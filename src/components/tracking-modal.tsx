@@ -46,7 +46,7 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ task, isOpen, onCl
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4">
-      <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200">
+      <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden modal-sheet-enter">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-emerald-50/70">
           <div className="flex items-center space-x-2">
@@ -71,11 +71,13 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ task, isOpen, onCl
         {/* Content */}
         <div className="p-5 space-y-4 overflow-y-auto flex-1">
           {/* Radar / Map Simulation Display */}
-          <div className="relative w-full h-56 bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-800 shadow-inner">
+          <div className="relative w-full h-60 bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-800 shadow-inner">
+            {/* Radar sweep cone */}
+            <div className="absolute w-52 h-52 radar-sweep opacity-70" />
             {/* Concentric Geofence Rings */}
-            <div className="absolute w-44 h-44 rounded-full border border-emerald-500/20 animate-pulse"></div>
-            <div className="absolute w-32 h-32 rounded-full border border-emerald-500/40 bg-emerald-500/5"></div>
-            <div className="absolute w-20 h-20 rounded-full border border-dashed border-emerald-400/60"></div>
+            <div className="absolute w-52 h-52 rounded-full border border-emerald-500/25" />
+            <div className="absolute w-36 h-36 rounded-full border border-emerald-500/40 bg-emerald-500/5" />
+            <div className="absolute w-20 h-20 rounded-full border border-dashed border-emerald-400/60" />
 
             {/* Center: Home / Task Location */}
             <div className="z-10 flex flex-col items-center">
@@ -159,7 +161,7 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({ task, isOpen, onCl
               <button
                 onClick={handleSendSOS}
                 disabled={isSendingSos}
-                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-95 transition-all flex items-center justify-center space-x-2"
+                className="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-95 transition-all flex items-center justify-center space-x-2 animate-pulse"
               >
                 <IconAlertTriangle className="w-4 h-4" />
                 <span>{isSendingSos ? 'Đang kích hoạt...' : 'KÍCH HOẠT SOS KHẨN CẤP'}</span>

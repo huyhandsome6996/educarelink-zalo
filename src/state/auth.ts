@@ -1,6 +1,6 @@
 import { atom, useAtom } from 'jotai';
 import { User, UserRole } from '@/types';
-import { api, clearTokens, getApiBaseUrl, setApiBaseUrl, getToken } from '@/services/api';
+import { api, clearTokens, getApiBaseUrl, setApiBaseUrl, getToken, setTokens } from '@/services/api';
 
 const getInitialUser = (): User | null => {
   const cached = localStorage.getItem('educarelink_current_user');

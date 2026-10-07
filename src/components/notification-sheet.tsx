@@ -5,6 +5,21 @@ import { MOCK_NOTIFICATIONS } from '@/services/mockData';
 import { useAuth } from '@/state/auth';
 import { IconBell, IconCheckCircle } from './common-icons';
 
+/** Backend trả created_at dạng "27/09/2026 04:20" hoặc ISO — hiển thị an toàn cả hai */
+function formatNotifTime(raw: string): string {
+  if (!raw) return '';
+  // Đã ở dạng dd/mm/yyyy hh:mm -> giữ nguyên
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(raw)) return raw;
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  });
+}
+
 interface NotificationSheetProps {
   isOpen: boolean;
   onClose: () => void;
@@ -94,9 +109,7 @@ export const NotificationSheet: React.FC<NotificationSheetProps> = ({ isOpen, on
                   )}
                 </div>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">{item.message}</p>
-                <span className="text-[10px] text-slate-400 mt-2 block">
-                  {new Date(item.created_at).toLocaleString('vi-VN')}
-                </span>
+                <span className="text-[10px] text-slate-400 mt-2 block">{formatNotifTime(item.created_at)}</span>
               </div>
             ))
           )}

@@ -17,6 +17,11 @@ export interface User {
   latitude?: number;
   longitude?: number;
   first_login?: boolean;
+  id_card_front?: string | null;
+  id_card_back?: string | null;
+  selfie_photo?: string | null;
+  certificate_photo?: string | null;
+  has_verification_papers?: boolean;
 }
 
 export interface AuthResponse {
@@ -72,19 +77,40 @@ export interface TaskApplication {
   task: number;
   worker: number;
   worker_name?: string;
+  worker_tier?: 'bronze' | 'silver' | 'gold' | 'diamond' | string;
+  worker_tier_label?: string;
+  worker_university?: string;
   task_title?: string;
-  task_status?: TaskStatus;
+  task_status?: TaskStatus | 'pending_payment' | string;
   task_price?: string | number;
   task_location?: string;
   task_scheduled_time?: string;
   task_description?: string;
   parent_username?: string;
   parent_name?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'accepted' | 'rejected' | string;
   note?: string;
   applied_at?: string;
   worker_avatar?: string;
   worker_rating?: number;
+}
+
+export interface EarningsSummary {
+  total_earned?: string | number;
+  pending_payout?: string | number;
+  cash_commission_owed?: string | number;
+  recent_payments?: Array<{
+    id: number;
+    task: number;
+    task_title?: string;
+    parent_name?: string;
+    worker_full_name?: string;
+    amount?: string | number;
+    worker_payout_amount?: string | number;
+    commission_amount?: string | number;
+    method?: string;
+    created_at?: string;
+  }>;
 }
 
 export interface Review {

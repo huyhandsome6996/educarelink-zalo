@@ -1,47 +1,87 @@
-# Zalo Mini App
+# EduCareLink — Zalo Mini App 🚀
 
-## Development
+**Nền tảng kết nối Chăm sóc & Giáo dục trẻ em** trên Zalo Mini App. Sao chép 1:1 design system từ bản mobile prototype gốc, đấu nối toàn bộ API REST backend thật.
 
-### Using Zalo Mini App Extension
+![EduCareLink](https://img.shields.io/badge/Zalo-Mini%20App-F26522) ![API](https://img.shields.io/badge/API-Render_Live-10B981) ![Build](https://img.shields.io/badge/vite%20build-passing-2DB84B)
 
-1. Install [Visual Studio Code](https://code.visualstudio.com/download) and [Zalo Mini App Extension](https://mini.zalo.me/docs/dev-tools).
-1. In the **Home** tab, process **Config App ID** and **Install Dependencies**.
-1. Navigate to the **Run** tab, select the suitable launcher, and click **Start**.
+## 🎨 Design System (chuẩn prototype gốc)
 
-### Using Zalo Mini App CLI
+| Token | Giá trị | Token | Giá trị |
+|---|---|---|---|
+| `--primary` | `#F26522` | `--bg` | `#F7F7F7` |
+| `--primary-dark` | `#D4541E` | `--surface` | `#FFFFFF` |
+| `--primary-light` | `#FFF4ED` | `--text-primary` | `#1A1A2E` |
+| `--primary-soft` | `#FFCFB3` | `--text-secondary` | `#6B7280` |
+| Secondary | `#2DB84B` / `#10B981` | Font body | **Plus Jakarta Sans** |
+| Warning | `#F59E0B` | Font headings | **Manrope** |
+| Error / Info | `#EF4444` / `#3B82F6` | Icons | Material-style SVG |
 
-1. [Install Node JS](https://nodejs.org/en/download/).
-1. [Install Zalo Mini App CLI](https://mini.zalo.me/docs/dev-tools/cli/intro/).
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-1. **Start** the dev server:
-   ```bash
-   zmp start
-   ```
-1. **Open** `localhost:3000` in your browser.
+## 📱 Danh sách màn hình (1:1 với prototype)
 
-## Deployment
+- **Splash Screen** — logo khiên + mũ tốt nghiệp, progress bar, chuyển cảnh mượt
+- **Login** — tab chuyển vai trò Phụ huynh/Carepartner, input icon, eye-toggle mật khẩu, nút gradient, social login Google/Facebook
+- **Register** — thẻ chọn vai trò, upload CCCD 2 mặt + ảnh chân dung + bằng cấp (preview), trường trường ĐH
+- **Parent Home** — header gradient cam, chuông thông báo chấm đỏ, tìm kiếm + lọc, 6 danh mục tròn, banner ĐĂNG VIỆC NGAY, Công việc của bạn (badge giá), Carepartner nổi bật (ĐH Sư Phạm, Bách Khoa…)
+- **Parent Tasks** — tab lọc trạng thái, thao tác nhanh: Xem ứng viên / Giám sát Live / Chấm điểm
+- **Candidates** — badge hạng (Đồng/Bạc/Vàng/Kim Cương), ghi chú ứng tuyển, nút "Duyệt Carepartner này"
+- **Task Detail** — hero gradient, bản đồ mô phỏng Geofence, mức lương nổi bật
+- **Worker Feed** — bảng tin việc, huy hiệu "AI Match %", lọc danh mục, Ứng tuyển ngay
+- **Worker Jobs** — công tắc GPS Live thật (heartbeat 30s → POST /tracking/location/), widget thu nhập real-time
+- **Worker Profile** — profile ring đánh giá, thống kê việc làm, chứng chỉ CCCD, Ví thu nhập EduCareLink
+- **AI Chatbot** — Gemini real-time, bubble chat, quick reply pills
+- **Modals** — Create Task (AI gợi ý mô tả), Review (1–5 sao + tag nhanh), Tracking (radar Geofence 500m + SOS), Notifications
 
-1. **Create** a mini program. For instructions on how to create a mini program, please refer to the [Coffee Shop Tutorial](https://mini.zalo.me/tutorial/coffee-shop/step-1/)
+## 🔌 API Backend
 
-1. **Deploy** your mini program to Zalo using the mini app ID created.
+Production: `https://educarelink-backend.onrender.com/api/` — Dev: dùng relative `/api` qua Vite proxy (không CORS).
 
-   - **Using Zalo Mini App Extension**: navigate to the **Deploy** panel > **Login** > **Deploy**.
-   - **Using Zalo Mini App CLI**:
-     ```bash
-     zmp login
-     zmp deploy
-     ```
+| Nhóm | Endpoint |
+|---|---|
+| Auth | `POST auth/login/`, `POST auth/register/`, `POST auth/token/refresh/`, `GET profile/` |
+| Tasks | `GET/POST tasks/`, `GET tasks/<id>/`, `PATCH tasks/<id>/status/` |
+| Parent | `GET parent/my-tasks/`, `GET parent/tasks/<id>/candidates/`, `POST parent/applications/<id>/approve/`, `POST parent/review/` |
+| Worker | `POST worker/tasks/<id>/apply/`, `GET worker/my-jobs/`, `GET payments/my-earnings/` |
+| AI | `POST chatbot/`, `POST worker/chatbot/` (key `message`) |
+| Tracking | `GET tracking/<id>/live/`, `POST tracking/location/`, `POST tracking/sos/`, `GET tracking/<id>/device-status/` |
+| Notifications | `GET notifications/`, `GET notifications/unread-count/`, `POST notifications/mark-read/` |
 
-1. Open the mini app in Zalo by scanning the QR code.
+### Tài khoản kiểm thử (mật khẩu: `Demo@2026`)
 
-## Resources
+| Vai trò | Username |
+|---|---|
+| Phụ huynh | `phuhuynh_test` |
+| Carepartner | `sinhvien_test` |
+| Admin | `admin` |
 
-- [Zalo Mini App Official Website](https://mini.zalo.me/)
-- [ZaUI Documentation](https://mini.zalo.me/documents/zaui/)
-- [ZMP SDK Documentation](https://mini.zalo.me/documents/api/)
-- [DevTools Documentation](https://mini.zalo.me/docs/dev-tools/)
-- [Ready-made Mini App Templates](https://mini.zalo.me/zaui-templates)
-- [Community Support](https://mini.zalo.me/community)
+## 🛠️ Phát triển
+
+### Cách 1: Zalo Mini App Extension (VS Code)
+1. Cài [Zalo Mini App Extension](https://mini.zalo.me/docs/dev-tools)
+2. **Config App ID** → **Install Dependencies** → **Start**
+
+### Cách 2: CLI
+```bash
+npm install
+zmp start        # mở http://localhost:3000
+npx vite build   # build production vào thư mục www/
+```
+
+> 💡 Mẹo QA: màn hình Đăng nhập có nút **1-Click** vào nhanh tài khoản demo; màn Tài khoản có công tắc đổi vai trò và trình đơn cấu hình API (Render/Local/Proxy).
+
+## 📦 Cấu trúc mã nguồn
+
+```
+src/
+├── app.ts                  # Entry — mount React
+├── components/             # AppHeader, BottomNav, SplashScreen,
+│                           # CreateTask/Candidate/Review/Tracking/Detail modals...
+├── pages/                  # index (router+splash), welcome-auth,
+│                           # parent-home, parent-tasks, worker-feed,
+│                           # worker-jobs, ai-chat, profile
+├── services/
+│   ├── api.ts              # JWT refresh tự động, fallback chain, timeouts
+│   └── mockData.ts         # Dữ liệu demo khi backend offline
+├── state/auth.ts           # jotai auth store + demo login
+├── types/index.ts          # Kiểu dữ liệu khớp 100% response thật
+└── css/app.scss            # Design tokens + animations (radar, shimmer…)
+```

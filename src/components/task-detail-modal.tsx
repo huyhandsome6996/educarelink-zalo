@@ -103,13 +103,45 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+        <div className="p-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+          {/* Hero section — gradient theo danh mục + badge giá nổi bật */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary to-primary-dark p-4 text-white shadow-md">
+            <div className="absolute -right-5 -bottom-8 w-28 h-28 rounded-full bg-white/10 blur-lg" />
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 backdrop-blur-sm mb-1.5">
+                  <IconBriefcase className="w-3 h-3 mr-1" />
+                  {task.category_name || 'Dịch vụ gia đình'}
+                </span>
+                <p className="text-[10px] text-white/80 font-semibold uppercase tracking-wider">Mức lương đề xuất</p>
+                <p className="text-2xl font-extrabold font-display">{formattedPrice}</p>
+              </div>
+              {/* Bản đồ mô phỏng mini */}
+              <div className="relative w-28 h-24 rounded-xl overflow-hidden bg-emerald-900/40 border border-white/20 shrink-0">
+                {/* Đường phố mô phỏng */}
+                <div className="absolute inset-x-0 top-6 h-1.5 bg-white/15 rotate-6" />
+                <div className="absolute inset-y-0 left-8 w-1.5 bg-white/15 -rotate-12" />
+                <div className="absolute inset-x-0 bottom-4 h-1 bg-white/10 -rotate-3" />
+                {/* Vùng Geofence */}
+                <div className="absolute right-2 top-2 w-14 h-14 rounded-full border-2 border-dashed border-emerald-300/70 bg-emerald-400/10" />
+                {/* Pin vị trí */}
+                <div className="absolute right-7 top-7 w-5 h-5 rounded-full bg-primary border-2 border-white shadow-lg flex items-center justify-center">
+                  <IconMapPin className="w-3 h-3 text-white" />
+                </div>
+                <span className="absolute bottom-1 right-1 text-[8px] font-bold text-white/80 bg-black/40 px-1 rounded">
+                  {task.geofence_radius || 500}m
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Title & Price */}
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900 leading-snug">{task.title}</h2>
+            <h2 className="text-lg font-extrabold text-slate-900 leading-snug font-display">{task.title}</h2>
             <div className="flex items-baseline space-x-2 mt-1">
-              <span className="text-2xl font-black text-orange-600">{formattedPrice}</span>
-              <span className="text-xs text-slate-400 font-medium">/ công việc</span>
+              <span className="text-xs text-slate-400 font-medium">
+                Đăng bởi <strong className="text-slate-600">{task.parent_name || 'Phụ huynh EduCareLink'}</strong>
+              </span>
             </div>
           </div>
 

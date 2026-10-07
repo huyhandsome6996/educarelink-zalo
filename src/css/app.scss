@@ -1,3 +1,34 @@
+/* ============================================================
+ * EduCareLink Global Styles (chuẩn mobile-prototype)
+ * ============================================================ */
+
+:root {
+  --primary: #f26522;
+  --primary-dark: #d4541e;
+  --primary-light: #fff4ed;
+  --primary-soft: #ffcfb3;
+  --bg: #f7f7f7;
+  --surface: #ffffff;
+  --surface-alt: #fff9f5;
+  --text-primary: #1a1a2e;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border: #f0f0f0;
+  --divider: #e5e7eb;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  color: var(--text-primary);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Manrope", "Plus Jakarta Sans", sans-serif;
+}
+
 .page {
   padding: 16px 16px 96px 16px;
 }
@@ -11,4 +42,121 @@
 
 .zaui-list-item {
   cursor: pointer;
+}
+
+/* ---------- Scrollbar utilities ---------- */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-soft);
+}
+
+/* ---------- Skeleton shimmer (trạng thái loading mượt) ---------- */
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e8edf3 50%, #f1f5f9 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.8s linear infinite;
+  border-radius: 12px;
+}
+
+/* ---------- Radar sweep cho modal Giám sát Geofence ---------- */
+.radar-sweep {
+  background: conic-gradient(
+    from 0deg,
+    rgba(52, 211, 153, 0) 0deg,
+    rgba(52, 211, 153, 0.05) 280deg,
+    rgba(52, 211, 153, 0.35) 350deg,
+    rgba(52, 211, 153, 0.55) 360deg
+  );
+  border-radius: 9999px;
+  animation: radarSweep 3s linear infinite;
+}
+
+@keyframes radarSweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Logo Splash ---------- */
+@keyframes splashShield {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-splash-shield {
+  animation: splashShield 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes splashProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+.animate-splash-progress {
+  animation: splashProgress 2s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+/* ---------- Modal enter ---------- */
+.modal-sheet-enter {
+  animation: modalSheetUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes modalSheetUp {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Dấu chấm live ping ---------- */
+.live-dot {
+  position: relative;
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid rgba(16, 185, 129, 0.5);
+  animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ---------- Safe area bottom cho nav ---------- */
+.pb-safe {
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }

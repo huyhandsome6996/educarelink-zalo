@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Page, useSnackbar } from 'zmp-ui';
 import { useAuth } from '@/state/auth';
+import { api } from '@/services/api';
 import { Task, TaskApplication } from '@/types';
 
 // Components
 import { AppHeader } from '@/components/app-header';
 import { BottomNav, NavTab } from '@/components/bottom-nav';
+import { SplashScreen } from '@/components/splash-screen';
 import { CreateTaskModal } from '@/components/create-task-modal';
 import { CandidateModal } from '@/components/candidate-modal';
 import { TrackingModal } from '@/components/tracking-modal';
@@ -23,8 +25,11 @@ import { AIChat } from './ai-chat';
 import { ProfilePage } from './profile';
 
 function HomePage() {
-  const { isLoggedIn, role } = useAuth();
+  const { isLoggedIn, role, setUnreadCount } = useAuth();
   const { openSnackbar } = useSnackbar();
+
+  // Splash Screen — hiển thị logo 2.5s khi khởi động app
+  const [showSplash, setShowSplash] = useState(true);
 
   // Active Tab navigation
   const [activeTab, setActiveTab] = useState<NavTab>('home');
@@ -40,6 +45,28 @@ function HomePage() {
   const [reviewTask, setReviewTask] = useState<Task | null>(null);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  // Polling số thông báo chưa đọc (60s/lần) để cập nhật chấm đỏ
+  const syncUnread = useCallback(async () => {
+    try {
+      const res = await api.getUnreadCount();
+      if (res && typeof res.unread_count === 'number') setUnreadCount(res.unread_count);
+    } catch {
+      /* im lặng — fallback demo giữ nguyên badge */
+    }
+  }, [setUnreadCount]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    syncUnread();
+    const t = setInterval(syncUnread, 60000);
+    return () => clearInterval(t);
+  }, [isLoggedIn, syncUnread]);
+
+  // Nếu không đăng nhập -> WelcomeAuth (vẫn hiển thị splash trước đó)
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   // If not logged in, render the clean Welcome & Fast-login experience
   if (!isLoggedIn) {

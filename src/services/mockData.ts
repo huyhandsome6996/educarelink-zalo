@@ -134,3 +134,52 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
     created_at: '2026-10-07T17:05:00+07:00',
   },
 ];
+
+export interface FeaturedCarepartner {
+  id: number;
+  name: string;
+  avatar: string;
+  university: string;
+  rating: number;
+  jobs: number;
+  tier_label: string;
+}
+
+export const MOCK_TOP_CAREPARTNERS: FeaturedCarepartner[] = [
+  {
+    id: 1,
+    name: 'Trần Thị Hương',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+    university: 'ĐH Sư Phạm TP.HCM',
+    rating: 4.9,
+    jobs: 127,
+    tier_label: 'Hạng Kim Cương',
+  },
+  {
+    id: 2,
+    name: 'Lê Văn Minh',
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150',
+    university: 'ĐH Bách Khoa',
+    rating: 4.8,
+    jobs: 98,
+    tier_label: 'Hạng Vàng',
+  },
+  {
+    id: 3,
+    name: 'Phạm Ngọc Anh',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+    university: 'ĐH KHXH&NV',
+    rating: 5.0,
+    jobs: 86,
+    tier_label: 'Hạng Vàng',
+  },
+  {
+    id: 4,
+    name: 'Vũ Đức Thắng',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    university: 'ĐH Y Dược TP.HCM',
+    rating: 4.7,
+    jobs: 74,
+    tier_label: 'Hạng Bạc',
+  },
+];

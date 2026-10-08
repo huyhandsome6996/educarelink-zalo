@@ -41,9 +41,11 @@ export const Touchable: React.FC<{
   activeOpacity?: number;
   hitSlop?: number;
   disabled?: boolean;
+  id?: string;
   children: React.ReactNode;
-}> = ({ onPress, style, activeOpacity = 0.8, hitSlop = 0, disabled, children }) => (
+}> = ({ onPress, style, activeOpacity = 0.8, hitSlop = 0, disabled, id, children }) => (
   <div
+    id={id}
     onClick={disabled ? undefined : onPress}
     style={{
       cursor: disabled ? "default" : "pointer",
@@ -143,10 +145,11 @@ export const NotificationsProvider: React.FC<{ enabled: boolean; children: React
   return <NotificationsContext.Provider value={{ unread, refresh }}>{children}</NotificationsContext.Provider>;
 };
 
-/** Nút chuông 38×38 nền trắng 20% + badge đỏ 8×8 (ParentHome header style) */
-export const NotificationBell: React.FC<{ variant?: "header" | "plain" }> = ({ variant = "header" }) => {
+/** Nút chuông — variant header (nền trắng 20%) / plain / dark (RN MyJobs NotificationBell dark: badge số + filled khi có unread) */
+export const NotificationBell: React.FC<{ variant?: "header" | "plain" | "dark" }> = ({ variant = "header" }) => {
   const { unread } = useNotifications();
   const nav = useNav();
+  const isDark = variant === "dark";
   return (
     <Touchable
       onPress={() => nav.navigate("Notifications")}
@@ -160,11 +163,39 @@ export const NotificationBell: React.FC<{ variant?: "header" | "plain" }> = ({ v
         justifyContent: "center",
         ...(variant === "header"
           ? { background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.25)" }
+          : isDark
+          ? { background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.22)" }
           : {}),
       }}
     >
-      <Icon name="notifications-outline" size={21} color={variant === "header" ? "#fff" : COLORS.primary} />
-      {unread > 0 && (
+      <Icon
+        name={isDark && unread > 0 ? "notifications" : "notifications-outline"} // CROSS-REVIEW FIX (7-b): filled khi có unread như RN
+        size={21}
+        color={variant === "plain" ? COLORS.primary : "#fff"}
+      />
+      {isDark && unread > 0 ? (
+        <span
+          style={{
+            position: "absolute",
+            top: -2,
+            right: -2,
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+            background: COLORS.error,
+            border: "1.5px solid #fff",
+            color: "#fff",
+            fontSize: 9.5,
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 3px",
+          }}
+        >
+          {unread > 99 ? "99+" : unread}
+        </span>
+      ) : unread > 0 ? (
         <span
           style={{
             position: "absolute",
@@ -177,7 +208,7 @@ export const NotificationBell: React.FC<{ variant?: "header" | "plain" }> = ({ v
             border: "1.5px solid #fff",
           }}
         />
-      )}
+      ) : null}
     </Touchable>
   );
 };

@@ -2,15 +2,28 @@
 import api from "./client";
 import { AI_TIMEOUT } from "./client";
 
-export const MATCH_LEVEL_LABELS: Record<string, string> = {};
+// CROSS-REVIEW FIX (7-c, P1): 2 constant dưới đây copy NGUYÊN mobile/src/api/matching.js:121-138.
+// Bản cũ: MATCH_LEVEL_LABELS rỗng {} + CANCEL_REASONS dùng code tự chế
+// (force_majeure/sick/...) không tồn tại trong backend → 400 khi cancel.
+// Các screen (BookingDetail/MyJobs/Appeal) đang dùng bản local đúng — sửa ở đây
+// để mọi nơi import sau này không lệch contract RN.
+export const MATCH_LEVEL_LABELS: Record<string, string> = {
+  very_high: "Rất phù hợp",
+  high: "Phù hợp cao",
+  medium: "Phù hợp",
+  low: "Có thể cân nhắc",
+};
+
+// 8 lý do hủy (Step 5.3) — force majeure cần note >= 20 ký tự (giống RN)
 export const CANCEL_REASONS = [
-  { code: "force_majeure", label: "Bất khả kháng", forceMajeure: true },
-  { code: "emergency", label: "Khẩn cấp gia đình" },
-  { code: "sick", label: "Bị ốm" },
-  { code: "schedule_conflict", label: "Trùng lịch" },
-  { code: "weather", label: "Thời tiết xấu" },
-  { code: "transport", label: "Vấn đề di chuyển" },
-  { code: "other", label: "Lý do khác" },
+  { code: "school_schedule", label: "Trùng lịch học đột xuất", forceMajeure: true },
+  { code: "health", label: "Sức khỏe không tốt", forceMajeure: true },
+  { code: "family_emergency", label: "Việc gia đình khẩn cấp", forceMajeure: true },
+  { code: "accident", label: "Tai nạn / sự cố di chuyển", forceMajeure: true },
+  { code: "wrong_job_info", label: "Thông tin công việc không đúng mô tả", forceMajeure: true },
+  { code: "transport", label: "Không thể di chuyển", forceMajeure: false },
+  { code: "personal", label: "Lý do cá nhân", forceMajeure: false },
+  { code: "other", label: "Khác (bắt buộc ghi chú)", forceMajeure: false },
 ];
 
 export const createJob = (payload: Record<string, any>) => api.post("/matching/jobs/", payload);

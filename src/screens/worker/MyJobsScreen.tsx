@@ -23,7 +23,7 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Icon from "@/components/Icon";
-import { Screen, Spinner, StatusBarSpacer, Touchable, showAlert } from "@/components/ui";
+import { Screen, Spinner, StatusBarSpacer, Touchable, showAlert, useNotifications } from "@/components/ui";
 import { COLORS, SHADOWS, SIZES, TYPO } from "@/theme";
 import storage from "@/utils/storage";
 import { getMyJobsAsWorker } from "@/api/tasks";
@@ -534,6 +534,52 @@ const TrackingConsentModal: React.FC<{
 /* ══════════════════════════════════════════════════════════════════
    MyJobsScreen chính
    ══════════════════════════════════════════════════════════════════ */
+/* CROSS-REVIEW FIX (7-b): bell dark 42×42 với badge số unread + icon filled khi có thông báo (như RN NotificationBell dark) */
+const MyJobsBell: React.FC = () => {
+  const nav = useNav();
+  const { unread } = useNotifications();
+  return (
+    <Touchable
+      onPress={() => nav.navigate("Notifications")}
+      style={{
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        background: COLORS.background,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        position: "relative",
+      }}
+    >
+      <Icon name={unread > 0 ? "notifications" : "notifications-outline"} size={22} color={COLORS.textPrimary} />
+      {unread > 0 && (
+        <span
+          style={{
+            position: "absolute",
+            top: -2,
+            right: -2,
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+            background: COLORS.error,
+            border: "1.5px solid #fff",
+            color: "#fff",
+            fontSize: 9.5,
+            fontWeight: 800,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 3px",
+          }}
+        >
+          {unread > 99 ? "99+" : unread}
+        </span>
+      )}
+    </Touchable>
+  );
+};
+
 const MyJobsScreen: React.FC<{ initialTab?: string; highlightBookingId?: string | number }> = ({
   initialTab,
   highlightBookingId: highlightParam,
@@ -1162,6 +1208,7 @@ const MyJobsScreen: React.FC<{ initialTab?: string; highlightBookingId?: string 
       return (
         <Touchable
           key={String(item.id)}
+          id={`booking-card-${item.bookingId}`} /* CROSS-REVIEW FIX (7-b): scroll highlight cần element id */
           activeOpacity={0.95}
           onPress={() => nav.navigate("BookingDetail", { bookingId: item.bookingId })}
           style={{
@@ -1321,7 +1368,12 @@ const MyJobsScreen: React.FC<{ initialTab?: string; highlightBookingId?: string 
           {/* 2 nút hành động */}
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
             <Touchable
-              onPress={() => openRejectModal(item)}
+              // CROSS-REVIEW FIX (7-b): thiếu stopPropagation — click bọt lên card onPress → navigate('BookingDetail')
+              // chạy cùng lúc → MyJobs unmount (RootNavigator chỉ mount route top) → modal Từ chối không bao giờ mở (RN: touchable con không kích hoạt cha).
+              onPress={(e?: any) => {
+                e?.stopPropagation?.();
+                openRejectModal(item);
+              }}
               disabled={expired || isCommitting}
               activeOpacity={0.85}
               style={{
@@ -1342,7 +1394,11 @@ const MyJobsScreen: React.FC<{ initialTab?: string; highlightBookingId?: string 
               <span style={{ ...TYPO.buttonSmall, color: "#475569" }}>Từ chối</span>
             </Touchable>
             <Touchable
-              onPress={() => handleCommit(item)}
+              // CROSS-REVIEW FIX (7-b): thiếu stopPropagation — commit xong bị navigate sang BookingDetail thay vì ở lại chuyển tab "Sắp làm" như RN.
+              onPress={(e?: any) => {
+                e?.stopPropagation?.();
+                handleCommit(item);
+              }}
               disabled={expired || isCommitting}
               activeOpacity={0.85}
               style={{
@@ -1381,6 +1437,7 @@ const MyJobsScreen: React.FC<{ initialTab?: string; highlightBookingId?: string 
       return (
         <Touchable
           key={String(item.id)}
+          id={`booking-card-${item.bookingId}`} /* CROSS-REVIEW FIX (7-b): scroll highlight cần element id */
           activeOpacity={0.95}
           onPress={() => nav.navigate("BookingDetail", { bookingId: item.bookingId })}
           style={{
@@ -2103,21 +2160,7 @@ const MyJobsScreen: React.FC<{ initialTab?: string; highlightBookingId?: string 
         <div style={{ ...TYPO.h1, fontSize: 24, color: COLORS.textPrimary }}>Việc của tôi</div>
         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: SIZES.sm }}>
           {/* NotificationBell dark — 42×42 nền background + icon tối (port styles.bellBtnDark) */}
-          <Touchable
-            onPress={() => nav.navigate("Notifications")}
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
-              background: COLORS.background,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              position: "relative",
-            }}
-          >
-            <Icon name="notifications-outline" size={22} color={COLORS.textPrimary} />
-          </Touchable>
+          <MyJobsBell />
           {totalEarned > 0 && (
             <div
               style={{

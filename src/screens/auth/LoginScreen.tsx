@@ -42,8 +42,11 @@ const LoginScreen: React.FC = () => {
 
   const handleLogin = async () => {
     const u = username.trim();
-    const p = password.trim();
-    if (!u || !p) {
+    // CROSS-REVIEW FIX (7-c, P1): RN chỉ trim username, gửi password NGUYÊN
+    // (LoginScreen.js d.209-216: login(username.trim(), password)) — trim password
+    // làm sai mật khẩu chứa khoảng trắng ở đầu/cuối. Validate trên bản trim như RN.
+    const p = password;
+    if (!u || !p.trim()) {
       showAlert("Lỗi", "Vui lòng nhập tên tài khoản và mật khẩu.");
       return;
     }

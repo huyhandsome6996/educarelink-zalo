@@ -34,10 +34,10 @@ Trạng thái: ✅ port đầy đủ · 🔶 port với thích ứng nền tản
 ### Parent tabs (đúng thứ tự RN: Trang chủ / Công việc / AI Trợ lý / Theo dõi / Tài khoản — FAB giữa)
 | Route RN | Zalo | Ghi chú |
 |---|---|---|
-| ParentHome | ✅ ParentHomeScreen.tsx | ví từ getCreditBalance() thật; radar bookings; VIETQR gate mount |
+| ParentHome | ✅ ParentHomeScreen.tsx | ví từ getCreditBalance() thật (RN mock 1.250.000đ); radar bookings; VIETQR gate mount. CROSS-REVIEW 7-a ghi nhận deviation spec 5-b: (1) section 5 "Lịch ca gần đây" RN dùng `bookings` (getBookings, item → BookingDetail, "Xem tất cả" → openLatestBooking) — Zalo dùng `tasks` (getMyTasksAsParent, item/"Xem tất cả" → MyTasks, time từ scheduled_time); (2) greeting động sáng/chiều/tối (RN hardcode "Chào buổi chiều"); (3) bell badge chỉ hiện khi unread>0 (RN luôn hiện dot đỏ 8×8) |
 | MyTasks | ✅ MyTasksScreen.tsx | 4 tab segmented; STITCH token giữ nguyên; countdown 1s |
 | Chatbot | ✅ ChatbotScreen.tsx | sendChatMessage 60s; job card AI → CandidatesList |
-| TrackingOverview | ✅ TrackingOverviewScreen.tsx | list in_progress → LiveTracking |
+| TrackingOverview | ✅ TrackingOverviewScreen.tsx | list in_progress → LiveTracking. CROSS-REVIEW 7-a: empty CTA "Tạo nhiệm vụ mới" → JobTypeSelect (RN navigate('ParentHome')) — deviation theo spec 5-c |
 | ParentProfile | ✅ ParentProfileScreen.tsx | menu + logout; modal Sửa dùng updateProfile+refreshUser (deviation ghi trong file) |
 
 ### Worker tabs (Trang chủ / Lịch rảnh / AI Trợ lý / Công việc / Tài khoản — FAB giữa)
@@ -52,7 +52,7 @@ Trạng thái: ✅ port đầy đủ · 🔶 port với thích ứng nền tản
 ### Parent stack + shared
 | Route RN | Zalo | Ghi chú |
 |---|---|---|
-| JobTypeSelect | ✅ | 3 card accent strip; AI express → Chatbot |
+| JobTypeSelect | ✅ | 3 card accent strip; AI express → Chatbot; alias card→card-outline, navigate-circle→navigate (icon trust #3 size 14 vs RN 15 — P2) |
 | TutoringForm | ✅ | createJob→publishJob(60s)→CandidatesList; price suggestion debounce 400ms |
 | ChildcareForm / PickupForm | ✅ | đủ section; geocode backend + Nominatim fallback thay MapPicker Leaflet |
 | CandidatesList | ✅ | getMatchingCandidates top 8 ELO; selectCarePartner + Idempotency-Key |
@@ -142,3 +142,11 @@ Trạng thái: ✅ port đầy đủ · 🔶 port với thích ứng nền tản
 - **CORS prod**: origin `*.zdn.vn` KHÔNG nằm trong `CORS_ALLOWED_ORIGINS` của backend Render — vẫn BLOCKED chờ chủ backend (đã có `docs/PATCH_CORS_BACKEND.md`). Frontend không tự chữa được CORS; dev/QA chạy qua proxy.
 - Chưa chụp RN thật bằng emulator để đo pixel-diff → toàn bộ port theo mã nguồn RN, trạng thái "chưa xác minh pixel" (không tự tạo ảnh chuẩn giả).
 - Smoke trên Zalo Developer Tools/thiết bị thật: CHƯA chạy (môi trường này không có Zalo Studio) — cần người dùng chạy `npm start`.
+
+## Cross-review độc lập (Task 7-c — auth + API + nav infra)
+
+- **[P0] Đã sửa** `src/api/misc.ts`: `getAllPayments` `/payments/admin/payments/` → `/payments/admin/all/`; `retryPayout` `/payments/admin/payments/<id>/retry-payout/` → `/payments/admin/<id>/retry-payout/` (đối chứng mobile/src/api/payments.js + backend payments/urls.py d.40-41 — bản cũ 404).
+- **[P1] Đã sửa** `src/api/matching.ts`: `CANCEL_REASONS` (7 code tự chế → đúng 8 code backend/RN) + `MATCH_LEVEL_LABELS` (rỗng → 4 nhãn RN). Screens đã dùng bản local đúng từ trước — sửa để import sau này không lệch contract.
+- **[P1] Đã sửa** `src/screens/auth/LoginScreen.tsx`: không trim password khi gửi (RN `login(username.trim(), password)` — password nguyên văn).
+- **[P1] Chưa sửa (khuyến nghị)**: GPS matching heartbeat 5 phút cho worker (RN AuthContext.js d.82-153: `syncGpsToBackend` khi login + interval 5') chưa có trong `AuthContext.tsx` — cần quyết định UX permission prompt trình duyệt trên Zalo webview trước khi thêm; đang fallback địa chỉ hồ sơ phía backend.
+- **[P2] Đã ghi nhận (không sửa)**: OAuth Google/Facebook Zalo chỉ spinner giả 800ms khi server bật (chờ SDK flow Zalo); `goBack()` router vừa pop state vừa `history.back()` (race popstate — hoạt động đúng trong thực tế nhưng nên dọn); alert worker-pending ở Register đổi vị trí title/message so RN; Onboarding gọi `completeOnboarding` 1 lần (RN gọi trùng 2 lần — quirk lành); route admin `AdminTracking` (RN) map sang `AdminTrackingOverview` (Zalo, ghi trong AdminDashboardScreen.tsx).

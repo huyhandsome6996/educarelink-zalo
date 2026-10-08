@@ -4,9 +4,10 @@
  * -> register (worker: pending_approval KHÔNG auto-login; parent: auto-login) -> logout xoá 6 keys.
  * Onboarding flag = user.first_login từ profile (giống RN).
  */
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import storage from "@/utils/storage";
 import * as authApi from "@/api/auth";
+import { sendGpsHeartbeat } from "@/api/tracking";
 import type { LoginResponse } from "@/api/auth";
 
 export interface User {
@@ -106,6 +107,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setUser((prev) => (prev ? { ...prev, first_login: false } : prev));
   }, []);
+
+  /* ---- GPS matching heartbeat (port syncGpsToBackend — RN AuthContext.js d.82-153) ----
+   * Chỉ role worker: xin geolocation -> POST /tracking/gps-heartbeat/.
+   * gps_sync === 'no_matching_consent' -> backoff 24h (key gps_no_consent_until).
+   * Trigger: sau login/hydrate + interval 5 phút. Lỗi im lặng (fire-and-forget như RN). */
+  const syncGpsRef = useRef(false);
+  const syncGpsToBackend = useCallback(async (u: User | null) => {
+    if (!u || u.role !== "worker" || syncGpsRef.current) return;
+    syncGpsRef.current = true;
+    try {
+      const backoff = await storage.getItem("gps_no_consent_until");
+      if (backoff && Date.now() < Number(backoff)) return;
+      if (!navigator.geolocation) return;
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 10_000,
+          maximumAge: 120_000,
+        })
+      );
+      const res = await sendGpsHeartbeat({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy: pos.coords.accuracy ?? undefined,
+      });
+      if ((res as any)?.gps_sync === "no_matching_consent") {
+        await storage.setItem("gps_no_consent_until", String(Date.now() + 24 * 60 * 60 * 1000));
+      }
+    } catch {
+      /* permission denied / timeout / mạng — im lặng như RN */
+    } finally {
+      syncGpsRef.current = false;
+    }
+  }, []);
+
+  /** worker: interval 5 phút khi app active (giống RN AuthContext.js d.146-148) */
+  useEffect(() => {
+    if (!user || user.role !== "worker") return;
+    syncGpsToBackend(user);
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") syncGpsToBackend(user);
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user, syncGpsToBackend]);
 
   /** checkToken lúc mở app — nguyên bản RN */
   useEffect(() => {

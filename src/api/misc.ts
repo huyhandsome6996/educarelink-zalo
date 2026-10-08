@@ -14,11 +14,16 @@ export const getSettlementDetail = (id: number | string) => api.get(`/payments/s
 export const getPaymentStatus = (paymentId: number | string) => api.get(`/payments/${paymentId}/status/`);
 export const cancelSelection = (paymentId: number | string) => api.post(`/payments/${paymentId}/cancel-selection/`);
 export const getPaymentOverview = () => api.get("/payments/admin/overview/");
+// CROSS-REVIEW FIX (7-c, P0): path sai — RN mobile/src/api/payments.js dùng
+// `/payments/admin/all/` (backend payments/urls.py d.40 chỉ khai báo path này;
+// `/payments/admin/payments/` cũ → 404 → tab "Giao dịch" AdminPayments trống).
 export const getAllPayments = (params: Record<string, any> = {}) => {
   const qs = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString();
-  return api.get(`/payments/admin/payments/${qs ? `?${qs}` : ""}`);
+  return api.get(`/payments/admin/all/${qs ? `?${qs}` : ""}`);
 };
-export const retryPayout = (id: number | string) => api.post(`/payments/admin/payments/${id}/retry-payout/`);
+// CROSS-REVIEW FIX (7-c, P0): đúng path RN + backend `/payments/admin/<id>/retry-payout/`
+// (bản cũ thêm segment `payments/` → 404, nút "Thử lại giải ngân" hỏng).
+export const retryPayout = (id: number | string) => api.post(`/payments/admin/${id}/retry-payout/`);
 export const regenerateSettlementQR = (id: number | string) =>
   api.post(`/payments/admin/settlements/${id}/regenerate-qr/`);
 export const runMonthlySettlement = (payload: Record<string, any>) => api.post("/payments/admin/run-settlement/", payload);

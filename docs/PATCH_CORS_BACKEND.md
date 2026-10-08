@@ -71,12 +71,12 @@ Ghi chú:
   `Access-Control-Allow-Headers: accept, authorization, content-type, user-agent,
   x-csrftoken, x-requested-with`, `Access-Control-Max-Age: 86400`, `Vary: Origin`.
 
-## 4. Hotfix tạm KHÔNG cần đụng code (nếu muốn gấp)
+## 4. Về hotfix env var — KHÔNG khuyến nghị
 
-Render Dashboard → Environment → thêm `CORS_ALLOW_ALL_ORIGINS = True` rồi redeploy
-(`settings.py` đã đọc env này). ⚠️ Mở API cho mọi origin — chấp nhận được ngắn hạn vì
-API thuần Bearer JWT (không cookie), nhưng **hãy ưu tiên patch whitelist** và xoá env
-var này ngay sau khi deploy bản chuẩn.
+> ⚠️ Theo đúng quy tắc của audit QA: **cấm chữa bằng `CORS_ALLOW_ALL_ORIGINS = True`**.
+> (Render Dashboard có env var này nhưng nó mở API cho MỌI origin — vi phạm policy
+> kiểm thử. Chỉ nêu ở đây để chủ backend biết sự tồn tại và TRÁNH dùng.)
+> Đường đi đúng = patch whitelist ở §3. Vui lòng bỏ qua mục này khi áp dụng.
 
 ## 5. Verify sau khi áp (chạy từng lệnh, phải thấy đủ header CORS)
 

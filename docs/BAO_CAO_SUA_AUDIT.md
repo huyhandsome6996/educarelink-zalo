@@ -97,12 +97,12 @@ Audit yêu cầu KHÔNG sửa CSS chỉ để coverage pass. Đã đối chứng
 | `npm ci` + lockfile sync sau khi thêm typescript | ✅ |
 | `build_cdn_css.py` 12 CSS — output **byte-identical** với bản cũ (đủ chứng minh determinism) | ✅ |
 | Quét 44 trang SERVED qua HTTP: mảnh Django cụt | ✅ 44/44 sạch (`scripts/scan_leak_pages.py`) |
-| **E2E browser thật** (viewport 390×844, dev server + proxy → Render): splash → login **thật** `phuhuynh_test/Demo@2026` → token lưu → redirect parent-home | ✅ (ảnh qa-evidence/fix-01…03) |
-| E2E parent-home: `.psb-nav-item.active` render thật + 0 leak + dữ liệu thật | ✅ (fix-03) |
-| E2E click "Xem tất cả" → parent-tasks: 0 leak + dữ liệu | ✅ (fix-04) |
-| E2E worker-feed: 0 leak + active classes | ✅ (fix-05) |
-| E2E `don.html?id=test-123&mode=preview`: cả 2 param giữ nguyên | ✅ (fix-06) |
-| E2E chatbot + notifications (API thật, poll 30s): 0 leak | ✅ (fix-07, 08) |
+| **E2E browser thật** (viewport 390×844, dev server + proxy → Render): splash → login **thật** `phuhuynh_test/Demo@2026` → token lưu → redirect parent-home | ✅ (ảnh trong repo: docs/qa-evidence/fix-01…03.png) |
+| E2E parent-home: `.psb-nav-item.active` render thật + 0 leak + dữ liệu thật | ✅ (docs/qa-evidence/fix-03-parent-home.png) |
+| E2E click "Xem tất cả" → parent-tasks: 0 leak + dữ liệu | ✅ (docs/qa-evidence/fix-04-parent-tasks.png) |
+| E2E worker-feed: 0 leak + active classes | ✅ (docs/qa-evidence/fix-05-worker-feed.png) |
+| E2E `don.html?id=test-123&mode=preview`: cả 2 param giữ nguyên | ✅ (docs/qa-evidence/fix-06-don.html.png) |
+| E2E chatbot + notifications (API thật, poll 30s): 0 leak | ✅ (docs/qa-evidence/fix-07-chatbot.png, fix-08-notifications.png) |
 | Console error trong các luồng trên | ✅ 0 (chỉ warning flatpickr locale có sẵn ở bản gốc) |
 
 ## Chưa kiểm / cần chủ dự án

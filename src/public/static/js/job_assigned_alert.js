@@ -125,7 +125,7 @@
       });
       n.onclick = function () {
         try { window.focus(); } catch (e) {}
-        window.location.href = '/worker/my-jobs/';
+        window.location.href = window.__edcToPage('/worker/my-jobs/');
       };
     } catch (e) { /* trình duyệt không hỗ trợ */ }
   }
@@ -189,7 +189,7 @@
 
     document.getElementById('ela-accept').addEventListener('click', commitOffer);
     document.getElementById('ela-detail').addEventListener('click', function () {
-      window.location.href = '/worker/my-jobs/';
+      window.location.href = window.__edcToPage('/worker/my-jobs/');
     });
     document.getElementById('ela-decline').addEventListener('click', toggleDecline);
   }
@@ -263,7 +263,7 @@
     btn.textContent = 'Đang xác nhận...';
     authedPost('/api/matching/bookings/' + activeBooking.id + '/commit/')
       .then(function (r) {
-        if (r.ok) { hideModal(); window.location.href = '/worker/my-jobs/'; }
+        if (r.ok) { hideModal(); window.location.href = window.__edcToPage('/worker/my-jobs/'); }
         else return r.json().then(function (d) {
           alert((d && d.detail) || 'Không xác nhận được đơn — có thể đã hết giờ.');
           hideModal(); window.location.reload();

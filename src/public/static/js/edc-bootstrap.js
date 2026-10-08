@@ -19,6 +19,24 @@
   window.__API_ORIGIN = IS_DEV ? '' : 'https://educarelink-backend.onrender.com';
   window.API_BASE = window.__API_ORIGIN + '/api';
 
+  /* 1b) Bọc fetch toàn cục (fix P0-2 audit 08/10/2026): các file JS dùng chung
+     trong static/js (notification_sound, job_assigned_alert, worker_gps_heartbeat,
+     worker_shift_heartbeat, worker_profile_tier_b4...) vẫn gọi '/api/...' tương
+     đối — ở prod webview resolve theo origin trang tĩnh -> chết. Wrapper chỉ đổi
+     string bắt đầu đúng bằng '/api/'; Request/URL tuyệt đối passthrough nguyên vẹn. */
+  (function () {
+    var rawFetch = window.fetch ? window.fetch.bind(window) : null;
+    if (!rawFetch) return; // webview quá cũ — giữ hành vi cũ
+    window.fetch = function (input, init) {
+      try {
+        if (typeof input === 'string' && input.lastIndexOf('/api/', 0) === 0) {
+          input = window.API_BASE + input.slice(4); // '/api/x' -> '<origin>/api/x'
+        }
+      } catch (e) { /* lỗi chuẩn bị input: gọi như cũ */ }
+      return rawFetch(input, init);
+    };
+  })();
+
   /* 2) Map path Django -> trang html tĩnh (đồng bộ scripts/port_pages.py) */
   var ROUTES = {
     '/': 'splash.html', '/landing/': 'landing.html',
@@ -45,20 +63,41 @@
     '/site-gate/': 'site-gate.html'
   };
 
+  /* Route CÓ tham số THẬT (khớp frontend/urls.py: /ung-vien/<id>/, /don/<id>/,
+     /khang-cao/<id>/) — dùng whitelist, KHÔNG đoán (fix P1-4 audit: bản cũ nuốt
+     mọi path 2 đoạn thành id, /parent/tasks/ -> parent-home.html?id=tasks). */
+  var PARAM_PAGES = {
+    '/ung-vien/': 'ung-vien.html',
+    '/don/': 'don.html',
+    '/khang-cao/': 'khang-cao.html'
+  };
+
   window.__edcToPage = function (url) {
     if (!url || typeof url !== 'string') return url;
     if (/^(https?:|tel:|mailto:|data:|#|\/\/)/.test(url)) return url;
     if (url.indexOf('.html') >= 0) return url;
-    var q = '';
-    var qi = url.indexOf('?');
-    if (qi >= 0) { q = url.slice(qi); url = url.slice(0, qi); }
-    if (url.charAt(url.length - 1) !== '/') url += '/';
-    var m = url.match(/^(\/[a-z0-9-]+)\/([^/]+)\/$/);
-    if (m && ROUTES[m[1] + '/']) {
-      // path có tham số: /ung-vien/<id>/ -> ung-vien.html?id=<id>
-      return ROUTES[m[1] + '/'] + '?id=' + encodeURIComponent(m[2]) + q;
+
+    /* Tách hash TRƯỚC, rồi query — giữ nguyên cả hai (fix P1-4) */
+    var hi = url.indexOf('#');
+    var hash = hi >= 0 ? url.slice(hi) : '';
+    var rest = hi >= 0 ? url.slice(0, hi) : url;
+    var qi = rest.indexOf('?');
+    var search = qi >= 0 ? rest.slice(qi) : ''; // luôn bắt đầu bằng '?' nếu có
+    var path = qi >= 0 ? rest.slice(0, qi) : rest;
+    if (path.charAt(path.length - 1) !== '/') path += '/';
+
+    /* 1) ROUTE TĨNH ƯU TIÊN: /parent/tasks/ -> parent-tasks.html?page=2 */
+    if (ROUTES[path]) return ROUTES[path] + search + hash;
+
+    /* 2) ROUTE THAM SỐ — chỉ prefix trong whitelist; id encode; query nối '&' */
+    var m = path.match(/^\/([a-z0-9-]+)\/([^/]+)\/$/);
+    if (m && PARAM_PAGES['/' + m[1] + '/']) {
+      var extra = search ? '&' + search.slice(1) : '';
+      return PARAM_PAGES['/' + m[1] + '/'] +
+        '?id=' + encodeURIComponent(m[2]) + extra + hash;
     }
-    if (ROUTES[url]) return ROUTES[url] + q;
+
+    /* Không rõ — trả nguyên vẹn (không tự chế trang) */
     return url;
   };
 

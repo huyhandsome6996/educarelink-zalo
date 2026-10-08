@@ -26,16 +26,26 @@ src/
   4. Tailwind CDN (12 trang) → CSS precompiled bằng đúng inline config gốc (`scripts/build_cdn_css.py`)
 - **Auth & dữ liệu**: giữ nguyên cơ chế gốc — `localStorage` (`token`, `refresh_token`, `role`), `apiFetch` tự refresh JWT, mọi fetch gọi thẳng API Render. Đăng nhập bằng tài khoản demo (`phuhuynh_test` / `Demo@2026`) hoạt động end-to-end.
 
-## 🔄 Regenerate (khi repo gốc thay đổi)
+## 🔄 Regenerate (khi repo gốc thay đổi — chạy được từ checkout mới)
 
 ```bash
-# Repo gốc clone cạnh repo này tại ../educarelink-backend-4-12-2026 (CHỈ ĐỌC)
-python3 scripts/port_pages.py       # 44 template -> src/public/pages
-python3 scripts/build_cdn_css.py    # 12 trang CDN -> css precompiled
-python3 scripts/check_css_coverage.py  # kiểm tra phủ CSS
-npx vite build                      # -> src/www
+# Repo gốc clone CẠNH repo này tại ../educarelink-backend-4-12-2026 (CHỈ ĐỌC),
+# hoặc chỉ định bằng biến môi trường EDUCARELINK_SRC / cờ --src:
+python3 scripts/port_pages.py          # 44 template -> src/public/pages (có --only, --help)
+python3 scripts/build_cdn_css.py       # 12 trang CDN -> css precompiled (fail -> exit != 0)
+python3 scripts/check_css_coverage.py  # phủ CSS (exit 2 = cảnh báo heuristic)
+
+npm ci
+npm run test        # unittest compiler (23 case) + routing/fetch wrapper (28 case)
+npm run typecheck   # tsc --noEmit
+npm run build       # vite build -> src/www
+npm run validate    # typecheck + build
+
 python3 scripts/dev_server.py 3000  # dev: serve www + proxy /api -> Render
 ```
+
+Cả 3 script python đều tự định vị repo qua `__file__` — không phụ thuộc cwd, chạy
+được trên Windows/Linux; override nguồn bằng `EDUCARELINK_SRC=<đường dẫn>`.
 
 ## 📱 44 trang được copy
 
@@ -60,9 +70,18 @@ Production: `https://educarelink-backend.onrender.com/api/` — Dev: dùng relat
 
 ```bash
 npm install
-npx vite build      # xuất src/www
+npm run build       # xuất src/www
 zmp login           # tài khoản Zalo Developer
 zmp deploy          # đẩy bundle (src/www) lên Zalo
 ```
 
 > Lưu ý: nhớ khai báo domain `educarelink-backend.onrender.com` trong phần **API List / Trusted domains** của app trên Zalo Developer Console để các request API hoạt động trên bản production.
+
+## ⛔ CORS production (BLOCKED — cần chủ backend áp patch)
+
+Prod Zalo gọi API **trực tiếp** từ origin `https://h5.zdn.vn`; whitelist CORS của
+Django chưa có origin này nên browser chặn mọi request (dev không ảnh hưởng vì có
+proxy). Toàn bộ bằng chứng + patch tối thiểu + lệnh verify nằm tại
+[`docs/PATCH_CORS_BACKEND.md`](docs/PATCH_CORS_BACKEND.md) — **backend sửa 1 block,
+frontend không tự chữa được** (no-cors/proxy đều bất khả thi). Sau khi backend áp
+patch, chạy lại 4 lệnh curl trong file đó để gỡ BLOCKED.

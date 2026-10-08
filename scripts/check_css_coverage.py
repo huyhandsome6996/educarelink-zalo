@@ -55,6 +55,13 @@ CHECKS = [
     ("lich-ranh.html", ["tailwind-default.css"]),
     ("ngay-ban.html", ["tailwind-default.css"]),
     ("admin-dashboard.html", ["tailwind-default.css"]),
+    # 6 trang còn thiếu theo audit P1-5 (08/10/2026)
+    ("landing.html", ["tailwind-radius-a.css"]),
+    ("onboarding-parent.html", ["tailwind-default.css"]),
+    ("onboarding-worker.html", ["tailwind-default.css"]),
+    ("parent-care-diary-detail.html", ["tailwind-default.css"]),
+    ("parent-care-diary-history.html", ["tailwind-default.css"]),
+    ("worker-care-diary-form.html", ["tailwind-default.css"]),
 ]
 
 CLASS_ATTR_RE = re.compile(r'class=(["\'])([^"\']*)\1')
@@ -73,8 +80,13 @@ def collect_inline_style_classes(html):
     for m in STYLE_BLOCK_RE.finditer(html):
         for sel in SELECTOR_RE.findall(m.group(1)):
             for tok in re.findall(r"\.([A-Za-z0-9_\\:.()\[\]#%/-]+)", sel):
-                # .a.b (selector ghép) -> tính cả a lẫn b
-                for part in tok.replace("\\", "").split("."):
+                tok = tok.replace("\\.", "\x00")  # giữ dấu chấm ĐƯỢC ESCAPE (p-2\.5)
+                tok = tok.replace("\\", "")
+                for part in tok.split("."):  # .a.b (selector ghép) -> cả a lẫn b
+                    # tách pseudo (:hover, ::before) KHỎI token — fix bug checker
+                    # ('.sidebar-scroll::-webkit-scrollbar' trước đây không tính
+                    #  sidebar-scroll -> báo thiếu ảo, ví dụ task-detail.html)
+                    part = part.split(":", 1)[0].replace("\x00", ".")
                     if 1 < len(part) < 40:
                         out.add(part)
     return out

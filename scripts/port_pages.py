@@ -180,6 +180,10 @@ CSRF_RE = re.compile(r"\{%\s*csrf_token\s*%\}")
 
 def eval_cond(cond, ctx):
     cond = cond.strip()
+    # Fail-loud: cú pháp chưa hỗ trợ phải phá build ngay, không được im lặng
+    # chọn sai nhánh (bug âm thầm khó phát hiện hơn cả leak).
+    if re.search(r"\b(and|not)\b", cond) or "|" in cond or "(" in cond:
+        raise RuntimeError("điều kiện if chưa hỗ trợ: " + cond)
     for part in re.split(r"\s+or\s+", cond):
         part = part.strip()
         m = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*==\s*['\"]([^'\"]*)['\"]$", part)
@@ -223,42 +227,51 @@ def render_dj(text, ctx, depth=0, cur_file=None):
 
     text = INCLUDE_RE.sub(repl_include, text)
 
-    # --- if/else/endif (hỗ trợ lồng) ---
+    # --- if/elif/else/endif (hỗ trợ lồng, ngữ nghĩa Django đúng) ---
+    # Fix bug P0 (audit 08/10/2026): bản cũ cắt thân nhánh TRUE từ sau "{% if "
+    # thay vì sau toàn bộ tag mở "{% if ... %}" -> điều kiện + "%}" bị rò vào HTML
+    # (115 điểm trên 28/44 trang). Bản cũ còn đọc lại điều kiện trong cửa sổ 200
+    # ký tự (nguồn crash tiềm ẩn) và không hiểu {% elif %}.
     def process_ifs(s, c):
         out, pos = [], 0
-        tag_re = re.compile(r"\{%\s*(if\b[^%]*|else|endif)\s*%\}")
+        tag_re = re.compile(r"\{%\s*(if\b[^%]*|elif\b[^%]*|else|endif)\s*%\}")
+        open_re = re.compile(r"\{%\s*if\s+([^%]+?)\s*%\}")
         while True:
-            m_if = re.search(r"\{%\s*if\s", s[pos:])
-            if not m_if:
+            m_open = open_re.search(s, pos)
+            if not m_open:
                 out.append(s[pos:])
                 break
-            start = pos + m_if.start()
-            depth_i = 0
+            start, body_start = m_open.start(), m_open.end()  # thân if nằm SAU tag đủ
+            depth_i = 1  # đang bên trong 1 if (tag mở đã nằm ngoài cửa sổ quét)
             end_of_tag = None
-            else_at = None
+            branches = [(m_open.group(1).strip(), body_start, body_start)]
             m = None
-            for m in tag_re.finditer(s, start):
-                if m.group(1).startswith("if"):
+            for m in tag_re.finditer(s, body_start):
+                g = m.group(1)
+                if g.startswith("if"):
                     depth_i += 1
-                elif m.group(1) == "endif":
+                elif g == "endif":
                     depth_i -= 1
                     if depth_i == 0:
                         end_of_tag = m.end()
                         break
-                elif m.group(1) == "else" and depth_i == 1:
-                    else_at = (m.start(), m.end())
+                elif depth_i == 1 and (g == "else" or g.startswith("elif")):
+                    # đóng nhánh hiện tại, mở nhánh kế tiếp (else = điều kiện None)
+                    branches[-1] = (branches[-1][0], branches[-1][1], m.start())
+                    cond = None if g == "else" else g[4:].strip()
+                    branches.append((cond, m.end(), m.end()))
             if end_of_tag is None:
                 raise RuntimeError("if thiếu endif: " + s[start:start + 100])
-            inner = s[pos + m_if.end(): (else_at[0] if else_at else end_of_tag - len(m.group(0)))]
-            # lấy lại if tag đầy đủ để biết điều kiện
-            m_open = re.match(r"\{%\s*if\s+(.+?)\s*%\}", s[start:pos + m_if.end() + 200])
-            cond = m_open.group(1)
-            if eval_cond(cond, c):
-                body = inner
-            else:
-                body = s[else_at[1]: end_of_tag - len(m.group(0))] if else_at else ""
+            endif_tag_start = end_of_tag - len(m.group(0))
+            branches[-1] = (branches[-1][0], branches[-1][1], endif_tag_start)
+            # Django: chọn nhánh ĐẦU TIÊN thỏa (else luôn thỏa nếu tới lượt)
+            chosen = ""
+            for cond, b_from, b_to in branches:
+                if cond is None or eval_cond(cond, c):
+                    chosen = s[b_from:b_to]
+                    break
             out.append(s[pos:start])
-            out.append(process_ifs(body, c))
+            out.append(process_ifs(chosen, c))
             pos = end_of_tag
         return "".join(out)
 
@@ -277,21 +290,35 @@ def render_dj(text, ctx, depth=0, cur_file=None):
     text = CSRF_RE.sub("", text)
     # request.path -> path Django của trang hiện tại (bake lúc build)
     text = text.replace("{{ request.path }}", ctx.get("__dj_path__", "/"))
-    # các biến {{ }} còn lại (rất hiếm): default filter hoặc rỗng
-    text = re.sub(r"\{\{\s*[a-zA-Z_][a-zA-Z0-9_]*(\|default:[\"'][^\"']*[\"'])?\s*\}\}",
-                  lambda m: (m.group(1) or "").split(":", 1)[-1].strip("'\"") if m.group(1) else "",
-                  text)
+    # Biến {{ }} còn lại: giá trị từ ctx (gồm biến từ include ... with ...);
+    # có |default:"x" thì x chỉ dùng khi biến rỗng — đúng ngữ nghĩa Django.
+    # (Bản cũ luôn trả rỗng cho biến trần -> include chứa {{ var }} mất dữ liệu.)
+    def _subst_var(m):
+        name, dflt = m.group(1), m.group(2)
+        val = str(ctx.get(name, ""))
+        if not val and dflt:
+            return dflt.split(":", 1)[1].strip("'\"")
+        return val
+    text = re.sub(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)(\|default:[\"'][^\"']*[\"'])?\s*\}\}",
+                  _subst_var, text)
     return text
 
 
 # --------------------------------------------------- URL/API REWRITES ------
 def path_to_page(url):
+    """Path Django -> file .html. Route tĩnh ưu tiên trước route tham số;
+    query/fragment giữ nguyên; id được encode; query nối bằng '&' (P1-4)."""
     if not url:
         return url
     if re.match(r"^(https?:|tel:|mailto:|data:|#|//)", url):
         return url
     if ".html" in url:
         return url
+    frag = ""
+    hi = url.find("#")
+    if hi >= 0:
+        frag = url[hi:]
+        url = url[:hi]
     q = ""
     if "?" in url:
         url, q = url.split("?", 1)
@@ -300,9 +327,11 @@ def path_to_page(url):
         url += "/"
     m = re.match(r"^(/[a-z0-9-]+)/([^/]+)/$", url)
     if m and (m.group(1) + "/<id>/") in PATH_TO_PAGE:
-        return PATH_TO_PAGE[m.group(1) + "/<id>/"] + "?id=" + m.group(2) + q
+        from urllib.parse import quote
+        extra = "&" + q[1:] if q else ""
+        return PATH_TO_PAGE[m.group(1) + "/<id>/"] + "?id=" + quote(m.group(2), safe="") + extra + frag
     if url in PATH_TO_PAGE:
-        return PATH_TO_PAGE[url] + q
+        return PATH_TO_PAGE[url] + q + frag
     return None
 
 
@@ -452,6 +481,14 @@ def main():
 
         # ---- verify ----
         leftovers = []
+        # Bất biến chống mảnh điều kiện cụt (bug P0 audit 08/10/2026): "%}" lẻ
+        # loi không thuộc tag {% ... %} nào. Loại trừ %} đứng sát sau chữ số/%
+        # (CSS/JS hợp lệ kiểu "100%}" không bị báo nhầm).
+        leak_spans = [(m.start(), m.end()) for m in re.finditer(r"\{%[\s\S]*?%\}", html)]
+        for m in re.finditer(r"(?<![0-9%])%\}", html):
+            if not any(a <= m.start() < b for a, b in leak_spans):
+                ctx_snip = html[max(0, m.start() - 45):m.start()].replace("\n", " ")[-45:]
+                leftovers.append("LEAK: ..." + ctx_snip + "%}")
         for m in list(re.finditer(r"\{%[\s\S]{0,80}?%\}", html))[:5]:
             leftovers.append("DJANGO: " + m.group(0)[:60])
         for m in list(re.finditer(r"\{\{[^}]{0,60}\}\}", html))[:3]:

@@ -21,11 +21,8 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "validate": "npm run typecheck && npm run build",
-    "port:pages": "python3 scripts/port_pages.py",
-    "css:build": "python3 scripts/build_cdn_css.py",
-    "css:check": "python3 scripts/check_css_coverage.py",
-    "regen": "npm run port:pages && npm run css:build",
-    "test": "python3 -m unittest discover -s tests -p 'test_*.py' && node tests/test_routing.mjs"
+    "test": "node tests/parity.test.mjs",
+    "qa:server": "python3 scripts/dev_server.py 3000"
   },
   "dependencies": {
     "jotai": "^2.12.1",

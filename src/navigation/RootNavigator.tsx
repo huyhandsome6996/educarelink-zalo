@@ -29,20 +29,27 @@ const Inner: React.FC = () => {
     ? "parent"
     : "worker";
 
-  /* Khởi tạo / đổi nhánh khi auth state thay đổi */
+  /* Khởi tạo / đổi nhánh khi auth state thay đổi.
+     BUGFIX: so sánh role prop là không đủ (prop đổi ngay lập tức) — phải so sánh
+     role TRƯỚC đó qua ref để setRole chạy đúng 1 lần khi nhánh thực sự đổi. */
+  const prevRoleRef = useRef<Role | null>(null);
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      if (!mounted.current || nav.role !== "guest") nav.setRole("guest");
-      mounted.current = true;
+      if (prevRoleRef.current !== "guest") {
+        prevRoleRef.current = "guest";
+        nav.setRole("guest");
+      }
       return;
     }
-    mounted.current = true;
     if (user.first_login) return; // Onboarding render trực tiếp, không cần tab
     if (user.role === "worker" && !user.is_approved) return;
     const tab =
       role === "admin" ? "AdminDashboard" : role === "parent" ? "ParentHome" : "WorkerFeed";
-    if (nav.role !== role) nav.setRole(role, tab);
+    if (prevRoleRef.current !== role) {
+      prevRoleRef.current = role;
+      nav.setRole(role, tab);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, isLoading, role]);
 

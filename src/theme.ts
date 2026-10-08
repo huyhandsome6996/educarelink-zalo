@@ -97,25 +97,25 @@ export interface Typo {
   fontSize: number;
   fontWeight: number;
   letterSpacing: number;
-  lineHeight: number;
+  lineHeight: string;
 }
 
 /** TYPO nguyên văn từ colors.js (RN fontSize/lineHeight = dp == px logical) */
 export const TYPO = {
-  h1: { fontFamily: FONT_HEAD, fontSize: 28, fontWeight: 800, letterSpacing: -0.5, lineHeight: 34 },
-  h2: { fontFamily: FONT_HEAD, fontSize: 22, fontWeight: 800, letterSpacing: -0.3, lineHeight: 28 },
-  h3: { fontFamily: FONT_HEAD, fontSize: 18, fontWeight: 800, letterSpacing: -0.2, lineHeight: 24 },
-  h4: { fontFamily: FONT_HEAD, fontSize: 16, fontWeight: 700, letterSpacing: 0, lineHeight: 22 },
-  h5: { fontFamily: FONT_HEAD, fontSize: 14, fontWeight: 700, letterSpacing: 0.1, lineHeight: 20 },
+  h1: { fontFamily: FONT_HEAD, fontSize: 28, fontWeight: 800, letterSpacing: -0.5, lineHeight: '34px'},
+  h2: { fontFamily: FONT_HEAD, fontSize: 22, fontWeight: 800, letterSpacing: -0.3, lineHeight: '28px'},
+  h3: { fontFamily: FONT_HEAD, fontSize: 18, fontWeight: 800, letterSpacing: -0.2, lineHeight: '24px'},
+  h4: { fontFamily: FONT_HEAD, fontSize: 16, fontWeight: 700, letterSpacing: 0, lineHeight: '22px'},
+  h5: { fontFamily: FONT_HEAD, fontSize: 14, fontWeight: 700, letterSpacing: 0.1, lineHeight: '20px'},
 
-  body: { fontFamily: FONT_BODY, fontSize: 15, fontWeight: 500, letterSpacing: 0.1, lineHeight: 22 },
-  bodyLarge: { fontFamily: FONT_BODY, fontSize: 17, fontWeight: 600, letterSpacing: 0, lineHeight: 24 },
-  bodySmall: { fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, letterSpacing: 0.1, lineHeight: 18 },
+  body: { fontFamily: FONT_BODY, fontSize: 15, fontWeight: 500, letterSpacing: 0.1, lineHeight: '22px'},
+  bodyLarge: { fontFamily: FONT_BODY, fontSize: 17, fontWeight: 600, letterSpacing: 0, lineHeight: '24px'},
+  bodySmall: { fontFamily: FONT_BODY, fontSize: 13, fontWeight: 500, letterSpacing: 0.1, lineHeight: '18px'},
 
-  caption: { fontFamily: FONT_BODY, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, lineHeight: 16 },
-  overline: { fontFamily: FONT_BODY, fontSize: 11, fontWeight: 800, letterSpacing: 0.8, lineHeight: 14 },
-  button: { fontFamily: FONT_BODY, fontSize: 16, fontWeight: 700, letterSpacing: 0.2, lineHeight: 20 },
-  buttonSmall: { fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, letterSpacing: 0.3, lineHeight: 18 },
+  caption: { fontFamily: FONT_BODY, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, lineHeight: '16px'},
+  overline: { fontFamily: FONT_BODY, fontSize: 11, fontWeight: 800, letterSpacing: 0.8, lineHeight: '14px'},
+  button: { fontFamily: FONT_BODY, fontSize: 16, fontWeight: 700, letterSpacing: 0.2, lineHeight: '20px'},
+  buttonSmall: { fontFamily: FONT_BODY, fontSize: 14, fontWeight: 700, letterSpacing: 0.3, lineHeight: '18px'},
 } satisfies Record<string, Typo>;
 
 export type TypoKey = keyof typeof TYPO;

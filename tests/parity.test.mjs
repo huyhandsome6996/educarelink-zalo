@@ -45,7 +45,7 @@ for (const [k, v] of [
   ["surfaceWarm: '#fff8f6'", 1], ["background: '#F7F7F7'", 1], ["outlineVariant: '#e1bfb3'", 1],
   ["outline: '#8d7166'", 1], ["onSurfaceVariant: '#594138'", 1], ["secondary: '#2DB84B'", 1],
 ]) ok(theme.includes(k), `theme token ${k}`);
-ok(theme.includes("fontSize: 28") && theme.includes("lineHeight: 34"), "theme TYPO.h1 28/34");
+ok(theme.includes("fontSize: 28") && theme.includes("lineHeight: '34px'"), "theme TYPO.h1 28/34 (px, không unitless);");
 ok(theme.includes("TAB_BAR_HEIGHT = 84"), "theme tab bar 84 (Android chuẩn RN)");
 
 /* ---------- 3. Tab bar cấu hình đúng AppNavigator ---------- */

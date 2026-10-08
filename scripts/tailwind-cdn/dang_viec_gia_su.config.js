@@ -41,6 +41,6 @@ var cfg = {
         }
       }
     };
-cfg.content = ["/home/z/my-project/work/educarelink-zalo/src/public/pages/dang-viec-gia-su.html"];
+cfg.content = ["src/public/pages/dang-viec-gia-su.html"];
 cfg.plugins = cfg.plugins || [];
 module.exports = cfg;

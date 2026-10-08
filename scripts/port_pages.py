@@ -14,12 +14,21 @@ Nguyên tắc: KHÔNG tự vẽ lại UI. Mỗi trang = template gốc, chỉ th
   4) Tailwind CDN -> CSS precompiled (build_cdn_css.py)
 Repo gốc chỉ ĐỌC, không hề bị sửa.
 """
+import argparse
 import os
 import re
 import sys
+from pathlib import Path
 
-SRC = "/home/z/my-project/work/educarelink-backend-4-12-2026/frontend/templates/frontend"
-OUT = "/home/z/my-project/work/educarelink-zalo/src/public/pages"
+# Đường dẫn dựa trên vị trí file (P1-5 audit): chạy được ở MỌI checkout
+# Windows/Linux, không phụ thuộc cwd hay máy tác giả.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OUT = str(REPO_ROOT / "src" / "public" / "pages")
+# Repo gốc nằm CẠNH repo zalo (quy ước README §Regenerate) — CHỈ ĐỌC.
+# Có thể override bằng biến môi trường EDUCARELINK_SRC hoặc cờ --src.
+SRC = (os.environ.get("EDUCARELINK_SRC")
+       or str(REPO_ROOT.parent / "educarelink-backend-4-12-2026"
+              / "frontend" / "templates" / "frontend"))
 
 # ------------------------------------------------------------- ROUTES ------
 URL_NAMES = {
@@ -446,10 +455,36 @@ def rel_static(text):
 
 
 # ------------------------------------------------------------------ MAIN ---
-def main():
+def parse_args(argv=None):
+    ap = argparse.ArgumentParser(
+        description="Port template Django (repo gốc, chỉ đọc) -> HTML tĩnh cho Zalo Mini App")
+    ap.add_argument("--src", default=SRC,
+                    help="Thư mục template gốc (mặc định: $EDUCARELINK_SRC hoặc repo gốc cạnh repo này)")
+    ap.add_argument("--out", default=OUT, help="Thư mục xuất HTML (mặc định: src/public/pages)")
+    ap.add_argument("--only", action="append", metavar="TEN_TRANG",
+                    help="Chỉ port trang chỉ định (lặp được; nhận tên template hoặc tên file xuất)")
+    return ap.parse_args(argv)
+
+
+def main(argv=None):
+    global SRC, OUT
+    args = parse_args(argv)
+    SRC, OUT = args.src, args.out
+    if not os.path.isdir(SRC):
+        sys.exit(
+            "LỖI: không tìm thấy template gốc tại:\n  %s\n"
+            "  -> clone repo gốc CẠNH repo này (educarelink-backend-4-12-2026),\n"
+            "     hoặc đặt biến môi trường EDUCARELINK_SRC, hoặc dùng --src" % SRC)
     os.makedirs(OUT, exist_ok=True)
+    pages = PAGES
+    if args.only:
+        wanted = set(args.only)
+        pages = [p for p in PAGES if p[0] in wanted or p[1] in wanted]
+        missing = wanted - {p[0] for p in pages} - {p[1] for p in pages}
+        if missing:
+            sys.exit("LỖI: --only không khớp trang nào: %s" % ", ".join(sorted(missing)))
     errors, report = [], []
-    for tpl, out_name, cfg in PAGES:
+    for tpl, out_name, cfg in pages:
         with open(os.path.join(SRC, tpl), encoding="utf-8") as f:
             raw = f.read()
 

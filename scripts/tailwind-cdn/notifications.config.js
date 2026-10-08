@@ -9,6 +9,6 @@ var cfg = {
         }
       }
     };
-cfg.content = ["/home/z/my-project/work/educarelink-zalo/src/public/pages/notifications.html"];
+cfg.content = ["src/public/pages/notifications.html"];
 cfg.plugins = cfg.plugins || [];
 module.exports = cfg;

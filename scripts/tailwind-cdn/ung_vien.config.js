@@ -79,6 +79,6 @@ var cfg = {
         }
       }
     };
-cfg.content = ["/home/z/my-project/work/educarelink-zalo/src/public/pages/ung-vien.html"];
+cfg.content = ["src/public/pages/ung-vien.html"];
 cfg.plugins = cfg.plugins || [];
 module.exports = cfg;

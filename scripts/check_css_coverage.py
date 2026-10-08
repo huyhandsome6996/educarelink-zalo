@@ -9,9 +9,12 @@ CSS selector escape: : . / [ ] ( ) # % , ! & ' * -> \char,
 import os
 import re
 import sys
+from pathlib import Path
 
-PAGES = "/home/z/my-project/work/educarelink-zalo/src/public/pages"
-CSS = "/home/z/my-project/work/educarelink-zalo/src/public/static/css"
+# Đường dẫn dựa trên vị trí file (P1-5 audit) — chạy được ở mọi checkout.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+PAGES = str(REPO_ROOT / "src" / "public" / "pages")
+CSS = str(REPO_ROOT / "src" / "public" / "static" / "css")
 
 CHECKS = [
     ("parent-home.html", ["cdn-parent_home.css"]),

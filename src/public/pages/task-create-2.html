@@ -1,0 +1,921 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<script src="../static/js/edc-bootstrap.js"></script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
+    <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+    <title>Đăng việc mới (Bước 2) | EduCareLink</title>
+    <link rel="stylesheet" href="../static/css/tailwind-radius-a.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <!-- Tailwind CSS -->
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Custom scrollbar for form area */
+        .form-scroll::-webkit-scrollbar { width: 6px; }
+        .form-scroll::-webkit-scrollbar-track { background: transparent; }
+        .form-scroll::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 999px; }
+        .form-scroll::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+
+
+        /* Toast animation */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in { animation: slideInRight 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards; }
+
+        /* Mobile bottom nav safe area */
+        @media (max-width: 1023px) {
+            .main-content { padding-bottom: 5.5rem; }
+        }
+
+        /* Step indicator */
+        .step-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .step-dot.active { background: #F26522; transform: scale(1.2); }
+        .step-dot.completed { background: #2DB84B; }
+        .step-dot.pending { background: #E5E7EB; }
+        .step-line {
+            height: 2px; flex: 1;
+            transition: background 0.3s ease;
+        }
+        .step-line.completed { background: #2DB84B; }
+        .step-line.pending { background: #E5E7EB; }
+
+        /* Form inputs enhanced */
+        .form-input {
+            transition: all 0.2s ease;
+            border: 1.5px solid #E5E7EB;
+        }
+        .form-input:focus {
+            border-color: #F26522;
+            box-shadow: 0 0 0 3px rgba(242, 101, 34, 0.12);
+        }
+        .form-input:hover:not(:focus) {
+            border-color: #D1D5DB;
+        }
+
+        /* Button hover effect */
+        .btn-primary {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(242, 101, 34, 0.25);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(242, 101, 34, 0.35);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(242, 101, 34, 0.2);
+        }
+
+        /* Mobile page transition */
+        @media (max-width: 1023px) {
+            body {
+                opacity: 0;
+                transform: translateY(12px);
+                transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            body.page-loaded { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body class="bg-background text-textPrimary min-h-screen">
+
+    <!-- ============================================ -->
+    <!-- SIDEBAR (Desktop ≥1024px)                    -->
+    <!-- ============================================ -->
+    <aside id="sidebar" class="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:w-[260px] lg:bg-surface lg:border-r lg:border-border lg:z-40">
+
+<!-- ============================================================ -->
+<!-- _parent_sidebar.html — Sidebar Phụ huynh chuẩn hóa (Stitch UI) -->
+<!-- Single Source of Truth cho toàn bộ các trang phụ huynh         -->
+<!-- Hỗ trợ active_tab: home | tasks | diary | matching/create      -->
+<!--                    | credit | chatbot | help | settings/profile -->
+<!-- ============================================================ -->
+
+<style>
+  /* 1. KHÓA CỨNG KÍCH THƯỚC SIDEBAR TUYỆT ĐỐI (260px) TRÊN MỌI TRANG VÀ ENGINE CSS */
+  #sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    background-color: #ffffff !important;
+    border-right: 1px solid #e5e7eb !important;
+    z-index: 40 !important;
+  }
+
+  /* Đảm bảo nội dung chính luôn dịch lề 260px trên desktop */
+  @media (min-width: 1024px) {
+    main, .main-content, .chat-main-area, .main-area {
+      margin-left: 260px !important;
+      box-sizing: border-box !important;
+    }
+  }
+
+  /* 2. TRIỆT TIÊU LAYOUT SHIFT DO THANH CUỘN CỬA SỔ (WINDOW SCROLLBAR) */
+  html {
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
+    box-sizing: border-box;
+  }
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  /* 3. LÀM MƯỢT VÀ ẨN THANH CUỘN THÔ CỦA SIDEBAR TRÊN WINDOWS CHROME */
+  /* Vẫn cho phép cuộn mượt bằng con lăn chuột/trackpad nhưng không hiển thị thanh cuộn thô 17px gây co giãn */
+  .psb-scroll {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none !important; /* Firefox & Chrome 121+ */
+    -ms-overflow-style: none !important; /* IE/Edge legacy */
+  }
+  .psb-scroll::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* 4. ĐỒNG BỘ CẤU TRÚC VIỀN TRÁI VÀ PADDING ITEM ĐỂ KHÔNG BAO GIỜ BỊ GIẬT/LỆCH PIXEL */
+  .psb-nav-item {
+    border-left: 4px solid transparent;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .psb-nav-item.active {
+    border-left-color: #F26522 !important;
+    background-color: rgba(255, 247, 237, 0.9) !important;
+    color: #c2410c !important;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 450, 'GRAD' 0, 'opsz' 22;
+    vertical-align: middle;
+  }
+  .material-symbols-outlined.fill-icon {
+    font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 22;
+  }
+  /* Đồng bộ với bottom-nav /parent/: icon tab active dùng class `filled` —
+     trang dùng build CSS không có định nghĩa này (trước đây chỉ /parent/ có) */
+  .material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 22;
+  }
+</style>
+
+<!-- Brand Logo & Context Area -->
+<div class="px-4 py-3.5 border-b border-slate-100/90 shrink-0">
+  <div class="flex items-center gap-3">
+    <!-- Logo Icon Box using project logo -->
+    <div class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200/80 flex items-center justify-center shadow-sm shrink-0">
+      <img src="../static/images/logo.png" alt="EduCareLink" class="h-7 w-7 object-contain">
+    </div>
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center justify-between gap-1.5">
+        <div class="font-heading font-extrabold text-xl tracking-tight text-slate-900 leading-tight truncate" style="font-family: 'Manrope', sans-serif;">
+          Edu<span class="text-[#F26522]">Care</span>Link
+        </div>
+      </div>
+      <div class="mt-1 flex items-center">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-[#c2410c] border border-orange-200/70 font-semibold text-[10px] tracking-wide">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#F26522] animate-pulse"></span>
+          Phụ huynh
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Navigation List with Categorized Grouping -->
+<nav class="flex-1 px-3 py-3 space-y-4 overflow-y-auto psb-scroll" data-purpose="main-navigation">
+
+  <!-- Group 1: QUẢN LÝ & DỊCH VỤ -->
+  <div class="space-y-1">
+    <div class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 select-none">
+      Quản lý &amp; Dịch vụ
+    </div>
+
+    <!-- 1. Trang chủ -->
+    <a href="parent-home.html"
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">home</span>
+        <span class="truncate">Trang chủ</span>
+      </div>
+      
+    </a>
+
+    <!-- 2. Việc của tôi -->
+    <a href="parent-tasks.html"
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">assignment</span>
+        <span class="truncate">Việc của tôi</span>
+      </div>
+      
+    </a>
+
+    <!-- 3. Nhật ký chăm sóc -->
+    <a href="parent-care-diary-history.html"
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">auto_stories</span>
+        <span class="truncate">Nhật ký chăm sóc</span>
+      </div>
+      
+    </a>
+
+    <!-- 4. Đăng việc ghép cặp (Special with High Contrast Badge) -->
+    <a href="dang-viec-select.html"
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active_tab == 'matching' or active_tab == 'create' %}active font-semibold rounded-l-none shadow-xs">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl fill-icon text-[#F26522]">auto_awesome</span>
+        <span class="truncate active_tab == 'matching' or active_tab == 'create' %}font-bold text-[#c2410c]">Đăng việc ghép cặp</span>
+      </div>
+      <span class="px-2 py-0.5 rounded-full bg-[#F26522] text-white font-bold text-[10px] tracking-wide shadow-sm shadow-orange-500/20 shrink-0">MỚI</span>
+    </a>
+
+    <!-- 5. Ví credit -->
+    <a href="vi-credit.html"
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">account_balance_wallet</span>
+        <span class="truncate ">Ví credit</span>
+      </div>
+      
+    </a>
+  </div>
+
+  <!-- Group 2: HỖ TRỢ & HỆ THỐNG -->
+  <div class="space-y-1">
+    <div class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 select-none">
+      Hỗ trợ &amp; Hệ thống
+    </div>
+
+    <!-- 6. AI Trợ lý -->
+    <a href="chatbot.html"
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">smart_toy</span>
+        <span class="truncate">AI Trợ lý</span>
+      </div>
+      
+    </a>
+
+    <!-- 7. Hướng dẫn sử dụng -->
+    <a href="onboarding-parent.html"
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">help_outline</span>
+        <span class="truncate">Hướng dẫn sử dụng</span>
+      </div>
+      
+    </a>
+
+    <!-- 8. Cài đặt / Hồ sơ — Batch 1 Bug #6: nếu người xem là Carepartner
+         (trang dùng chung), script cuối file sẽ tự trỏ link này về hồ sơ
+         Carepartner thay vì hồ sơ Phụ huynh -->
+    <a href="parent-profile.html" data-psb-settings-link
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">settings</span>
+        <span class="truncate">Cài đặt</span>
+      </div>
+      
+    </a>
+  </div>
+</nav>
+
+<!-- Bottom: User Profile Card & Safe Log out -->
+<div class="p-3 border-t border-slate-200/90 space-y-2 bg-slate-50/50 shrink-0" data-purpose="sidebar-user-footer">
+  <!-- Profile Interactive Capsule — cũng bị script Role-Guard điều hướng lại
+       về hồ sơ Carepartner khi role = worker (Bug #6) -->
+  <a href="parent-profile.html" data-psb-settings-link
+     class="flex items-center justify-between p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 transition-all cursor-pointer shadow-xs group">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="relative shrink-0">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white overflow-hidden">
+          <img id="sidebar-avatar" alt="Avatar" class="w-full h-full object-cover"
+               src="https://ui-avatars.com/api/?name=User&background=F26522&color=fff"/>
+        </div>
+        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></span>
+      </div>
+      <div class="truncate min-w-0">
+        <h4 id="sidebar-name" class="text-sm font-semibold text-slate-800 truncate group-hover:text-[#F26522] transition-colors">Đang tải...</h4>
+        <p id="sidebar-subtitle" class="text-[11px] text-slate-500 truncate">Phụ huynh</p>
+      </div>
+    </div>
+    <span class="material-symbols-outlined text-slate-400 group-hover:text-slate-600 text-lg shrink-0 transition-colors">chevron_right</span>
+  </a>
+
+  <!-- Safe Logout Button -->
+  <button onclick="handleLogout()"
+          class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium transition-colors"
+          type="button">
+    <span class="material-symbols-outlined text-slate-400 group-hover:text-rose-500 text-base">logout</span>
+    <span>Đăng xuất tài khoản</span>
+  </button>
+</div>
+
+<!-- Self-healing script: Đảm bảo sidebar luôn có tên, avatar và logout trên mọi trang -->
+<script>
+  (function initParentSidebar() {
+    // ═══ ROLE GUARD (Batch 1 — Bug #6) ═══
+    // Sidebar phụ huynh có thể được nhúng vào trang dùng chung (don,
+    // vi-credit, khang-cao qua _role_chrome.html — bình thường chỉ chrome
+    // đúng role mới hiển thị). Phòng khi chrome phụ huynh vẫn hiển thị
+    // nhầm cho Carepartner (role chưa kịp xác định / cache), mọi link
+    // Cài đặt/Hồ sơ phải tự chuyển về hồ sơ Carepartner — KHÔNG cho bấm
+    // văng sang luồng phụ huynh.
+    function psbApplyRoleGuard() {
+      var role = null;
+      try { role = localStorage.getItem('role'); } catch (e) {}
+      if (role === 'worker') {
+        document.querySelectorAll('[data-psb-settings-link]').forEach(function (a) {
+          a.setAttribute('href', 'worker-profile.html');
+        });
+        var sub = document.getElementById('sidebar-subtitle');
+        if (sub) sub.textContent = 'Carepartner';
+      }
+    }
+    psbApplyRoleGuard();
+    document.addEventListener('DOMContentLoaded', psbApplyRoleGuard);
+
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        const nameEl = document.getElementById('sidebar-name');
+        const avtEl = document.getElementById('sidebar-avatar');
+        const displayName = u.first_name || u.username || 'Phụ huynh';
+        if (nameEl && (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim())) {
+          nameEl.textContent = displayName;
+        }
+        if (avtEl && u.avatar_url) {
+          avtEl.src = u.avatar_url;
+        } else if (avtEl && !avtEl.src.includes('ui-avatars')) {
+          avtEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=F26522&color=fff`;
+        }
+      }
+    } catch (e) {
+      console.warn('Sidebar user auto-populate error:', e);
+    }
+
+    if (typeof window.handleLogout !== 'function') {
+      window.handleLogout = function() {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = 'login.html';
+      };
+    }
+
+    // Fallback riêng của EduCareLink: web login KHÔNG lưu localStorage 'user'
+    // (chỉ lưu token/role/avatar_url rời) — nên lấy trực tiếp từ /api/profile/,
+    // cùng nguồn sự thật với _parent_chrome.html, để mọi trang phụ huynh đều
+    // có tên + avatar ngay cả khi trang chưa có script đổ dữ liệu riêng.
+    (async function psbLoadProfile() {
+      try {
+        const nameEl = document.getElementById('sidebar-name');
+        const avtEl = document.getElementById('sidebar-avatar');
+        if (!nameEl || !avtEl) return;
+        const token = localStorage.getItem('token');
+        if (!token) {
+          if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
+            nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
+          }
+          return;
+        }
+        const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (r.status === 401) {
+          // Token hỏng hoặc tài khoản không tồn tại trên DB
+          localStorage.removeItem('token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+          if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
+            nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
+          }
+          return;
+        }
+        if (!r.ok) return;
+        const p = await r.json();
+        const fullName = (p.first_name && p.last_name)
+          ? (p.first_name + ' ' + p.last_name)
+          : (p.username || 'Phụ huynh');
+        nameEl.textContent = fullName;
+        if (p.avatar_url) {
+          avtEl.src = p.avatar_url;
+        } else {
+          avtEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fullName) + '&background=F26522&color=fff';
+        }
+      } catch (e) {
+        const nameEl = document.getElementById('sidebar-name');
+        if (nameEl && (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim())) {
+          nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
+        }
+      }
+    })();
+  })();
+</script>
+
+    </aside>
+
+    <!-- ============================================ -->
+    <!-- MOBILE HEADER (<1024px)                      -->
+    <!-- ============================================ -->
+    <header class="lg:hidden fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-border">
+        <div class="flex items-center justify-between px-4 h-14">
+            <img src="../static/images/logo.png" alt="Logo EduCareLink" class="w-8 h-8 rounded-lg object-contain shrink-0" loading="eager">
+            <div class="flex items-center gap-2.5">
+                <button onclick="history.back()" class="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <span class="material-symbols-outlined text-textSecondary">arrow_back</span>
+                </button>
+                <span class="font-headline font-bold text-base text-textPrimary">Đăng việc (Bước 2)</span>
+            </div>
+            <div class="w-9"></div>
+        </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT AREA                            -->
+    <!-- ============================================ -->
+    <main class="lg:ml-[260px] min-h-screen main-content">
+        <!-- TOP HEADER BAR (Desktop) -->
+        <div class="hidden lg:flex items-center justify-between px-8 py-5 bg-surface border-b border-border sticky top-0 z-30">
+            <div>
+                <h1 class="font-headline font-bold text-2xl text-textPrimary">Đăng việc mới</h1>
+                <p class="text-textSecondary text-sm mt-0.5">Bước 2: Lịch trình & Ngân sách</p>
+            </div>
+            <a href="task-create-1.html" class="text-primary hover:text-primaryDark font-semibold text-sm flex items-center gap-1 transition-colors">
+                <span class="material-symbols-outlined text-lg">arrow_back</span> Quay lại bước 1
+            </a>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="px-4 lg:px-8 pt-6 lg:pt-8">
+            <div class="flex items-center gap-2 max-w-2xl">
+                <div class="flex items-center gap-2">
+                    <div class="step-dot completed"></div>
+                    <span class="text-xs font-semibold text-secondary hidden sm:inline">Thông tin</span>
+                </div>
+                <div class="step-line completed"></div>
+                <div class="flex items-center gap-2">
+                    <div class="step-dot active"></div>
+                    <span class="text-xs font-semibold text-primary hidden sm:inline">Lịch trình</span>
+                </div>
+                <div class="step-line pending"></div>
+                <div class="flex items-center gap-2">
+                    <div class="step-dot pending"></div>
+                    <span class="text-xs font-medium text-textMuted hidden sm:inline">Hoàn tất</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT BODY -->
+        <div class="px-4 lg:px-8 pb-8 pt-6 lg:pt-6">
+            <div class="max-w-2xl space-y-6">
+
+                <!-- Summary from Step 1 -->
+                <div id="step1-summary" class="bg-primaryLight rounded-2xl p-5 border border-primarySoft/50">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined filled text-primary text-lg">info</span>
+                        <span class="font-semibold text-primary text-sm">Thông tin từ bước 1</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <span class="text-textMuted">Dịch vụ:</span>
+                            <p id="summary-category" class="font-semibold text-textPrimary">—</p>
+                        </div>
+                        <div>
+                            <span class="text-textMuted">Tiêu đề:</span>
+                            <p id="summary-title" class="font-semibold text-textPrimary">—</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Section -->
+                <section class="bg-surface rounded-2xl p-6 border border-border shadow-sm">
+                    <h2 class="font-headline font-bold text-lg text-textPrimary mb-5 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">schedule</span>
+                        Lịch trình làm việc
+                    </h2>
+                    <div class="space-y-5">
+                        <!-- Date -->
+                        <div>
+                            <label class="block text-sm font-semibold text-textPrimary mb-2">Ngày làm việc <span class="text-error">*</span></label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-textMuted text-xl">calendar_today</span>
+                                <input type="date" id="task-date" class="form-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-background text-textPrimary outline-none" required/>
+                            </div>
+                        </div>
+                        <!-- Time Range -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-textPrimary mb-2">Giờ bắt đầu <span class="text-error">*</span></label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-textMuted text-xl">play_circle</span>
+                                    <input type="time" id="task-start" class="form-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-background text-textPrimary outline-none" required/>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-textPrimary mb-2">Giờ kết thúc <span class="text-error">*</span></label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-textMuted text-xl">stop_circle</span>
+                                    <input type="time" id="task-end" class="form-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-background text-textPrimary outline-none" required/>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Duration display -->
+                        <div id="duration-display" class="hidden bg-secondaryLight rounded-xl p-4 flex items-center gap-3">
+                            <span class="material-symbols-outlined filled text-secondary">timer</span>
+                            <div>
+                                <span class="text-sm text-textSecondary">Thời lượng ước tính:</span>
+                                <p id="duration-text" class="font-bold text-secondary text-lg">—</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Budget Section -->
+                <section class="bg-surface rounded-2xl p-6 border border-border shadow-sm">
+                    <h2 class="font-headline font-bold text-lg text-textPrimary mb-5 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">payments</span>
+                        Ngân sách
+                    </h2>
+                    <div class="space-y-5">
+                        <!-- Budget Type -->
+                        <div>
+                            <label class="block text-sm font-semibold text-textPrimary mb-3">Hình thức trả lương</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" id="btn-hourly" onclick="setBudgetType('hourly')" class="py-3 px-4 rounded-xl border-2 border-primary bg-primaryLight text-primary font-semibold text-sm transition-all flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-lg">schedule</span> Theo giờ
+                                </button>
+                                <button type="button" id="btn-fixed" onclick="setBudgetType('fixed')" class="py-3 px-4 rounded-xl border-2 border-border bg-surface text-textSecondary font-semibold text-sm transition-all flex items-center justify-center gap-2 hover:border-primarySoft hover:text-primary">
+                                    <span class="material-symbols-outlined text-lg">label</span> Trọn gói
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Amount -->
+                        <div>
+                            <label class="block text-sm font-semibold text-textPrimary mb-2" id="budget-label">Mức lương theo giờ <span class="text-error">*</span></label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-textMuted font-bold">₫</span>
+                                <input type="number" id="task-budget" class="form-input w-full pl-10 pr-16 py-3.5 rounded-xl bg-background text-textPrimary outline-none font-semibold text-lg" placeholder="150.000" min="10000" required/>
+                                <span id="budget-unit" class="absolute right-4 top-1/2 -translate-y-1/2 text-textMuted font-semibold text-sm">VNĐ/giờ</span>
+                            </div>
+                            <p id="budget-hint" class="text-xs text-textMuted mt-2 ml-1">Gợi ý: 150.000 - 300.000 VNĐ/giờ cho gia sư</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Additional Notes -->
+                <section class="bg-surface rounded-2xl p-6 border border-border shadow-sm">
+                    <h2 class="font-headline font-bold text-lg text-textPrimary mb-5 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">edit_note</span>
+                        Ghi chú thêm
+                    </h2>
+                    <textarea id="task-notes" class="form-input w-full px-4 py-3.5 rounded-xl bg-background text-textPrimary outline-none resize-none" rows="3" placeholder="Yêu cầu đặc biệt, lưu ý cho người làm..."></textarea>
+                </section>
+
+                <!-- Address (from step 1, editable) -->
+                <section class="bg-surface rounded-2xl p-6 border border-border shadow-sm">
+                    <h2 class="font-headline font-bold text-lg text-textPrimary mb-5 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">location_on</span>
+                        Địa chỉ làm việc
+                    </h2>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-4 text-textMuted text-xl">place</span>
+                        <input type="text" id="task-address" class="form-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-background text-textPrimary outline-none" placeholder="Nhập địa chỉ làm việc" required/>
+                    </div>
+                </section>
+
+                <!-- Submit Buttons -->
+                <div class="flex gap-3 pt-2">
+                    <a href="task-create-1.html" class="flex-1 py-4 rounded-xl border-2 border-border text-textSecondary font-semibold text-center hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">arrow_back</span> Bước 1
+                    </a>
+                    <button onclick="submitTask()" id="submit-btn" class="flex-[2] py-4 bg-primary hover:bg-primaryDark text-white rounded-xl font-bold text-base btn-primary flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">send</span> Đăng việc
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================ -->
+    <!-- MOBILE BOTTOM NAV (<1024px)                  -->
+    <!-- ============================================ -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-border">
+        <div class="flex items-center justify-around py-2 px-4">
+            <a href="parent-home.html" class="flex flex-col items-center gap-0.5 py-1.5 px-3 text-textMuted hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-xl">home</span>
+                <span class="text-[10px] font-semibold">Trang chủ</span>
+            </a>
+            <a href="parent-tasks.html" class="flex flex-col items-center gap-0.5 py-1.5 px-3 text-textMuted hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-xl">assignment</span>
+                <span class="text-[10px] font-semibold">Việc của tôi</span>
+            </a>
+            <a href="task-create-1.html" class="flex flex-col items-center gap-0.5 py-1.5 px-3 text-primary">
+                <span class="material-symbols-outlined filled text-xl">add_circle</span>
+                <span class="text-[10px] font-bold">Đăng việc</span>
+            </a>
+            <a href="chatbot.html" class="flex flex-col items-center gap-0.5 py-1.5 px-3 text-textMuted hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-xl">smart_toy</span>
+                <span class="text-[10px] font-semibold">AI Trợ lý</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2"></div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-[90] hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-surface rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl">
+            <h3 id="confirm-title" class="font-headline font-bold text-lg text-textPrimary mb-2"></h3>
+            <p id="confirm-message" class="text-textSecondary text-sm mb-6"></p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="flex-1 py-3 rounded-xl border border-border text-textSecondary font-semibold hover:bg-gray-50 transition-colors">Hủy</button>
+                <button id="confirm-ok" class="flex-1 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primaryDark transition-colors">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ CONSTANTS ============
+        const API_BASE = window.API_BASE;
+        const LOGIN_URL = 'login.html';
+
+        // ============ UTILITIES ============
+        function getAccessToken() {
+            return localStorage.getItem('token') || sessionStorage.getItem('token');
+        }
+
+        async function apiFetch(url, options = {}) {
+            let token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = LOGIN_URL;
+                return new Response(null, { status: 401 });
+            }
+            options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
+            let response = await fetch(url, options);
+
+            if (response.status === 401) {
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (refreshToken) {
+                    try {
+                        const refreshResp = await fetch(API_BASE + '/auth/token/refresh/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ refresh: refreshToken })
+                        });
+                        if (refreshResp.ok) {
+                            const refreshData = await refreshResp.json();
+                            localStorage.setItem('token', refreshData.access);
+                            if (refreshData.refresh) localStorage.setItem('refresh_token', refreshData.refresh);
+                            options.headers['Authorization'] = 'Bearer ' + refreshData.access;
+                            response = await fetch(url, options);
+                        } else {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('refresh_token');
+                            window.location.href = LOGIN_URL;
+                            return new Response(null, { status: 401 });
+                        }
+                    } catch (e) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('refresh_token');
+                        window.location.href = LOGIN_URL;
+                        return new Response(null, { status: 401 });
+                    }
+                } else {
+                    localStorage.removeItem('token');
+                    window.location.href = LOGIN_URL;
+                    return new Response(null, { status: 401 });
+                }
+            }
+            return response;
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const colors = {
+                success: 'bg-secondary text-white',
+                error: 'bg-error text-white',
+                info: 'bg-primary text-white',
+                warning: 'bg-warning text-white'
+            };
+            const icons = { success: 'check_circle', error: 'error', info: 'info', warning: 'warning' };
+            const toast = document.createElement('div');
+            toast.className = `animate-slide-in ${colors[type]} px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm font-medium min-w-[280px]`;
+            toast.innerHTML = `<span class="material-symbols-outlined filled text-lg">${icons[type]}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function showConfirm(title, message, onOk) {
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('confirm-ok').onclick = () => { closeConfirm(); onOk(); };
+        }
+        function closeConfirm() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden'); modal.classList.remove('flex');
+        }
+
+        function handleLogout() {
+            showConfirm('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', () => {
+                localStorage.clear(); sessionStorage.clear();
+                window.location.href = 'login.html';
+            });
+        }
+
+        // ============ BUDGET TYPE ============
+        let budgetType = 'hourly';
+        function setBudgetType(type) {
+            budgetType = type;
+            const btnHourly = document.getElementById('btn-hourly');
+            const btnFixed = document.getElementById('btn-fixed');
+            const budgetLabel = document.getElementById('budget-label');
+            const budgetUnit = document.getElementById('budget-unit');
+            const budgetHint = document.getElementById('budget-hint');
+
+            if (type === 'hourly') {
+                btnHourly.className = 'py-3 px-4 rounded-xl border-2 border-primary bg-primaryLight text-primary font-semibold text-sm transition-all flex items-center justify-center gap-2';
+                btnFixed.className = 'py-3 px-4 rounded-xl border-2 border-border bg-surface text-textSecondary font-semibold text-sm transition-all flex items-center justify-center gap-2 hover:border-primarySoft hover:text-primary';
+                budgetLabel.textContent = 'Mức lương theo giờ *';
+                budgetUnit.textContent = 'VNĐ/giờ';
+                budgetHint.textContent = 'Gợi ý: 150.000 - 300.000 VNĐ/giờ cho gia sư';
+            } else {
+                btnFixed.className = 'py-3 px-4 rounded-xl border-2 border-primary bg-primaryLight text-primary font-semibold text-sm transition-all flex items-center justify-center gap-2';
+                btnHourly.className = 'py-3 px-4 rounded-xl border-2 border-border bg-surface text-textSecondary font-semibold text-sm transition-all flex items-center justify-center gap-2 hover:border-primarySoft hover:text-primary';
+                budgetLabel.textContent = 'Mức lương trọn gói *';
+                budgetUnit.textContent = 'VNĐ';
+                budgetHint.textContent = 'Nhập tổng ngân sách cho toàn bộ công việc';
+            }
+        }
+
+        // ============ DURATION CALCULATOR ============
+        function calculateDuration() {
+            const start = document.getElementById('task-start').value;
+            const end = document.getElementById('task-end').value;
+            const display = document.getElementById('duration-display');
+            const text = document.getElementById('duration-text');
+
+            if (start && end) {
+                const [sh, sm] = start.split(':').map(Number);
+                const [eh, em] = end.split(':').map(Number);
+                let diffMin = (eh * 60 + em) - (sh * 60 + sm);
+                if (diffMin <= 0) diffMin += 24 * 60;
+                const hours = Math.floor(diffMin / 60);
+                const mins = diffMin % 60;
+                text.textContent = mins > 0 ? `${hours} giờ ${mins} phút` : `${hours} giờ`;
+                display.classList.remove('hidden');
+                display.classList.add('flex');
+            } else {
+                display.classList.add('hidden');
+                display.classList.remove('flex');
+            }
+        }
+
+        document.getElementById('task-start').addEventListener('change', calculateDuration);
+        document.getElementById('task-end').addEventListener('change', calculateDuration);
+
+        // ============ LOAD STEP 1 DATA ============
+        function loadStep1Data() {
+            const data = JSON.parse(sessionStorage.getItem('task_create_step1') || '{}');
+            if (data.category) {
+                document.getElementById('summary-category').textContent = data.category_label || data.category;
+            }
+            if (data.title) {
+                document.getElementById('summary-title').textContent = data.title;
+            }
+            if (data.address) {
+                document.getElementById('task-address').value = data.address;
+            }
+            // Pre-fill date/time
+            if (data.date) document.getElementById('task-date').value = data.date;
+            if (data.start_time) document.getElementById('task-start').value = data.start_time;
+            if (data.end_time) document.getElementById('task-end').value = data.end_time;
+            if (data.budget) document.getElementById('task-budget').value = data.budget;
+            if (data.budget_type) setBudgetType(data.budget_type);
+
+            calculateDuration();
+        }
+
+        // ============ SUBMIT TASK ============
+        async function submitTask() {
+            const date = document.getElementById('task-date').value;
+            const startTime = document.getElementById('task-start').value;
+            const endTime = document.getElementById('task-end').value;
+            const budget = document.getElementById('task-budget').value;
+            const address = document.getElementById('task-address').value;
+            const notes = document.getElementById('task-notes').value;
+
+            if (!date || !startTime || !endTime || !budget || !address) {
+                showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+                return;
+            }
+
+            const step1Data = JSON.parse(sessionStorage.getItem('task_create_step1') || '{}');
+            const scheduled_time = `${date}T${startTime}:00`;
+
+            const taskData = {
+                category: step1Data.category,
+                title: step1Data.title,
+                description: notes,
+                location: address,
+                latitude: step1Data.latitude || null,
+                longitude: step1Data.longitude || null,
+                scheduled_time: scheduled_time,
+                price: parseInt(budget),
+            };
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang đăng...';
+
+            try {
+                const response = await apiFetch(API_BASE + '/tasks/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(taskData)
+                });
+
+                if (response.ok) {
+                    sessionStorage.removeItem('task_create_step1');
+                    showToast('Đăng việc thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'parent-tasks.html';
+                    }, 1200);
+                } else {
+                    const data = await response.json();
+                    showToast(data.detail || 'Có lỗi xảy ra, vui lòng thử lại', 'error');
+                }
+            } catch (err) {
+                showToast('Lỗi kết nối, vui lòng thử lại', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-symbols-outlined">send</span> Đăng việc';
+            }
+        }
+
+        // ============ INIT ============
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStep1Data();
+
+            // Load user info
+            apiFetch(API_BASE + '/profile/').then(r => {
+                if (!r.ok) return null;
+                return r.json();
+            }).then(user => {
+                if (!user) return;
+                const name = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Người dùng';
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F26522&color=fff`;
+                document.querySelectorAll('#sidebar-user-name').forEach(el => el.textContent = name);
+                document.querySelectorAll('#sidebar-avatar, #header-avatar').forEach(el => el.src = avatarUrl);
+            }).catch(() => {});
+
+            // Mobile page transition
+            if (window.innerWidth < 1024) {
+                requestAnimationFrame(() => document.body.classList.add('page-loaded'));
+            } else {
+                document.body.style.opacity = '1';
+                document.body.style.transform = 'none';
+            }
+        });
+
+        // Handle back/forward cache
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) document.body.classList.add('page-loaded');
+        });
+    </script>
+</body>
+</html>

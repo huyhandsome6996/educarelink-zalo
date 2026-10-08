@@ -1,0 +1,915 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<script src="../static/js/edc-bootstrap.js"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
+<link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+<title>Ghi nhật ký chăm sóc - EduCareLink</title>
+<link rel="stylesheet" href="../static/css/tailwind-default.css">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+  html { scroll-behavior: smooth; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  h1, h2, h3, h4, h5, h6 { font-family: 'Manrope', sans-serif; }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+  .material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .nav-item { transition: all 0.2s ease; }
+  .nav-item:hover { background: rgba(242,101,34,0.08); }
+  .nav-item.active { background: rgba(242,101,34,0.12); color: #F26522; }
+  .nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; color: #F26522; }
+  @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+  .toast-in { animation: slideInRight 0.35s ease forwards; }
+  .toast-out { animation: slideOutRight 0.3s ease forwards; }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
+  .mood-option { transition: all 0.15s ease; cursor: pointer; }
+  .mood-option:hover { transform: scale(1.05); }
+  .mood-option.selected { ring: 2px solid #F26522; background: rgba(242,101,34,0.08); }
+  @media (max-width: 767px) {
+    .sidebar { display: none !important; }
+    .main-area { margin-left: 0 !important; }
+    .mobile-bottom-nav { display: flex !important; }
+  }
+  @media (min-width: 768px) {
+    .mobile-bottom-nav { display: none !important; }
+  }
+</style>
+</head>
+
+<body class="bg-background text-textPrimary min-h-screen">
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none" style="max-width:400px;"></div>
+
+<!-- SIDEBAR (Desktop) -->
+<aside class="sidebar fixed left-0 top-0 bottom-0 w-[260px] bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm">
+  <div class="px-6 py-6 border-b border-gray-50">
+    <a href="worker-feed.html" class="flex items-center gap-2">
+      <img src="../static/images/logo.png" alt="EduCareLink" class="h-8 w-8 rounded-lg object-contain">
+      <div>
+        <span class="font-manrope font-extrabold text-xl text-textPrimary">Edu</span><span class="font-manrope font-extrabold text-xl text-secondary">Care</span><span class="font-manrope font-extrabold text-xl text-textPrimary">Link</span>
+      </div>
+    </a>
+  </div>
+  <nav class="flex-1 px-4 py-6 overflow-y-auto">
+    <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-textSecondary/50 mb-3">Menu</p>
+    <ul class="space-y-1">
+      <li><a href="worker-feed.html" class="nav-item flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-textSecondary hover:text-textPrimary"><span class="material-symbols-outlined text-xl">search</span>Tìm việc</a></li>
+      <li><a href="worker-jobs.html" class="nav-item flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-textSecondary hover:text-textPrimary"><span class="material-symbols-outlined text-xl">assignment</span>Việc của tôi</a></li>
+      <li><a href="worker-profile.html" class="nav-item flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-textSecondary hover:text-textPrimary"><span class="material-symbols-outlined text-xl">person</span>Hồ sơ</a></li>
+      <li><a href="worker-availability.html" class="nav-item flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold text-textSecondary hover:text-textPrimary"><span class="material-symbols-outlined text-xl">schedule</span>Lịch rảnh</a></li>
+    </ul>
+  </nav>
+  <div class="px-4 py-4 border-t border-gray-100">
+    <div class="flex items-center gap-3 px-2">
+      <div class="w-10 h-10 rounded-full bg-primaryLight flex-shrink-0"><img id="sidebar-avatar" class="w-full h-full object-cover rounded-full" src="https://ui-avatars.com/api/?name=W&background=F26522&color=fff"/></div>
+      <div class="flex-1 min-w-0"><p id="sidebar-name" class="font-semibold text-sm text-textPrimary truncate">CarePartner</p><p class="text-xs text-textSecondary">CarePartner</p></div>
+      <button onclick="handleLogout()" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center text-textSecondary hover:text-error transition-all" title="Đăng xuất"><span class="material-symbols-outlined text-xl">logout</span></button>
+    </div>
+  </div>
+</aside>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-bottom-nav hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 justify-around items-center px-2 py-2">
+  <a href="worker-feed.html" class="flex flex-col items-center gap-0.5 px-3 py-1 text-textSecondary"><span class="material-symbols-outlined text-xl">search</span><span class="text-[10px] font-medium">Tìm việc</span></a>
+  <a href="worker-jobs.html" class="flex flex-col items-center gap-0.5 px-3 py-1 text-textSecondary"><span class="material-symbols-outlined text-xl">assignment</span><span class="text-[10px] font-medium">Việc</span></a>
+  <a href="worker-profile.html" class="flex flex-col items-center gap-0.5 px-3 py-1 text-textSecondary"><span class="material-symbols-outlined text-xl">person</span><span class="text-[10px] font-medium">Hồ sơ</span></a>
+  <button onclick="handleLogout()" class="flex flex-col items-center gap-0.5 px-3 py-1 text-textSecondary"><span class="material-symbols-outlined text-xl">logout</span><span class="text-[10px] font-medium">Đăng xuất</span></button>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main-area lg:ml-[260px] min-h-screen pb-20 lg:pb-0">
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-6 lg:py-10">
+
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-sm text-textSecondary mb-6">
+      <a href="worker-jobs.html" class="hover:text-primary transition-colors">Việc của tôi</a>
+      <span class="material-symbols-outlined text-base">chevron_right</span>
+      <span class="text-textPrimary font-medium">Ghi nhật ký</span>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading-state" class="space-y-4">
+      <div class="skeleton h-8 w-48"></div>
+      <div class="skeleton h-4 w-64"></div>
+      <div class="skeleton h-40 w-full mt-4"></div>
+      <div class="skeleton h-40 w-full"></div>
+      <div class="skeleton h-32 w-full"></div>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="hidden">
+      <div class="bg-white rounded-2xl border border-gray-100 p-10 text-center">
+        <span class="material-symbols-outlined text-5xl text-error mb-4 block">error</span>
+        <h3 class="font-manrope font-bold text-xl text-textPrimary mb-2">Không thể tải thông tin</h3>
+        <p id="error-message" class="text-textSecondary text-sm mb-6">Đã có lỗi xảy ra.</p>
+        <a href="worker-jobs.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primaryDark transition-all">
+          <span class="material-symbols-outlined text-lg">arrow_back</span>Quay lại
+        </a>
+      </div>
+    </div>
+
+    <!-- Form State -->
+    <div id="form-state" class="hidden space-y-6">
+      <div>
+        <h1 class="font-manrope font-bold text-2xl text-textPrimary" id="page-title">Ghi nhật ký chăm sóc</h1>
+        <p class="text-textSecondary text-sm mt-1" id="task-title-display">Đang tải...</p>
+      </div>
+
+      <form id="diary-form" class="space-y-6" onsubmit="handleSubmit(event)">
+        <!-- Mood -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6">
+          <h3 class="font-manrope font-bold text-base text-textPrimary mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">mood</span>Tâm trạng của bé
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="mood-options">
+            <button type="button" onclick="selectMood('happy','Vui vẻ')" data-mood="happy" class="mood-option flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-primary/30">
+              <span class="material-symbols-outlined text-3xl text-emerald-500 filled">sentiment_very_satisfied</span>
+              <span class="text-xs font-semibold text-textSecondary">Vui vẻ</span>
+            </button>
+            <button type="button" onclick="selectMood('neutral','Bình thường')" data-mood="neutral" class="mood-option flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-primary/30">
+              <span class="material-symbols-outlined text-3xl text-amber-500 filled">sentiment_neutral</span>
+              <span class="text-xs font-semibold text-textSecondary">Bình thường</span>
+            </button>
+            <button type="button" onclick="selectMood('sad','Buồn')" data-mood="sad" class="mood-option flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-primary/30">
+              <span class="material-symbols-outlined text-3xl text-red-400 filled">sentiment_dissatisfied</span>
+              <span class="text-xs font-semibold text-textSecondary">Buồn</span>
+            </button>
+            <button type="button" onclick="selectMood('excited','Hào hứng')" data-mood="excited" class="mood-option flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-primary/30">
+              <span class="material-symbols-outlined text-3xl text-blue-500 filled">celebration</span>
+              <span class="text-xs font-semibold text-textSecondary">Hào hứng</span>
+            </button>
+          </div>
+          <input type="hidden" id="mood_icon" name="mood_icon" value="">
+          <input type="hidden" id="mood_label" name="mood_label" value="">
+          <div class="mt-3">
+            <label class="text-sm font-medium text-textSecondary">Ghi chú tâm trạng</label>
+            <input type="text" id="mood_note" name="mood_note" class="mt-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" placeholder="Ví dụ: Bé vui vì được chơi ngoài trời...">
+          </div>
+        </div>
+
+        <!-- Completion -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6">
+          <h3 class="font-manrope font-bold text-base text-textPrimary mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">task_alt</span>Mức độ hoàn thành
+          </h3>
+          <div class="flex items-center gap-4">
+            <input type="range" id="completion_percent" name="completion_percent" min="0" max="100" value="0" class="flex-1 h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-primary" oninput="document.getElementById('pct-display').textContent = this.value + '%'">
+            <span id="pct-display" class="font-manrope font-bold text-xl text-primary w-16 text-right">0%</span>
+          </div>
+        </div>
+
+        <!-- ═══ CARE DIARY NÂNG CẤP — Form đánh giá chuyên sâu ═══ -->
+        <!-- Header loại form (hiện khi là tutoring/childcare) -->
+        <div id="assessment-banner" class="hidden bg-primaryLight/40 rounded-2xl border border-primary/20 p-4 flex items-center gap-3">
+          <span class="material-symbols-outlined text-primary filled">info</span>
+          <p class="text-sm text-textPrimary"><span id="assessment-banner-text" class="font-semibold"></span> — biểu mẫu chuyên sâu thay thế danh sách hoạt động cơ bản.</p>
+        </div>
+
+        <!-- TUTORING — Form đánh giá buổi học (Gia sư) -->
+        <div id="tutoring-assessment" class="hidden bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-5">
+          <h3 class="font-manrope font-bold text-base text-textPrimary flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">school</span>Đánh giá buổi học
+          </h3>
+          <!-- Nội dung bài học -->
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-2">Môn học <span class="text-error">*</span></label>
+            <div id="tutor-subject-chips" class="flex flex-wrap gap-2 mb-2">
+              <!-- chips render bằng JS -->
+            </div>
+            <input type="text" id="tutor-subject" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Môn học (bắt buộc)">
+          </div>
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-1">Chủ đề bài học hôm nay <span class="text-error">*</span></label>
+            <input type="text" id="tutor-topic" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="VD: Phép nhân phân số &amp; bài toán tìm X">
+          </div>
+          <div class="flex items-center gap-3">
+            <button type="button" id="tutor-new-knowledge" onclick="toggleTutorFlag('is_new_knowledge')" class="px-4 py-2 rounded-xl border text-sm font-semibold transition-all">Kiến thức mới</button>
+            <button type="button" id="tutor-is-review" onclick="toggleTutorFlag('is_review')" class="px-4 py-2 rounded-xl border text-sm font-semibold transition-all">Ôn tập</button>
+          </div>
+          <!-- Mức độ tiếp thu -->
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-2">Mức độ tiếp thu bài <span class="text-error">*</span></label>
+            <div id="tutor-score-stars" class="flex items-center gap-1">
+              <!-- 5 sao render bằng JS -->
+            </div>
+            <p id="tutor-score-label" class="text-sm font-semibold text-amber-500 mt-1"></p>
+            <input type="text" id="tutor-attitude" class="mt-2 w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Thái độ buổi học (tuỳ chọn) — VD: Rất tập trung, hăng hái">
+          </div>
+          <!-- Bài tập -->
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-1">Bài tập trên lớp <span class="text-error">*</span></label>
+            <textarea id="tutor-classwork-status" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" placeholder="VD: Đã giải quyết 10 bài tập trong SGK và đề cương"></textarea>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-1">Bài tập về nhà (tuỳ chọn)</label>
+            <textarea id="tutor-homework" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" placeholder="VD: Trang 45-46, bài 1-5, SBT Toán / Không có"></textarea>
+          </div>
+          <!-- Nhận xét -->
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-1">Lỗ hổng kiến thức (tuỳ chọn)</label>
+            <textarea id="tutor-knowledge-gap" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" placeholder="VD: Con còn nhầm lẫn quy tắc đổi dấu khi chuyển vế"></textarea>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-1">Kế hoạch buổi tới (tuỳ chọn)</label>
+            <textarea id="tutor-next-session-plan" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" placeholder="VD: Ôn lại giải phương trình bậc nhất, làm thêm đề luyện tập"></textarea>
+          </div>
+        </div>
+
+        <!-- CHILDCARE — Form sinh hoạt (Đồng hành cùng trẻ) -->
+        <div id="childcare-assessment" class="hidden bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 space-y-5">
+          <h3 class="font-manrope font-bold text-base text-textPrimary flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">volunteer_activism</span>Sinh hoạt buổi đồng hành cùng trẻ
+          </h3>
+          <!-- Bữa ăn -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium text-textSecondary">Bữa ăn <span class="text-error">*</span> (ít nhất 1 bữa)</label>
+              <button type="button" onclick="addChildcareMealRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primaryLight text-primary text-xs font-semibold hover:bg-primary/20 transition-all">
+                <span class="material-symbols-outlined text-sm">add</span>Thêm bữa ăn
+              </button>
+            </div>
+            <div id="childcare-meals-list" class="space-y-3"></div>
+          </div>
+          <!-- Giấc ngủ -->
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-1">Giấc ngủ</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <input type="time" id="childcare-nap-start" class="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+              <input type="time" id="childcare-nap-end" class="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+              <input type="text" id="childcare-nap-quality" class="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Chất lượng (bắt buộc) — VD: Ngủ ngon, sâu giấc">
+            </div>
+          </div>
+          <!-- Vệ sinh & thể chất -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-sm font-medium text-textSecondary block mb-1">Vệ sinh / đi vệ sinh (tuỳ chọn)</label>
+              <input type="text" id="childcare-diaper-toilet" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="VD: Thay tã 2 lần, đi vệ sinh bình thường">
+            </div>
+            <div>
+              <label class="text-sm font-medium text-textSecondary block mb-1">Tình trạng thể chất <span class="text-error">*</span></label>
+              <input type="text" id="childcare-physical-condition" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="VD: Nhiệt độ cơ thể bình thường, tỉnh táo">
+            </div>
+          </div>
+          <!-- Hoạt động -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium text-textSecondary">Hoạt động (tuỳ chọn)</label>
+              <button type="button" onclick="addChildcareActivityRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primaryLight text-primary text-xs font-semibold hover:bg-primary/20 transition-all">
+                <span class="material-symbols-outlined text-sm">add</span>Thêm hoạt động
+              </button>
+            </div>
+            <div id="childcare-activities-list" class="space-y-2"></div>
+            <input type="text" id="childcare-mood-during" class="mt-2 w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Tâm trạng trong lúc chơi (tuỳ chọn) — VD: Vui vẻ, quấn quýt">
+          </div>
+          <!-- Ghi chú cho phụ huynh -->
+          <div>
+            <label class="text-sm font-medium text-textSecondary block mb-1">Ghi chú cho phụ huynh (tuỳ chọn)</label>
+            <textarea id="childcare-notes-for-parents" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none" placeholder="VD: Bé hơi ho nhẹ cuối buổi, phụ huynh theo dõi thêm nhé"></textarea>
+          </div>
+        </div>
+
+        <!-- Activities -->
+        <div id="activities-card" class="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-manrope font-bold text-base text-textPrimary flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary">checklist</span>Hoạt động
+            </h3>
+            <button type="button" onclick="addActivityRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primaryLight text-primary text-xs font-semibold hover:bg-primary/20 transition-all">
+              <span class="material-symbols-outlined text-sm">add</span>Thêm hoạt động
+            </button>
+          </div>
+          <div id="activities-list" class="space-y-3">
+            <!-- Dynamic activity rows -->
+          </div>
+          <div id="activities-empty" class="hidden text-center py-8 text-textSecondary text-sm">
+            <span class="material-symbols-outlined text-3xl text-gray-300 block mb-2">playlist_add</span>
+            Chưa có hoạt động. Nhấn "Thêm hoạt động" để bắt đầu.
+          </div>
+        </div>
+
+        <!-- Note -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6">
+          <h3 class="font-manrope font-bold text-base text-textPrimary mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">edit_note</span>Ghi chú chung
+          </h3>
+          <textarea id="note" name="note" rows="4" class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none" placeholder="Tổng kết chung về buổi chăm sóc..."></textarea>
+        </div>
+
+        <!-- Photo Upload -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6">
+          <h3 class="font-manrope font-bold text-base text-textPrimary mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">photo_camera</span>Ảnh đính kèm
+          </h3>
+          <div id="photo-upload-section" class="hidden">
+            <input type="file" id="photo-input" multiple accept="image/*" class="hidden" onchange="handlePhotoSelect(event)">
+            <button type="button" onclick="document.getElementById('photo-input').click()" class="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-200 text-sm text-textSecondary hover:border-primary/40 hover:text-primary transition-all w-full justify-center">
+              <span class="material-symbols-outlined">cloud_upload</span>Chọn ảnh để tải lên
+            </button>
+            <div id="photo-preview" class="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3"></div>
+            <div id="photo-upload-progress" class="hidden mt-2 text-sm text-textSecondary">Đang tải ảnh...</div>
+          </div>
+          <div id="photo-no-diary" class="text-center py-4 text-textSecondary text-sm">Tạo nhật ký trước, sau đó tải ảnh lên.</div>
+        </div>
+
+        <!-- Form Error -->
+        <div id="form-error" class="hidden bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 flex items-center gap-2">
+          <span class="material-symbols-outlined text-lg">error</span>
+          <span id="form-error-text"></span>
+        </div>
+
+        <!-- Submit -->
+        <div class="flex items-center gap-3">
+          <button type="submit" id="submit-btn" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-primary text-white font-bold text-sm hover:bg-primaryDark transition-all active:scale-[0.98] shadow-sm shadow-primary/20">
+            <span id="submit-text">Lưu nhật ký</span>
+            <span id="submit-spinner" class="hidden"><svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg></span>
+          </button>
+          <a href="worker-jobs.html" class="px-6 py-3 rounded-xl border border-gray-200 text-textSecondary font-semibold text-sm hover:bg-gray-50 transition-all">Hủy bỏ</a>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const API_BASE = window.API_BASE;
+const LOGIN_URL = "login.html";
+let taskId = null;
+let isEdit = false;
+let selectedMoodIcon = '';
+let selectedMoodLabel = '';
+let activityCounter = 0;
+let mealCounter = 0;
+let childcareActivityCounter = 0;
+
+// ═══ CARE DIARY NÂNG CẤP — state form đánh giá chuyên sâu ═══
+// Contract khớp 100% với mobile (TutoringAssessmentSection.js /
+// ChildcareAssessmentSection.js) và backend (care_diary/services.py).
+const TUTOR_SUBJECTS = ['Toán', 'Ngữ văn', 'Tiếng Anh', 'Vật Lý', 'Hóa học', 'Sinh học', 'Lịch sử', 'Địa lí', 'Tin học', 'Khác'];
+const TUTOR_SCORE_LABELS = {
+  1: 'Chưa tiếp thu được', 2: 'Cần hỗ trợ nhiều', 3: 'Tiếp thu ở mức cơ bản',
+  4: 'Hiểu bài nhanh', 5: 'Tiếp thu xuất sắc',
+};
+let taskCategoryCode = '';      // H1/L1 (QA 2026-09-19) — code slug danh mục (gia-su / trong-tre / ...)
+let assessmentType = 'general'; // tutoring | childcare | general
+let selectedTutorScore = 0;
+const tutorFlags = { is_new_knowledge: false, is_review: false };
+
+function effectiveAssessmentType() {
+  // Loại form hiệu lực: entry cũ ghi đè category; category là mặc định khi tạo mới.
+  // L1 — so khớp category.code (slug ổn định: 'gia-su', 'trong-tre') thay vì
+  // category_name hiển thị: admin đổi tên không làm form rơi về general.
+  if (isEdit) return assessmentType || 'general';
+  if (taskCategoryCode === 'gia-su') return 'tutoring';
+  if (taskCategoryCode === 'trong-tre') return 'childcare';
+  return 'general';
+}
+
+function showAssessmentForCategory() {
+  const t = effectiveAssessmentType();
+  document.getElementById('tutoring-assessment').classList.toggle('hidden', t !== 'tutoring');
+  document.getElementById('childcare-assessment').classList.toggle('hidden', t !== 'childcare');
+  document.getElementById('activities-card').classList.toggle('hidden', t !== 'general');
+  const banner = document.getElementById('assessment-banner');
+  banner.classList.toggle('hidden', t === 'general');
+  document.getElementById('assessment-banner-text').textContent =
+    t === 'tutoring' ? 'Form đánh giá buổi học (Gia sư)' : 'Form sinh hoạt buổi đồng hành cùng trẻ';
+  toggleActivitiesEmpty();
+}
+
+function renderSubjectChips() {
+  const wrap = document.getElementById('tutor-subject-chips');
+  wrap.innerHTML = TUTOR_SUBJECTS.map(s =>
+    `<button type="button" onclick="pickSubject('${escapeHtml(s)}')" data-subject="${escapeHtml(s)}" class="tutor-subject-chip px-3 py-1.5 rounded-full border border-gray-200 text-xs font-semibold text-textSecondary hover:border-primary/40 hover:text-primary transition-all">${escapeHtml(s)}</button>`
+  ).join('');
+}
+
+function pickSubject(s) {
+  document.getElementById('tutor-subject').value = s;
+  document.querySelectorAll('.tutor-subject-chip').forEach(el => {
+    const on = el.dataset.subject === s;
+    el.classList.toggle('border-primary', on);
+    el.classList.toggle('bg-primaryLight/40', on);
+    el.classList.toggle('text-primary', on);
+  });
+}
+
+function toggleTutorFlag(name) {
+  tutorFlags[name] = !tutorFlags[name];
+  if (name === 'is_new_knowledge' && tutorFlags[name]) tutorFlags.is_review = false;
+  if (name === 'is_review' && tutorFlags[name]) tutorFlags.is_new_knowledge = false;
+  const newBtn = document.getElementById('tutor-new-knowledge');
+  const revBtn = document.getElementById('tutor-is-review');
+  newBtn.className = 'px-4 py-2 rounded-xl border text-sm font-semibold transition-all ' + (tutorFlags.is_new_knowledge ? 'border-primary bg-primaryLight/40 text-primary' : 'border-gray-200 text-textSecondary');
+  revBtn.className = 'px-4 py-2 rounded-xl border text-sm font-semibold transition-all ' + (tutorFlags.is_review ? 'border-primary bg-primaryLight/40 text-primary' : 'border-gray-200 text-textSecondary');
+}
+
+function renderTutorStars() {
+  const wrap = document.getElementById('tutor-score-stars');
+  wrap.innerHTML = [1, 2, 3, 4, 5].map(n =>
+    `<button type="button" onclick="pickTutorScore(${n})" class="p-0.5">
+      <span class="material-symbols-outlined text-3xl ${selectedTutorScore >= n ? 'text-amber-400 filled' : 'text-gray-300'}">star</span>
+    </button>`
+  ).join('');
+  document.getElementById('tutor-score-label').textContent = selectedTutorScore ? (TUTOR_SCORE_LABELS[selectedTutorScore] || '') : '';
+}
+
+function pickTutorScore(n) { selectedTutorScore = n; renderTutorStars(); }
+
+function addChildcareMealRow(time = '', meal = '', amount = '') {
+  const list = document.getElementById('childcare-meals-list');
+  const idx = mealCounter++;
+  const row = document.createElement('div');
+  row.className = 'meal-row bg-gray-50 rounded-xl p-3';
+  row.innerHTML = `
+    <div class="flex items-start gap-2">
+      <input type="time" class="meal-time px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" value="${escapeHtml(time)}">
+      <input type="text" class="meal-name flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Món ăn (VD: Cơm trưa + canh rau)" value="${escapeHtml(meal)}">
+      <button type="button" onclick="this.closest('.meal-row').remove()" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center text-textSecondary hover:text-error transition-all flex-shrink-0">
+        <span class="material-symbols-outlined text-lg">delete</span>
+      </button>
+    </div>
+    <input type="text" class="meal-amount mt-2 w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Lượng ăn (bắt buộc) — VD: Ăn hết suất / Uống 200ml" value="${escapeHtml(amount)}">
+  `;
+  list.appendChild(row);
+}
+
+function addChildcareActivityRow(value = '') {
+  const list = document.getElementById('childcare-activities-list');
+  const row = document.createElement('div');
+  row.className = 'ca-activity-row flex items-center gap-2';
+  row.innerHTML = `
+    <input type="text" class="ca-activity-input flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Hoạt động (VD: Đọc truyện)" value="${escapeHtml(value)}">
+    <button type="button" onclick="this.closest('.ca-activity-row').remove()" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center text-textSecondary hover:text-error transition-all flex-shrink-0">
+      <span class="material-symbols-outlined text-lg">delete</span>
+    </button>
+  `;
+  list.appendChild(row);
+}
+
+function collectTutoringAssessment() {
+  return {
+    schema_version: 1,
+    lesson_content: {
+      subject: document.getElementById('tutor-subject').value.trim(),
+      topic: document.getElementById('tutor-topic').value.trim(),
+      is_new_knowledge: !!tutorFlags.is_new_knowledge,
+      is_review: !!tutorFlags.is_review,
+    },
+    comprehension: {
+      score: selectedTutorScore,
+      score_label: TUTOR_SCORE_LABELS[selectedTutorScore] || '',
+      attitude: document.getElementById('tutor-attitude').value.trim(),
+    },
+    classwork_homework: {
+      classwork_status: document.getElementById('tutor-classwork-status').value.trim(),
+      homework: document.getElementById('tutor-homework').value.trim(),
+    },
+    remarks: {
+      knowledge_gap: document.getElementById('tutor-knowledge-gap').value.trim(),
+      next_session_plan: document.getElementById('tutor-next-session-plan').value.trim(),
+    },
+  };
+}
+
+function collectChildcareAssessment() {
+  const meals = [];
+  document.querySelectorAll('#childcare-meals-list .meal-row').forEach(row => {
+    meals.push({
+      time: row.querySelector('.meal-time').value || '',
+      meal: row.querySelector('.meal-name').value || '',
+      amount: row.querySelector('.meal-amount').value || '',
+    });
+  });
+  const actList = [];
+  document.querySelectorAll('#childcare-activities-list .ca-activity-input').forEach(inp => {
+    const v = inp.value.trim();
+    if (v) actList.push(v);
+  });
+  return {
+    schema_version: 1,
+    meals: meals,
+    nap: {
+      start_time: document.getElementById('childcare-nap-start').value || '',
+      end_time: document.getElementById('childcare-nap-end').value || '',
+      quality: document.getElementById('childcare-nap-quality').value.trim(),
+    },
+    hygiene_health: {
+      diaper_toilet: document.getElementById('childcare-diaper-toilet').value.trim(),
+      physical_condition: document.getElementById('childcare-physical-condition').value.trim(),
+    },
+    activities: {
+      list: actList,
+      mood_during: document.getElementById('childcare-mood-during').value.trim(),
+    },
+    notes_for_parents: document.getElementById('childcare-notes-for-parents').value.trim(),
+  };
+}
+
+function collectAssessmentData(type) {
+  return type === 'tutoring' ? collectTutoringAssessment()
+       : type === 'childcare' ? collectChildcareAssessment()
+       : {};
+}
+
+// Validate client-side khớp 100% backend (Phase 2) — tránh round-trip 400.
+function validateAssessmentClientSide(type, data) {
+  if (type === 'tutoring') {
+    if (!data.lesson_content.subject) return 'Vui lòng nhập môn học.';
+    if (!data.lesson_content.topic) return 'Vui lòng nhập chủ đề bài học.';
+    if (!data.comprehension.score || data.comprehension.score < 1 || data.comprehension.score > 5) {
+      return 'Vui lòng chọn mức độ tiếp thu từ 1 đến 5 sao.';
+    }
+    if (!data.classwork_homework.classwork_status) return 'Vui lòng nhập tình trạng bài tập trên lớp.';
+  } else if (type === 'childcare') {
+    if (!data.meals.length) return 'Vui lòng thêm ít nhất 1 bữa ăn.';
+    for (let i = 0; i < data.meals.length; i++) {
+      if (!data.meals[i].time || !data.meals[i].amount) return `Bữa ăn thứ ${i + 1} thiếu giờ hoặc lượng ăn.`;
+    }
+    if (!data.nap.quality) return 'Vui lòng nhập chất lượng giấc ngủ của bé.';
+    if (!data.hygiene_health.physical_condition) return 'Vui lòng nhập tình trạng thể chất của bé.';
+  }
+  return null;
+}
+
+async function apiFetch(url, options = {}) {
+  let token = localStorage.getItem('token');
+  if (!token) { window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+  options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
+  let response = await fetch(url, options);
+  if (response.status === 401) {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      try {
+        const refreshResp = await fetch(API_BASE + '/auth/token/refresh/', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh: refreshToken })
+        });
+        if (refreshResp.ok) {
+          const rd = await refreshResp.json();
+          localStorage.setItem('token', rd.access);
+          if (rd.refresh) localStorage.setItem('refresh_token', rd.refresh);
+          options.headers['Authorization'] = 'Bearer ' + rd.access;
+          response = await fetch(url, options);
+        } else { localStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+      } catch (e) { localStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+    } else { localStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+  }
+  return response;
+}
+
+function escapeHtml(v) {
+  if (v == null) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const icons = { success: 'check_circle', error: 'error', info: 'info', warning: 'warning' };
+  const colors = { success: 'bg-emerald-500', error: 'bg-red-500', info: 'bg-primary', warning: 'bg-amber-500' };
+  const toast = document.createElement('div');
+  toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-lg text-white text-sm font-medium toast-in ${colors[type] || colors.info}`;
+  toast.innerHTML = `<span class="material-symbols-outlined text-xl filled" style="font-variation-settings:'FILL'1;">${icons[type]||icons.info}</span><span class="flex-1">${escapeHtml(message)}</span><button onclick="this.parentElement.remove()" class="ml-2 hover:opacity-80"><span class="material-symbols-outlined text-lg">close</span></button>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.classList.remove('toast-in'); toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 300); }, 4000);
+}
+
+function selectMood(icon, label) {
+  selectedMoodIcon = icon;
+  selectedMoodLabel = label;
+  document.getElementById('mood_icon').value = icon;
+  document.getElementById('mood_label').value = label;
+  document.querySelectorAll('.mood-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.mood === icon);
+    el.classList.toggle('border-primary', el.dataset.mood === icon);
+    el.classList.toggle('bg-primaryLight/30', el.dataset.mood === icon);
+  });
+}
+
+function addActivityRow(time = '', title = '', desc = '', status = 'done') {
+  const list = document.getElementById('activities-list');
+  const idx = activityCounter++;
+  const row = document.createElement('div');
+  row.className = 'activity-row bg-gray-50 rounded-xl p-4 space-y-3';
+  row.dataset.idx = idx;
+  row.innerHTML = `
+    <div class="flex items-start gap-3">
+      <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="text-xs font-medium text-textSecondary">Thời gian</label>
+          <input type="time" class="act-time mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" value="${escapeHtml(time)}">
+        </div>
+        <div>
+          <label class="text-xs font-medium text-textSecondary">Tên hoạt động</label>
+          <input type="text" class="act-title mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Ví dụ: Học Toán" value="${escapeHtml(title)}">
+        </div>
+        <div>
+          <label class="text-xs font-medium text-textSecondary">Trạng thái</label>
+          <select class="act-status mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
+            <option value="done" ${status==='done'?'selected':''}>Hoàn thành</option>
+            <option value="partial" ${status==='partial'?'selected':''}>Một phần</option>
+            <option value="skipped" ${status==='skipped'?'selected':''}>Bỏ qua</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" onclick="this.closest('.activity-row').remove(); toggleActivitiesEmpty();" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center text-textSecondary hover:text-error transition-all flex-shrink-0 mt-5" title="Xóa">
+        <span class="material-symbols-outlined text-lg">delete</span>
+      </button>
+    </div>
+    <div>
+      <label class="text-xs font-medium text-textSecondary">Mô tả</label>
+      <input type="text" class="act-desc w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Chi tiết (không bắt buộc)" value="${escapeHtml(desc)}">
+    </div>
+  `;
+  list.appendChild(row);
+  toggleActivitiesEmpty();
+}
+
+function toggleActivitiesEmpty() {
+  const rows = document.querySelectorAll('.activity-row');
+  document.getElementById('activities-empty').classList.toggle('hidden', rows.length > 0);
+  document.getElementById('activities-list').classList.toggle('hidden', rows.length === 0);
+}
+
+function getFormData() {
+  const type = effectiveAssessmentType();
+  // H2 — chỉ thu thập + gửi key 'activities' khi form chung: backend coi
+  // activities != null là lệnh "xóa hết rồi tạo lại", gửi mảng rỗng khi
+  // form chuyên sâu ẩn timeline sẽ âm thầm xóa activities cũ của entry.
+  const activities = [];
+  if (type === 'general') {
+    document.querySelectorAll('.activity-row').forEach((row, i) => {
+      activities.push({
+        time: row.querySelector('.act-time').value || '',
+        title: row.querySelector('.act-title').value || '',
+        description: row.querySelector('.act-desc').value || '',
+        status: row.querySelector('.act-status').value,
+        order: i
+      });
+    });
+  }
+  return {
+    mood_icon: document.getElementById('mood_icon').value,
+    mood_label: document.getElementById('mood_label').value,
+    mood_note: document.getElementById('mood_note').value,
+    completion_percent: document.getElementById('completion_percent').value,
+    note: document.getElementById('note').value,
+    assessment_type: type,
+    assessment_data: collectAssessmentData(type),
+    ...(type === 'general' ? { activities: activities } : {})
+  };
+}
+
+function showFormError(msg) {
+  document.getElementById('form-error-text').textContent = msg;
+  document.getElementById('form-error').classList.remove('hidden');
+}
+
+function hideFormError() {
+  document.getElementById('form-error').classList.add('hidden');
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  hideFormError();
+  const btn = document.getElementById('submit-btn');
+  const btnText = document.getElementById('submit-text');
+  const spinner = document.getElementById('submit-spinner');
+  btn.disabled = true;
+  btnText.textContent = isEdit ? 'Đang cập nhật...' : 'Đang lưu...';
+  spinner.classList.remove('hidden');
+
+  try {
+    const data = getFormData();
+    // CARE DIARY NÂNG CẤP — validate form đánh giá trước khi gửi
+    const assessErr = validateAssessmentClientSide(data.assessment_type, data.assessment_data);
+    if (assessErr) {
+      showFormError(assessErr);
+      btn.disabled = false;
+      btnText.textContent = isEdit ? 'Cập nhật nhật ký' : 'Lưu nhật ký';
+      spinner.classList.add('hidden');
+      return;
+    }
+    const method = isEdit ? 'PATCH' : 'POST';
+    const resp = await apiFetch(API_BASE + '/worker/tasks/' + taskId + '/care-diary/', {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await resp.json();
+
+    if (!resp.ok) {
+      showFormError(result.error || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      return;
+    }
+
+    showToast(isEdit ? 'Đã cập nhật nhật ký thành công!' : 'Đã lưu nhật ký thành công!', 'success');
+
+    // Nếu là tạo mới → chuyển sang edit mode (hiện upload ảnh)
+    if (!isEdit) {
+      isEdit = true;
+      document.getElementById('submit-text').textContent = 'Cập nhật nhật ký';
+      document.getElementById('photo-upload-section').classList.remove('hidden');
+      document.getElementById('photo-no-diary').classList.add('hidden');
+    }
+  } catch (err) {
+    showFormError('Lỗi kết nối mạng. Vui lòng thử lại.');
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = isEdit ? 'Cập nhật nhật ký' : 'Lưu nhật ký';
+    spinner.classList.add('hidden');
+  }
+}
+
+async function handlePhotoSelect(e) {
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
+  const progress = document.getElementById('photo-upload-progress');
+  progress.classList.remove('hidden');
+  e.target.value = '';
+
+  try {
+    const formData = new FormData();
+    files.forEach(f => formData.append('images', f));
+    const resp = await apiFetch(API_BASE + '/worker/tasks/' + taskId + '/care-diary/attachments/', {
+      method: 'POST',
+      body: formData
+    });
+    const result = await resp.json();
+    if (!resp.ok) {
+      showToast(result.error || 'Không thể tải ảnh lên.', 'error');
+      return;
+    }
+    showToast('Đã tải lên ' + (result.attachments ? result.attachments.length : 0) + ' ảnh!', 'success');
+  } catch (err) {
+    showToast('Lỗi kết nối khi tải ảnh.', 'error');
+  } finally {
+    progress.classList.add('hidden');
+  }
+}
+
+async function loadExistingDiary() {
+  if (!taskId) return;
+  try {
+    const resp = await apiFetch(API_BASE + '/tasks/' + taskId + '/care-diary/');
+    if (resp.ok) {
+      const d = await resp.json();
+      isEdit = true;
+      document.getElementById('page-title').textContent = 'Sửa nhật ký chăm sóc';
+      document.getElementById('submit-text').textContent = 'Cập nhật nhật ký';
+      if (d.mood) {
+        selectMood(d.mood.icon || '', d.mood.label || '');
+        if (d.mood.note) document.getElementById('mood_note').value = d.mood.note;
+      }
+      if (d.completion) document.getElementById('completion_percent').value = d.completion.percent;
+      document.getElementById('pct-display').textContent = (d.completion ? d.completion.percent : 0) + '%';
+      if (d.note) document.getElementById('note').value = d.note;
+      if (d.activities && d.activities.length > 0) {
+        document.getElementById('activities-list').classList.remove('hidden');
+        document.getElementById('activities-empty').classList.add('hidden');
+        d.activities.forEach(a => addActivityRow(a.time, a.title, a.desc, a.status));
+      }
+      // CARE DIARY NÂNG CẤP — nạp form đánh giá chuyên sâu từ entry cũ
+      if (d.assessment_type) assessmentType = d.assessment_type;
+      const ad = d.assessment_data || {};
+      if (ad.lesson_content) {
+        if (ad.lesson_content.subject) {
+          document.getElementById('tutor-subject').value = ad.lesson_content.subject;
+          pickSubject(ad.lesson_content.subject);
+        }
+        document.getElementById('tutor-topic').value = ad.lesson_content.topic || '';
+        if (ad.lesson_content.is_new_knowledge && !tutorFlags.is_new_knowledge) toggleTutorFlag('is_new_knowledge');
+        if (ad.lesson_content.is_review && !tutorFlags.is_review) toggleTutorFlag('is_review');
+      }
+      if (ad.comprehension) {
+        selectedTutorScore = Number(ad.comprehension.score) || 0;
+        renderTutorStars();
+        document.getElementById('tutor-attitude').value = ad.comprehension.attitude || '';
+      }
+      if (ad.classwork_homework) {
+        document.getElementById('tutor-classwork-status').value = ad.classwork_homework.classwork_status || '';
+        document.getElementById('tutor-homework').value = ad.classwork_homework.homework || '';
+      }
+      if (ad.remarks) {
+        document.getElementById('tutor-knowledge-gap').value = ad.remarks.knowledge_gap || '';
+        document.getElementById('tutor-next-session-plan').value = ad.remarks.next_session_plan || '';
+      }
+      if (Array.isArray(ad.meals) && ad.meals.length) {
+        ad.meals.forEach(m => addChildcareMealRow(m.time || '', m.meal || '', m.amount || ''));
+      }
+      if (ad.nap) {
+        document.getElementById('childcare-nap-start').value = ad.nap.start_time || '';
+        document.getElementById('childcare-nap-end').value = ad.nap.end_time || '';
+        document.getElementById('childcare-nap-quality').value = ad.nap.quality || '';
+      }
+      if (ad.hygiene_health) {
+        document.getElementById('childcare-diaper-toilet').value = ad.hygiene_health.diaper_toilet || '';
+        document.getElementById('childcare-physical-condition').value = ad.hygiene_health.physical_condition || '';
+      }
+      if (ad.activities && Array.isArray(ad.activities.list)) {
+        ad.activities.list.forEach(a => addChildcareActivityRow(a || ''));
+        document.getElementById('childcare-mood-during').value = ad.activities.mood_during || '';
+      }
+      document.getElementById('childcare-notes-for-parents').value = ad.notes_for_parents || '';
+      showAssessmentForCategory();
+      // Hiện upload ảnh
+      document.getElementById('photo-upload-section').classList.remove('hidden');
+      document.getElementById('photo-no-diary').classList.add('hidden');
+      // Hiện ảnh đã upload
+      if (d.attachments && d.attachments.length > 0) {
+        const preview = document.getElementById('photo-preview');
+        d.attachments.forEach(att => {
+          const img = document.createElement('div');
+          img.className = 'relative rounded-xl overflow-hidden border border-gray-100';
+          img.innerHTML = `<img src="${escapeHtml(att.url)}" class="w-full h-24 object-cover" alt="Ảnh đính kèm"><a href="${escapeHtml(att.url)}" target="_blank" class="absolute inset-0 bg-black/0 hover:bg-black/20 transition-all flex items-center justify-center"><span class="material-symbols-outlined text-white text-2xl opacity-0 hover:opacity-100">open_in_new</span></a>`;
+          preview.appendChild(img);
+        });
+      }
+    } else if (resp.status === 404) {
+      // Chưa có nhật ký → form tạo mới
+      isEdit = false;
+      toggleActivitiesEmpty();
+    }
+  } catch (e) { /* ignore — để form trống */ }
+}
+
+async function loadTaskInfo() {
+  const params = new URLSearchParams(window.location.search);
+  taskId = params.get('task_id');
+  if (!taskId) {
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('error-message').textContent = 'Không tìm thấy ID công việc.';
+    document.getElementById('error-state').classList.remove('hidden');
+    return;
+  }
+
+  // CARE DIARY NÂNG CẤP — lấy category của task để chọn loại form
+  // ('gia-su' → tutoring, 'trong-tre' → childcare, còn lại → general).
+  // L1 — đọc category_code (slug ổn định từ TaskSerializer), parity với mobile
+  // CareDiaryFormScreen.js; không so khớp category_name hiển thị.
+  try {
+    const tResp = await apiFetch(API_BASE + '/tasks/' + taskId + '/');
+    if (tResp.ok) {
+      const tData = await tResp.json();
+      taskCategoryCode = tData.category_code || '';
+    }
+  } catch (e) { /* không lấy được category → form chung */ }
+
+  try {
+    // Thử tải nhật ký trước để xác định task title + edit mode
+    const resp = await apiFetch(API_BASE + '/tasks/' + taskId + '/care-diary/');
+    if (resp.ok) {
+      const d = await resp.json();
+      // Lấy task title từ API my-jobs hoặc dùng URL param
+      const params2 = new URLSearchParams(window.location.search);
+      document.getElementById('task-title-display').textContent = params2.get('task_title') || 'Công việc #' + taskId;
+    }
+  } catch(e) { /* ignore */ }
+
+  // Dùng query param nếu có
+  const params3 = new URLSearchParams(window.location.search);
+  const tt = params3.get('task_title');
+  if (tt) document.getElementById('task-title-display').textContent = tt;
+
+  document.getElementById('loading-state').classList.add('hidden');
+  document.getElementById('form-state').classList.remove('hidden');
+
+  // Init form đánh giá chuyên sâu (chips + sao + loại form theo category)
+  renderSubjectChips();
+  renderTutorStars();
+  showAssessmentForCategory();
+
+  toggleActivitiesEmpty();
+  await loadExistingDiary();
+}
+
+function handleLogout() {
+  localStorage.clear();
+  window.location.href = LOGIN_URL;
+}
+
+if (!localStorage.getItem('token')) window.location.href = LOGIN_URL;
+loadTaskInfo();
+</script>
+</body>
+</html>

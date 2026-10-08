@@ -1,0 +1,912 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<script src="../static/js/edc-bootstrap.js"></script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
+    <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+    <title>EduCareLink - Đăng nhập</title>
+    <link rel="stylesheet" href="../static/css/tailwind-default.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+
+        /* Active tab */
+        .tab-active {
+            background-color: #FFFFFF !important;
+            color: #F26522 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            font-weight: 700;
+        }
+
+        /* Role card active */
+        .role-card-active {
+            border-color: #F26522 !important;
+            background-color: #FFF4ED !important;
+        }
+        .role-card-active .role-icon-wrap {
+            background-color: #F26522 !important;
+            color: #FFFFFF !important;
+        }
+        .role-card-active .role-label {
+            color: #F26522 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Toast animations */
+        @keyframes toastSlideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes toastSlideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .toast-enter { animation: toastSlideIn 0.35s cubic-bezier(0.21,1.02,0.73,1) forwards; }
+        .toast-exit { animation: toastSlideOut 0.3s ease-in forwards; }
+
+        /* Left panel decorative blobs */
+        .blob-1 {
+            position: absolute;
+            width: 320px; height: 320px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            top: -60px; right: -80px;
+        }
+        .blob-2 {
+            position: absolute;
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            bottom: 40px; left: -40px;
+        }
+        .blob-3 {
+            position: absolute;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: 45%; left: 30%;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+
+        /* Input focus handled by Tailwind classes */
+
+        /* Floating label animation */
+        .input-wrapper { position: relative; }
+        .input-wrapper input::placeholder { color: transparent; }
+        .input-wrapper label {
+            position: absolute;
+            left: 48px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            color: #6B7280;
+            font-size: 14px;
+        }
+        .input-wrapper input:focus ~ label,
+        .input-wrapper input:not(:placeholder-shown) ~ label {
+            top: 6px;
+            transform: translateY(0);
+            font-size: 11px;
+            color: #F26522;
+            font-weight: 600;
+        }
+
+        /* Feature card hover */
+        .feature-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(242,101,34,0.15);
+        }
+    </style>
+</head>
+<body class="bg-background text-textPrimary min-h-dvh">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none" style="max-width: 380px;"></div>
+
+    <!-- Main Layout: Split Screen -->
+    <div class="min-h-dvh flex flex-col lg:flex-row">
+
+        <!-- LEFT PANEL: Branding (hidden on mobile) -->
+        <div class="hidden lg:flex lg:w-[52%] relative overflow-hidden flex-col justify-between p-12 xl:p-16"
+             style="background: linear-gradient(135deg, #F26522 0%, #D4541E 50%, #B8441A 100%);">
+            <!-- Decorative blobs -->
+            <div class="blob-1"></div>
+            <div class="blob-2"></div>
+            <div class="blob-3"></div>
+
+            <!-- Top: Logo -->
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                    <img src="../static/images/logo.png" alt="EduCareLink" class="h-8 w-8 rounded-lg object-contain">
+                    <span class="text-2xl font-extrabold text-white tracking-tight font-display">EduCareLink</span>
+                </div>
+                <p class="text-white/70 text-sm ml-14">Nền tảng chăm sóc & giáo dục hàng đầu</p>
+            </div>
+
+            <!-- Middle: Tagline & Features -->
+            <div class="relative z-10 flex-1 flex flex-col justify-center max-w-lg">
+                <h1 class="text-4xl xl:text-5xl font-extrabold text-white leading-tight font-display mb-4">
+                    Kết nối tri thức,<br/>
+                    <span class="text-white/90">nuôi dưỡng tương lai</span>
+                </h1>
+                <p class="text-white/75 text-base xl:text-lg mb-10 leading-relaxed">
+                    Nơi phụ huynh và người chăm sóc giáo dục gặp nhau, tạo nên môi trường phát triển tốt nhất cho trẻ.
+                </p>
+
+                <!-- Feature Highlights -->
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="feature-card flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                        <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-sm mb-0.5">Xác minh uy tín</h3>
+                            <p class="text-white/65 text-xs leading-relaxed">Hồ sơ được xác thực, đánh giá minh bạch từ phụ huynh</p>
+                        </div>
+                    </div>
+                    <div class="feature-card flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                        <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">handshake</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-sm mb-0.5">Kết nối dễ dàng</h3>
+                            <p class="text-white/65 text-xs leading-relaxed">Tìm kiếm và ghép nối người chăm sóc phù hợp nhanh chóng</p>
+                        </div>
+                    </div>
+                    <div class="feature-card flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                        <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-sm mb-0.5">Quản lý thông minh</h3>
+                            <p class="text-white/65 text-xs leading-relaxed">Theo dõi tiến trình, đánh giá và phản hồi trực quan</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom: Copyright -->
+            <div class="relative z-10">
+                <p class="text-white/40 text-xs">&copy; 2026 EduCareLink. Bảo lưu mọi quyền.</p>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Auth Form -->
+        <div class="flex-1 flex flex-col min-h-dvh bg-surface">
+            <!-- Mobile Header (visible only on mobile) -->
+            <div class="lg:hidden flex items-center justify-center py-8 px-6">
+                <div class="flex items-center gap-2.5">
+                    <img src="../static/images/logo.png" alt="EduCareLink" class="h-8 w-8 rounded-lg object-contain">
+                    <span class="text-xl font-extrabold text-textPrimary tracking-tight font-display">EduCareLink</span>
+                </div>
+            </div>
+
+            <!-- Form Container -->
+            <div class="flex-1 flex items-start lg:items-center justify-center px-5 sm:px-8 pb-8 lg:pb-0">
+                <div class="w-full max-w-[440px]">
+                    <!-- Title Section -->
+                    <div class="mb-8">
+                        <h1 id="auth-title" class="text-2xl sm:text-3xl font-extrabold text-textPrimary tracking-tight font-display mb-2">
+                            Chào mừng trở lại!
+                        </h1>
+                        <p class="text-textSecondary text-sm">Đăng nhập để tiếp tục hành trình chăm sóc giáo dục.</p>
+                    </div>
+
+                    <!-- Tab Switcher -->
+                    <div class="mb-7">
+                        <div class="flex p-1 bg-background rounded-xl">
+                            <button id="tab-login" class="flex-1 py-2.5 text-sm font-semibold rounded-lg tab-active transition-all duration-200">
+                                Đăng nhập
+                            </button>
+                            <button id="tab-register" class="flex-1 py-2.5 text-sm font-semibold text-textSecondary hover:text-textPrimary transition-all duration-200">
+                                Đăng ký
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Role Selector (Register only) -->
+                    <div id="role-selector" class="mb-7" style="display: none;">
+                        <label class="block text-sm font-bold text-textPrimary mb-3">Bạn là ai?</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button id="role-parent" class="role-btn role-card-active flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 group cursor-pointer">
+                                <div class="role-icon-wrap w-11 h-11 rounded-full bg-primary flex items-center justify-center mb-2.5 text-white transition-all duration-200">
+                                    <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">family_restroom</span>
+                                </div>
+                                <span class="role-label text-sm font-bold text-primary transition-all duration-200">Phụ Huynh</span>
+                            </button>
+                            <button id="role-worker" class="role-btn flex flex-col items-center justify-center p-4 rounded-xl border-2 border-gray-200 bg-background transition-all duration-200 group cursor-pointer">
+                                <div class="role-icon-wrap w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center mb-2.5 text-textSecondary transition-all duration-200">
+                                    <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">work</span>
+                                </div>
+                                <span class="role-label text-sm font-semibold text-textSecondary transition-all duration-200">Carepartner</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Auth Form -->
+                    <form id="auth-form" class="space-y-5">
+                        <!-- Username -->
+                        <div>
+                            <label class="block text-sm font-semibold text-textPrimary mb-1.5">Tên tài khoản</label>
+                            <div class="relative">
+                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-textSecondary text-xl">person</span>
+                                <input id="username"
+                                    class="w-full pl-11 pr-4 py-3 bg-surface border border-gray-200 rounded-xl text-sm text-textPrimary placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-gray-300 outline-none transition-all duration-200"
+                                    placeholder="Nhập tên tài khoản"
+                                    type="text"
+                                    required/>
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label class="block text-sm font-semibold text-textPrimary">Mật khẩu</label>
+                                <a id="forgot-link" class="text-xs font-semibold text-primary hover:text-primary-dark transition-colors cursor-pointer">Quên mật khẩu?</a>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-textSecondary text-xl">lock</span>
+                                <input id="password"
+                                    class="w-full pl-11 pr-11 py-3 bg-surface border border-gray-200 rounded-xl text-sm text-textPrimary placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-gray-300 outline-none transition-all duration-200"
+                                    placeholder="Nhập mật khẩu"
+                                    type="password"
+                                    required/>
+                                <button type="button" id="toggle-password" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-textSecondary hover:text-textPrimary transition-colors">
+                                    <span class="material-symbols-outlined text-xl">visibility_off</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button id="submit-btn" class="w-full py-3.5 bg-primary text-textOnPrimary font-bold rounded-xl shadow-lg shadow-primary/25 hover:bg-primary-dark hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center justify-center gap-2 text-sm" type="submit">
+                            <span id="submit-text">Đăng nhập</span>
+                            <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                            <!-- Spinner (hidden by default) -->
+                            <svg id="submit-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                        </button>
+                    </form>
+
+                    <!-- Divider -->
+                    <div class="relative my-7">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-200"></div>
+                        </div>
+                        <div class="relative flex justify-center text-xs uppercase">
+                            <span class="bg-surface px-3 text-textSecondary font-medium">Hoặc đăng nhập với</span>
+                        </div>
+                    </div>
+
+                    <!-- Social Login -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="google-login-btn" class="flex items-center justify-center gap-2.5 py-2.5 border border-gray-200 rounded-xl hover:bg-background transition-all duration-200 group">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            <span class="text-sm font-semibold text-textPrimary group-hover:text-primary transition-colors">Google</span>
+                        </button>
+                        <button id="facebook-login-btn" class="flex items-center justify-center gap-2.5 py-2.5 border border-gray-200 rounded-xl hover:bg-background transition-all duration-200 group">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            <span class="text-sm font-semibold text-textPrimary group-hover:text-primary transition-colors">Facebook</span>
+                        </button>
+                    </div>
+
+                    <!-- Mobile: Sign up link -->
+                    <div class="lg:hidden mt-8 text-center">
+                        <p class="text-sm text-textSecondary">
+                            Chưa có tài khoản?
+                            <button id="mobile-go-register" class="text-primary font-semibold hover:underline">Đăng ký ngay</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer (right panel) -->
+            <div class="py-5 px-6 text-center border-t border-gray-100">
+                <p class="text-xs text-textSecondary">&copy; 2026 EduCareLink. Nền tảng chăm sóc & giáo dục hàng đầu Việt Nam.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ CONFIG ============
+        const API_BASE = window.API_BASE;
+        let isLogin = true;
+        let selectedRole = 'parent';
+
+        // ============ DOM REFERENCES ============
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        const roleSelector = document.getElementById('role-selector');
+        const authTitle = document.getElementById('auth-title');
+        const authSubtitle = authTitle.nextElementSibling;
+        const btnParent = document.getElementById('role-parent');
+        const btnWorker = document.getElementById('role-worker');
+        const submitBtn = document.getElementById('submit-btn');
+        const submitText = document.getElementById('submit-text');
+        const submitSpinner = document.getElementById('submit-spinner');
+        const togglePassword = document.getElementById('toggle-password');
+        const forgotLink = document.getElementById('forgot-link');
+        const mobileGoRegister = document.getElementById('mobile-go-register');
+
+        // ============ TOAST SYSTEM ============
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const colors = {
+                success: { bg: '#ECFDF5', border: '#10B981', icon: 'check_circle', iconColor: '#10B981', text: '#065F46' },
+                error:   { bg: '#FEF2F2', border: '#EF4444', icon: 'error',       iconColor: '#EF4444', text: '#991B1B' },
+                info:    { bg: '#FFF4ED', border: '#F26522', icon: 'info',         iconColor: '#F26522', text: '#9A3412' },
+                warning: { bg: '#FFFBEB', border: '#F59E0B', icon: 'warning',      iconColor: '#F59E0B', text: '#92400E' },
+            };
+            const c = colors[type] || colors.info;
+
+            toast.className = 'toast-enter pointer-events-auto';
+            toast.style.cssText = `
+                display: flex; align-items: flex-start; gap: 10px;
+                padding: 14px 16px; border-radius: 12px;
+                background: ${c.bg}; border: 1px solid ${c.border}22;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+                min-width: 280px; max-width: 380px;
+            `;
+            toast.innerHTML = `
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1; color: ${c.iconColor}; font-size: 20px; flex-shrink: 0; margin-top: 1px;">${c.icon}</span>
+                <p style="color: ${c.text}; font-size: 13px; font-weight: 500; line-height: 1.5; flex: 1;">${message}</p>
+                <button onclick="this.parentElement.classList.replace('toast-enter','toast-exit'); setTimeout(() => this.parentElement.remove(), 300);"
+                    style="color: ${c.iconColor}; opacity: 0.6; cursor: pointer; flex-shrink: 0; padding: 0; background: none; border: none; line-height: 1;">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+                </button>
+            `;
+            container.appendChild(toast);
+
+            // Auto dismiss after 3 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.replace('toast-enter', 'toast-exit');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 3000);
+        }
+
+        // ============ TAB SWITCHER ============
+        tabLogin.onclick = () => {
+            isLogin = true;
+            tabLogin.classList.add('tab-active');
+            tabRegister.classList.remove('tab-active');
+            roleSelector.style.display = 'none';
+            authTitle.innerText = 'Chào mừng trở lại!';
+            authSubtitle.innerText = 'Đăng nhập để tiếp tục hành trình chăm sóc giáo dục.';
+            submitText.innerText = 'Đăng nhập';
+            forgotLink.style.display = '';
+        };
+
+        tabRegister.onclick = () => {
+            window.location.href = 'register.html';
+        };
+
+        // Mobile shortcut
+        if (mobileGoRegister) {
+            mobileGoRegister.onclick = () => tabRegister.click();
+        }
+
+        // ============ ROLE SELECTOR ============
+        function updateRoleUI() {
+            // Reset both
+            [btnParent, btnWorker].forEach(btn => {
+                btn.classList.remove('role-card-active');
+                btn.classList.add('border-gray-200', 'bg-background');
+                btn.querySelector('.role-icon-wrap').classList.remove('bg-primary', 'text-white');
+                btn.querySelector('.role-icon-wrap').classList.add('bg-gray-100', 'text-textSecondary');
+                btn.querySelector('.role-label').classList.remove('text-primary', 'font-bold');
+                btn.querySelector('.role-label').classList.add('text-textSecondary');
+            });
+
+            // Activate selected
+            const activeBtn = selectedRole === 'parent' ? btnParent : btnWorker;
+            activeBtn.classList.add('role-card-active');
+            activeBtn.classList.remove('border-gray-200', 'bg-background');
+            activeBtn.querySelector('.role-icon-wrap').classList.add('bg-primary', 'text-white');
+            activeBtn.querySelector('.role-icon-wrap').classList.remove('bg-gray-100', 'text-textSecondary');
+            activeBtn.querySelector('.role-label').classList.add('text-primary', 'font-bold');
+            activeBtn.querySelector('.role-label').classList.remove('text-textSecondary');
+        }
+
+        btnParent.onclick = () => {
+            selectedRole = 'parent';
+            updateRoleUI();
+        };
+
+        btnWorker.onclick = () => {
+            selectedRole = 'worker';
+            updateRoleUI();
+        };
+
+        // ============ TOGGLE PASSWORD VISIBILITY ============
+        togglePassword.onclick = () => {
+            const pwdInput = document.getElementById('password');
+            const icon = togglePassword.querySelector('.material-symbols-outlined');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                pwdInput.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        };
+
+        // ============ FORM SUBMISSION ============
+        document.getElementById('auth-form').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Basic validation
+            if (!username) {
+                showToast('Vui lòng nhập tên tài khoản.', 'warning');
+                document.getElementById('username').focus();
+                return;
+            }
+            if (!password) {
+                showToast('Vui lòng nhập mật khẩu.', 'warning');
+                document.getElementById('password').focus();
+                return;
+            }
+            if (password.length < 6) {
+                showToast('Mật khẩu phải có ít nhất 6 ký tự.', 'warning');
+                return;
+            }
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            submitSpinner.classList.remove('hidden');
+
+            const endpoint = isLogin ? '/auth/login/' : '/auth/register/';
+            const payload = isLogin
+                ? { username, password }
+                : { username, password, role: selectedRole };
+
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (isLogin) {
+                        // Save JWT tokens and role
+                        localStorage.setItem('token', data.tokens.access);
+                        localStorage.setItem('refresh_token', data.tokens.refresh);
+                        localStorage.setItem('role', data.role);
+                        if (data.is_staff) localStorage.setItem('is_staff', 'true');
+                        if (data.username) localStorage.setItem('admin_username', data.username);
+
+                        showToast('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+
+                        setTimeout(() => {
+                            // Kiểm tra nếu là admin → chuyển đến admin dashboard
+                            if (data.is_staff) {
+                                // Kiểm tra nếu có ?next= parameter
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const nextUrl = urlParams.get('next') || "admin-dashboard.html";
+                                window.location.href = window.__edcToPage(nextUrl);
+                            } else if (data.first_login) {
+                                // Lần đầu đăng nhập → hiển thị hướng dẫn sử dụng
+                                window.location.href = data.role === 'parent'
+                                    ? "onboarding-parent.html"
+                                    : "onboarding-worker.html";
+                            } else {
+                                window.location.href = data.role === 'parent'
+                                    ? "parent-home.html"
+                                    : "worker-feed.html";
+                            }
+                        }, 1200);
+                    } else {
+                        showToast('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+                        // Switch to login tab
+                        setTimeout(() => {
+                            tabLogin.click();
+                            document.getElementById('username').value = username;
+                            document.getElementById('password').value = '';
+                            document.getElementById('password').focus();
+                        }, 800);
+                    }
+                } else {
+                    // Xử lý đặc biệt: Carepartner chưa được admin duyệt
+                    if (response.status === 403 && data.status === 'pending_approval') {
+                        showToast('Tài khoản của bạn đang chờ Admin xét duyệt. Vui lòng đợi thông báo qua email.', 'warning');
+                    } else if (response.status === 403 && data.status === 'account_locked') {
+                        showToast('Tài khoản của bạn đã bị khoá. Vui lòng liên hệ Admin để được hỗ trợ.', 'error');
+                    } else {
+                        const errorMessage = data.error || data.detail || data.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
+                        showToast(errorMessage, 'error');
+                    }
+                }
+            } catch (err) {
+                console.error('Auth error:', err);
+                showToast('Không thể kết nối đến máy chủ. Vui lòng thử lại sau.', 'error');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitText.classList.remove('hidden');
+                submitSpinner.classList.add('hidden');
+            }
+        };
+
+        // ============ FORGOT PASSWORD ============
+        forgotLink.onclick = () => {
+            showToast('Tính năng quên mật khẩu sẽ sớm ra mắt!', 'info');
+        };
+
+        // ============ INIT ============
+        // Check if already logged in
+        const existingToken = localStorage.getItem('token');
+        const existingRole = localStorage.getItem('role');
+        const isStaff = localStorage.getItem('is_staff');
+        // ⚠️ Nếu URL có ?auto=1 (QR auto-login) → PHẢI clear localStorage cũ
+        // để tránh redirect sang admin dashboard khi vẫn còn token admin cũ
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAutoLogin = urlParams.get('auto') === '1';
+        if (isAutoLogin) {
+            // Xoá toàn bộ session cũ để auto-login chạy sạch sẽ
+            localStorage.removeItem('token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('is_staff');
+            localStorage.removeItem('admin_username');
+        } else if (existingToken && existingRole) {
+            const nextUrl = urlParams.get('next');
+            if (isStaff === 'true') {
+                window.location.href = window.__edcToPage(nextUrl || 'admin-dashboard.html');
+            } else if (nextUrl) {
+                window.location.href = window.__edcToPage(nextUrl);
+            }
+        }
+
+        // Initialize role UI
+        updateRoleUI();
+
+        // ============ SOCIAL OAUTH ============
+        let oauthConfig = null;
+
+        // Load OAuth config from backend
+        async function loadOAuthConfig() {
+            try {
+                const res = await fetch(API_BASE + '/auth/oauth-config/');
+                if (res.ok) {
+                    oauthConfig = await res.json();
+                    updateOAuthButtons();
+                }
+            } catch (e) {
+                console.warn('Could not load OAuth config:', e);
+            }
+        }
+
+        function updateOAuthButtons() {
+            const googleBtn = document.getElementById('google-login-btn');
+            const facebookBtn = document.getElementById('facebook-login-btn');
+            if (!oauthConfig) return;
+
+            // Hide buttons if OAuth not configured
+            if (!oauthConfig.google.enabled) {
+                googleBtn.style.opacity = '0.4';
+                googleBtn.style.cursor = 'not-allowed';
+            }
+            if (!oauthConfig.facebook.enabled) {
+                facebookBtn.style.opacity = '0.4';
+                facebookBtn.style.cursor = 'not-allowed';
+            }
+
+            // Initialize Google Identity Services
+            if (oauthConfig.google.enabled && oauthConfig.google.client_id) {
+                const script = document.createElement('script');
+                script.src = 'https://accounts.google.com/gsi/client';
+                script.async = true;
+                script.defer = true;
+                script.onload = () => {
+                    google.accounts.id.initialize({
+                        client_id: oauthConfig.google.client_id,
+                        callback: handleGoogleResponse,
+                        auto_select: false,
+                    });
+                };
+                document.head.appendChild(script);
+            }
+
+            // Initialize Facebook SDK
+            if (oauthConfig.facebook.enabled && oauthConfig.facebook.app_id) {
+                const script = document.createElement('script');
+                script.src = 'https://connect.facebook.net/vi_VN/sdk.js';
+                script.async = true;
+                script.defer = true;
+                script.onload = () => {
+                    FB.init({
+                        appId: oauthConfig.facebook.app_id,
+                        cookie: true,
+                        xfbml: false,
+                        version: 'v21.0',
+                    });
+                };
+                document.head.appendChild(script);
+            }
+        }
+
+        // Google OAuth handler
+        function handleGoogleResponse(response) {
+            if (!response.credential) {
+                showToast('Đăng nhập Google thất bại. Vui lòng thử lại.', 'error');
+                return;
+            }
+            sendOAuthToken('google', response.credential);
+        }
+
+        // Google button click
+        document.getElementById('google-login-btn').addEventListener('click', () => {
+            if (!oauthConfig || !oauthConfig.google.enabled) {
+                showToast('Đăng nhập Google chưa được kích hoạt.', 'warning');
+                return;
+            }
+            try {
+                google.accounts.id.prompt((notification) => {
+                    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                        // Fallback: use popup
+                        const tokenClient = google.accounts.oauth2.initTokenClient({
+                            client_id: oauthConfig.google.client_id,
+                            scope: 'email profile',
+                            callback: (resp) => {
+                                if (resp.access_token) {
+                                    // With access token, we need to get ID token
+                                    // Use the token endpoint approach
+                                    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                                        headers: { 'Authorization': 'Bearer ' + resp.access_token }
+                                    }).then(r => r.json()).then(userInfo => {
+                                        sendOAuthToken('google', resp.access_token, 'access_token');
+                                    });
+                                }
+                            },
+                        });
+                        tokenClient.requestAccessToken();
+                    }
+                });
+            } catch (e) {
+                console.error('Google OAuth error:', e);
+                showToast('Không thể mở đăng nhập Google.', 'error');
+            }
+        });
+
+        // Facebook button click
+        document.getElementById('facebook-login-btn').addEventListener('click', () => {
+            if (!oauthConfig || !oauthConfig.facebook.enabled) {
+                showToast('Đăng nhập Facebook chưa được kích hoạt.', 'warning');
+                return;
+            }
+            try {
+                FB.login((response) => {
+                    if (response.authResponse && response.authResponse.accessToken) {
+                        sendOAuthToken('facebook', response.authResponse.accessToken);
+                    } else if (response.status !== 'connected') {
+                        showToast('Đăng nhập Facebook đã bị huỷ.', 'info');
+                    }
+                }, { scope: 'email,public_profile' });
+            } catch (e) {
+                console.error('Facebook OAuth error:', e);
+                showToast('Không thể mở đăng nhập Facebook.', 'error');
+            }
+        });
+
+        // Send OAuth token to backend
+        async function sendOAuthToken(provider, token, tokenType = 'id_token') {
+            const endpoint = provider === 'google' ? '/auth/google/' : '/auth/facebook/';
+            const body = provider === 'google'
+                ? (tokenType === 'access_token' ? { access_token: token } : { token: token })
+                : { access_token: token };
+
+            // Show loading
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            submitSpinner.classList.remove('hidden');
+
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Save JWT tokens and redirect (same as normal login)
+                    localStorage.setItem('token', data.tokens.access);
+                    localStorage.setItem('refresh_token', data.tokens.refresh);
+                    localStorage.setItem('role', data.role);
+                    if (data.is_staff) localStorage.setItem('is_staff', 'true');
+                    if (data.username) localStorage.setItem('admin_username', data.username);
+                    if (data.avatar_url) localStorage.setItem('avatar_url', data.avatar_url);
+                    localStorage.setItem('auth_provider', data.auth_provider || provider);
+
+                    showToast('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+
+                    setTimeout(() => {
+                        if (data.is_staff) {
+                            window.location.href = 'admin-dashboard.html';
+                        } else if (data.first_login) {
+                            window.location.href = data.role === 'parent'
+                                ? '/onboarding-parent/'
+                                : '/onboarding-worker/';
+                        } else {
+                            window.location.href = data.role === 'parent'
+                                ? '/parent-home/'
+                                : '/worker-feed/';
+                        }
+                    }, 1200);
+
+                } else {
+                    // Handle errors
+                    if (response.status === 409) {
+                        // Email conflict
+                        const providerName = provider === 'google' ? 'Google' : 'Facebook';
+                        if (data.code === 'EMAIL_ALREADY_REGISTERED') {
+                            showToast('Email này đã đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng email và mật khẩu.', 'error');
+                        } else if (data.code === 'EMAIL_LINKED_FACEBOOK') {
+                            showToast('Email này đã liên kết với Facebook. Vui lòng đăng nhập bằng Facebook.', 'error');
+                        } else if (data.code === 'EMAIL_LINKED_GOOGLE') {
+                            showToast('Email này đã liên kết với Google. Vui lòng đăng nhập bằng Google.', 'error');
+                        } else {
+                            showToast(data.error || 'Lỗi xác thực.', 'error');
+                        }
+                    } else {
+                        showToast(data.error || 'Đăng nhập thất bại. Vui lòng thử lại.', 'error');
+                    }
+                }
+            } catch (err) {
+                console.error('OAuth error:', err);
+                showToast('Không thể kết nối đến máy chủ.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitText.classList.remove('hidden');
+                submitSpinner.classList.add('hidden');
+            }
+        }
+
+        // Load OAuth config on page load
+        loadOAuthConfig();
+    </script>
+
+    <!-- Mobile App-like Transition -->
+    <style>
+        @media (max-width: 767px) {
+            body {
+                opacity: 0;
+                transform: translateY(15px) scale(0.98);
+                transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            body.page-loaded {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            body.page-exit {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.98);
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth <= 767) {
+                // Initial load animation
+                requestAnimationFrame(() => {
+                    document.body.classList.add('page-loaded');
+                });
+
+                // Link click transitions
+                document.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        const href = link.getAttribute('href');
+                        const target = link.getAttribute('target');
+                        if (href && href.startsWith('/') && !href.startsWith('#') && target !== '_blank' && !e.ctrlKey && !e.metaKey) {
+                            e.preventDefault();
+                            document.body.classList.remove('page-loaded');
+                            document.body.classList.add('page-exit');
+                            setTimeout(() => {
+                                window.location.href = window.__edcToPage(href);
+                            }, 300); // match transition duration
+                        }
+                    });
+                });
+            } else {
+                // Ensure visibility on desktop if resized
+                document.body.style.opacity = '1';
+                document.body.style.transform = 'none';
+            }
+        });
+        
+        // Handle back/forward navigation cache
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted && window.innerWidth <= 767) {
+                document.body.classList.remove('page-exit');
+                document.body.classList.add('page-loaded');
+            }
+        });
+    </script>
+
+    <!-- ============================================================
+         QR AUTO-LOGIN (cho ban giam khao - quet QR la vao duoc)
+         Chi kich hoat khi URL co ?u=<user>&p=<pass>&auto=1
+         Khong anh huong den luong dang nhap binh thuong.
+         ============================================================ -->
+    <script>
+    (function () {
+        try {
+            var params = new URLSearchParams(window.location.search);
+            var u = params.get('u');
+            var p = params.get('p');
+            var auto = params.get('auto');
+            if (!u || !p || auto !== '1') return;
+
+            function fillAndSubmit() {
+                var userInput = document.getElementById('username');
+                var passInput = document.getElementById('password');
+                var form = document.getElementById('auth-form');
+                if (!userInput || !passInput || !form) {
+                    setTimeout(fillAndSubmit, 80);
+                    return;
+                }
+                // Dam bao o che do DANG NHAP (khong phai dang ky)
+                var tabLogin = document.getElementById('tab-login');
+                if (tabLogin) tabLogin.click();
+                userInput.value = u;
+                passInput.value = p;
+                // Hien toast de giam khao biet dang tu dong dang nhap
+                if (typeof showToast === 'function') {
+                    showToast('🔄 Dang tu dong dang nhap tu ma QR...', 'success');
+                }
+                // Trigger submit (onsubmit handler se goi API)
+                setTimeout(function () {
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }, 400);
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', fillAndSubmit);
+            } else {
+                fillAndSubmit();
+            }
+        } catch (e) {
+            console.warn('QR auto-login error:', e);
+        }
+    })();
+    </script>
+
+</body>
+</html>

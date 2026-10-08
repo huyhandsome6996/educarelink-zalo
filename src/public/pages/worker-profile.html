@@ -1,0 +1,2546 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<script src="../static/js/edc-bootstrap.js"></script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
+    <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+    <title>Hồ sơ - EduCareLink</title>
+    <link rel="stylesheet" href="../static/css/tailwind-default.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Leaflet.js Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, h4 { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Custom scrollbar for sidebar */
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+
+        /* Custom scrollbar for main content */
+        .main-scroll::-webkit-scrollbar { width: 6px; }
+        .main-scroll::-webkit-scrollbar-track { background: transparent; }
+        .main-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 6px; }
+
+        /* Toast animation */
+        @keyframes toast-in {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes toast-out {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-20px); opacity: 0; }
+        }
+        .toast-enter { animation: toast-in 0.3s ease-out forwards; }
+        .toast-exit { animation: toast-out 0.3s ease-in forwards; }
+
+        /* Modal animation */
+        @keyframes modal-bg-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modal-content-in {
+            from { transform: scale(0.9) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .modal-bg-enter { animation: modal-bg-in 0.2s ease-out forwards; }
+        .modal-content-enter { animation: modal-content-in 0.3s ease-out forwards; }
+
+        /* Sidebar nav item hover */
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item:hover { background: rgba(242, 101, 34, 0.08); }
+        .nav-item.active { background: rgba(242, 101, 34, 0.12); color: #F26522; }
+        .nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; color: #F26522; }
+
+        /* Card hover */
+        .profile-card { transition: all 0.25s ease; }
+        .profile-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(242, 101, 34, 0.08); }
+
+        /* Menu item hover */
+        .menu-item { transition: all 0.2s ease; }
+        .menu-item:hover { background: #F7F7F7; }
+        .menu-item:active { transform: scale(0.98); }
+
+        /* Bottom nav for mobile */
+        @media (max-width: 767px) {
+            .sidebar { display: none !important; }
+            .main-area { margin-left: 0 !important; }
+            .mobile-bottom-nav { display: flex !important; }
+        }
+        @media (min-width: 768px) {
+            .mobile-bottom-nav { display: none !important; }
+        }
+
+        /* Skeleton loading */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        /* AI sparkle float animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .ai-float { animation: float 3s ease-in-out infinite; }
+
+        /* Rating star pulse */
+        @keyframes starPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .star-pulse { animation: starPulse 2s ease-in-out infinite; }
+
+        /* ===== PARENT BACK BUTTON ===== */
+        .parent-back-banner {
+            display: none;
+            background: linear-gradient(135deg, #F26522 0%, #D4541E 100%);
+            color: white;
+            padding: 12px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 35;
+            box-shadow: 0 4px 20px rgba(242,101,34,0.3);
+        }
+        .parent-back-banner.visible { display: flex; }
+        .parent-back-banner a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            font-family: 'Manrope', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+        .parent-back-banner a:hover {
+            transform: translateX(-3px);
+        }
+        .parent-back-banner .back-arrow-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .parent-back-banner .back-text-label {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        /* ===== PROFILE TOUR STYLES (Redesigned — no dimming, high contrast) ===== */
+        .tour-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            background: transparent;
+            pointer-events: none;
+        }
+        .tour-overlay.hidden { display: none; }
+        .tour-spotlight {
+            position: absolute;
+            border-radius: 16px;
+            z-index: 9001;
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            pointer-events: none;
+            background: transparent;
+            outline: none;
+        }
+        .tour-spotlight::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border: 3px solid #F26522;
+            border-radius: 18px;
+            animation: tourPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 0 6px rgba(242,101,34,0.15), 0 0 24px rgba(242,101,34,0.2);
+        }
+        @keyframes tourPulse {
+            0%, 100% { border-color: #F26522; box-shadow: 0 0 0 6px rgba(242,101,34,0.15), 0 0 24px rgba(242,101,34,0.2); }
+            50% { border-color: #FFCFB3; box-shadow: 0 0 0 10px rgba(242,101,34,0.08), 0 0 36px rgba(242,101,34,0.12); }
+        }
+        .tour-tooltip {
+            position: fixed;
+            z-index: 9002;
+            background: #FFFFFF;
+            border-radius: 20px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 0 0 2px #F26522, 0 0 0 6px rgba(242,101,34,0.1);
+            padding: 24px;
+            max-width: 380px;
+            width: calc(100vw - 32px);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            pointer-events: auto;
+        }
+        .tour-tooltip.hidden { display: none; }
+        .tour-step-dots {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+        .tour-step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #E5E7EB;
+            transition: all 0.3s ease;
+        }
+        .tour-step-dot.active {
+            background: #F26522;
+            width: 24px;
+            border-radius: 4px;
+        }
+        .tour-step-dot.completed {
+            background: #2DB84B;
+        }
+        @keyframes tourFadeIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .tour-animate { animation: tourFadeIn 0.35s ease-out forwards; }
+        .tour-close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: #F3F4F6;
+            color: #6B7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
+            transition: all 0.2s ease;
+        }
+        .tour-close-btn:hover {
+            background: #E5E7EB;
+            color: #1A1A2E;
+        }
+    </style>
+</head>
+<body class="bg-bg text-textPrimary antialiased">
+
+    <!-- ========== TOAST CONTAINER ========== -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none" style="max-width: 400px;"></div>
+
+    <!-- ========== CONFIRM MODAL ========== -->
+    <div id="confirm-modal" class="fixed inset-0 z-[9998] hidden items-center justify-center p-4">
+        <div id="confirm-modal-bg" class="absolute inset-0 bg-black/40 modal-bg-enter" onclick="closeConfirmModal(false)"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm modal-content-enter">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-primaryLight flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-primary text-2xl">help</span>
+                </div>
+                <div>
+                    <h3 id="confirm-title" class="font-manrope font-bold text-lg text-textPrimary">Xác nhận</h3>
+                    <p id="confirm-message" class="text-textSecondary text-sm mt-0.5">Bạn có chắc chắn?</p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeConfirmModal(false)" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-textSecondary font-semibold text-sm hover:bg-gray-50 transition-all duration-200">
+                    Hủy bỏ
+                </button>
+                <button onclick="closeConfirmModal(true)" class="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primaryDark transition-all duration-200">
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SIDEBAR + MOBILE NAV CHUẨN CAREPARTNER (Batch 1) ========== -->
+    
+<!-- ============================================================ -->
+<!-- _worker_chrome.html — Khung điều hướng dùng chung MỌI trang    -->
+<!-- luồng Carepartner (Batch 1 — QA 2026-09-10).                   -->
+<!-- Tham số: active_tab = feed | jobs | availability | profile     -->
+<!--                    | chatbot | guide | help                    -->
+<!-- Gồm: sidebar desktop + bottom-nav mobile chuẩn 4 tab Carepartner -->
+<!-- (Nhận việc · Lịch rảnh · Việc của tôi · Hồ sơ) + runtime user.  -->
+<!-- ============================================================ -->
+
+<!-- ===== SIDEBAR (Desktop ≥1024px) — đồng bộ pattern _parent_chrome ===== -->
+<aside id="sidebar" class="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:w-[260px] lg:bg-surface lg:border-r lg:border-border lg:z-40">
+
+<!-- ============================================================ -->
+<!-- _worker_sidebar.html — Sidebar CAREPARTNER chuẩn hóa          -->
+<!-- Single Source of Truth cho toàn bộ trang luồng Carepartner    -->
+<!-- (Batch 1 — QA 2026-09-10: trước đây 4 trang worker hardcode   -->
+<!--  4 sidebar khác nhau, còn nhãn kỹ thuật lỗi thời).            -->
+<!-- Hỗ trợ active_tab: feed | jobs | availability | profile       -->
+<!--                    | chatbot | guide | help                   -->
+<!-- ============================================================ -->
+
+<style>
+  /* 1. KHÓA CỨNG KÍCH THƯỚC SIDEBAR 260px — đồng bộ tuyệt đối với
+     _parent_sidebar.html để không bao giờ bị nhảy layout giữa 2 luồng */
+  #sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    background-color: #ffffff !important;
+    border-right: 1px solid #e5e7eb !important;
+    z-index: 40 !important;
+  }
+
+  /* Nội dung chính dịch lề 260px trên desktop (cùng ngưỡng lg=1024px
+     với _parent_chrome.html — không còn vùng 768-1024px bị hụt sidebar) */
+  @media (min-width: 1024px) {
+    main, .main-area, .main-content, .chat-main-area {
+      margin-left: 260px !important;
+      box-sizing: border-box !important;
+    }
+  }
+
+  /* 2. TRIỆT TIÊU LAYOUT SHIFT DO THANH CUỘN CỬA SỔ (window scrollbar) */
+  html {
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
+    box-sizing: border-box;
+  }
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  /* 3. ẨN THANH CUỘN THÔ CỦA SIDEBAR (mượt như sidebar phụ huynh) */
+  .wsb-scroll {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: none !important; /* Firefox & Chrome 121+ */
+    -ms-overflow-style: none !important; /* IE/Edge legacy */
+  }
+  .wsb-scroll::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* 4. ITEM ĐỒNG BỘ VIỀN TRÁI — cùng ngôn ngữ thiết kế với sidebar phụ huynh */
+  .wsb-nav-item {
+    border-left: 4px solid transparent;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .wsb-nav-item.active {
+    border-left-color: #F26522 !important;
+    background-color: rgba(255, 247, 237, 0.9) !important;
+    color: #c2410c !important;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 450, 'GRAD' 0, 'opsz' 22;
+    vertical-align: middle;
+  }
+  .material-symbols-outlined.fill-icon {
+    font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 22;
+  }
+  .material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 450, 'GRAD' 0, 'opsz' 22;
+  }
+</style>
+
+<!-- Brand Logo & Context Area -->
+<div class="px-4 py-3.5 border-b border-slate-100/90 shrink-0">
+  <div class="flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200/80 flex items-center justify-center shadow-sm shrink-0">
+      <img src="../static/images/logo.png" alt="EduCareLink" class="h-7 w-7 object-contain">
+    </div>
+    <div class="min-w-0 flex-1">
+      <div class="font-heading font-extrabold text-xl tracking-tight text-slate-900 leading-tight truncate" style="font-family: 'Manrope', sans-serif;">
+        Edu<span class="text-[#F26522]">Care</span>Link
+      </div>
+      <div class="mt-1 flex items-center">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-[#c2410c] border border-orange-200/70 font-semibold text-[10px] tracking-wide">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#F26522] animate-pulse"></span>
+          Carepartner
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Navigation — MENU CHUẨN THỐNG NHẤT toàn luồng Carepartner -->
+<nav class="flex-1 px-3 py-3 space-y-4 overflow-y-auto wsb-scroll" data-purpose="worker-main-navigation">
+
+  <!-- Group 1: NHẬN VIỆC -->
+  <div class="space-y-1">
+    <div class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 select-none">
+      Nhận việc
+    </div>
+
+    <!-- 1. Nhận đơn mới (luồng ghép cặp thụ động kiểu Grab — trang chính) -->
+    <a href="don-cua-toi.html"
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">notifications_active</span>
+        <span class="truncate">Nhận đơn mới</span>
+      </div>
+      
+    </a>
+
+    <!-- 2. Lịch rảnh làm việc -->
+    <a href="lich-ranh.html"
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">event_available</span>
+        <span class="truncate">Lịch rảnh làm việc</span>
+      </div>
+      
+    </a>
+
+    <!-- 3. Việc của tôi -->
+    <a href="worker-jobs.html"
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">assignment</span>
+        <span class="truncate">Việc của tôi</span>
+      </div>
+      
+    </a>
+  </div>
+
+  <!-- Group 2: TÀI KHOẢN -->
+  <div class="space-y-1">
+    <div class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 select-none">
+      Tài khoản
+    </div>
+
+    <!-- 4. Hồ sơ của tôi -->
+    <a href="worker-profile.html"
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active_tab == 'profile' %}active font-semibold rounded-l-none shadow-xs">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl active_tab == 'profile' %}fill-icon text-[#F26522]">person</span>
+        <span class="truncate">Hồ sơ của tôi</span>
+      </div>
+      active_tab == 'profile' %}
+        <span class="w-1.5 h-1.5 rounded-full bg-[#F26522] shrink-0"></span>
+      
+    </a>
+
+    <!-- 5. AI Trợ lý -->
+    <a href="worker-chatbot.html"
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">smart_toy</span>
+        <span class="truncate">AI Trợ lý</span>
+      </div>
+      
+    </a>
+  </div>
+
+  <!-- Group 3: HỖ TRỢ & HỆ THỐNG -->
+  <div class="space-y-1">
+    <div class="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 select-none">
+      Hỗ trợ &amp; Hệ thống
+    </div>
+
+    <!-- 6. Hướng dẫn nhận việc -->
+    <a href="onboarding-worker.html"
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">help_outline</span>
+        <span class="truncate">Hướng dẫn nhận việc</span>
+      </div>
+      
+    </a>
+
+    <!-- 7. Trung tâm trợ giúp -->
+    <a href="help-center.html"
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 group">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="material-symbols-outlined text-xl text-slate-400 group-hover:text-slate-600 transition-colors">support_agent</span>
+        <span class="truncate">Trung tâm trợ giúp</span>
+      </div>
+      
+    </a>
+  </div>
+</nav>
+
+<!-- Bottom: User Profile Card & Safe Log out -->
+<div class="p-3 border-t border-slate-200/90 space-y-2 bg-slate-50/50 shrink-0" data-purpose="worker-sidebar-user-footer">
+  <a href="worker-profile.html"
+     class="flex items-center justify-between p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 transition-all cursor-pointer shadow-xs group">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="relative shrink-0">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-sm ring-1 ring-white overflow-hidden">
+          <img id="sidebar-avatar" alt="Avatar" class="w-full h-full object-cover"
+               src="https://ui-avatars.com/api/?name=User&background=F26522&color=fff"/>
+        </div>
+        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></span>
+      </div>
+      <div class="truncate min-w-0">
+        <h4 id="sidebar-name" class="text-sm font-semibold text-slate-800 truncate group-hover:text-[#F26522] transition-colors">Đang tải...</h4>
+        <p id="sidebar-subtitle" class="text-[11px] text-slate-500 truncate">Carepartner</p>
+      </div>
+    </div>
+    <span class="material-symbols-outlined text-slate-400 group-hover:text-slate-600 text-lg shrink-0 transition-colors">chevron_right</span>
+  </a>
+
+  <button onclick="handleLogout()"
+          class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium transition-colors"
+          type="button">
+    <span class="material-symbols-outlined text-slate-400 group-hover:text-rose-500 text-base">logout</span>
+    <span>Đăng xuất tài khoản</span>
+  </button>
+</div>
+
+<!-- Self-healing script: tên + avatar + logout an toàn (cùng nguồn sự thật
+     /api/profile/ với _parent_chrome.html) -->
+<script>
+  (function initWorkerSidebar() {
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        const nameEl = document.getElementById('sidebar-name');
+        const avtEl = document.getElementById('sidebar-avatar');
+        const displayName = u.first_name || u.username || 'Carepartner';
+        if (nameEl && (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim())) {
+          nameEl.textContent = displayName;
+        }
+        if (avtEl && u.avatar_url) {
+          avtEl.src = u.avatar_url;
+        }
+      }
+    } catch (e) { /* im lặng */ }
+
+    if (typeof window.handleLogout !== 'function') {
+      window.handleLogout = function() {
+        if (confirm('Bạn có chắc muốn đăng xuất?')) {
+          try { localStorage.clear(); } catch (e) {}
+          setTimeout(() => { window.location.href = 'login.html'; }, 200);
+        }
+      };
+    }
+
+    // Nguồn sự thật duy nhất: /api/profile/ (web login không lưu localStorage 'user')
+    (async function wsbLoadProfile() {
+      try {
+        const nameEl = document.getElementById('sidebar-name');
+        const avtEl = document.getElementById('sidebar-avatar');
+        if (!nameEl || !avtEl) return;
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!r.ok) return;
+        const p = await r.json();
+        const fullName = (p.first_name && p.last_name)
+          ? (p.first_name + ' ' + p.last_name)
+          : (p.username || 'Carepartner');
+        if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
+          nameEl.textContent = fullName;
+        }
+        if (p.avatar_url) {
+          avtEl.src = p.avatar_url;
+        } else if (avtEl.src.includes('ui-avatars')) {
+          avtEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(fullName) + '&background=F26522&color=fff';
+        }
+      } catch (e) { /* im lặng — sidebar vẫn hiển thị mặc định */ }
+    })();
+  })();
+</script>
+
+</aside>
+
+<!-- ===== BOTTOM NAV (Mobile <1024px) — chuẩn 4 tab Carepartner ===== -->
+<nav id="worker-bottom-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-xl border-t border-border shadow-lg">
+    <div class="flex justify-around items-center px-2 py-2" style="padding-bottom: max(0.6rem, env(safe-area-inset-bottom));">
+        <!-- Nhận việc -->
+        <a href="don-cua-toi.html"
+           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+            <span class="material-symbols-outlined text-xl">notifications_active</span>
+            <span class="font-medium text-[10px] mt-0.5">Nhận việc</span>
+        </a>
+        <!-- Lịch rảnh -->
+        <a href="lich-ranh.html"
+           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+            <span class="material-symbols-outlined text-xl">event_available</span>
+            <span class="font-medium text-[10px] mt-0.5">Lịch rảnh</span>
+        </a>
+        <!-- Việc của tôi -->
+        <a href="worker-jobs.html"
+           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+            <span class="material-symbols-outlined text-xl">assignment</span>
+            <span class="font-medium text-[10px] mt-0.5">Việc của tôi</span>
+        </a>
+        <!-- Hồ sơ -->
+        <a href="worker-profile.html"
+           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 active_tab == 'profile' %}bg-orange-50 text-primary font-bold transition-all">
+            <span class="material-symbols-outlined text-xlactive_tab == 'profile' %} filled">person</span>
+            <span class="active_tab == 'profile' %}font-bold text-[10px] mt-0.5">Hồ sơ</span>
+        </a>
+    </div>
+</nav>
+
+<style>
+    /* Chừa chỗ cho bottom-nav trên mobile để nội dung không bị che
+       (đồng bộ _parent_chrome.html) */
+    @media (max-width: 1023px) {
+        main, .main-area, .chat-main-area { padding-bottom: 5.5rem; }
+    }
+</style>
+
+<script>
+  // Runtime cho sidebar worker: đăng xuất + hiển thị tên/avatar (null-safe).
+  // _worker_sidebar.html đã có script riêng — script này chỉ đảm bảo
+  // handleLogout tồn tại ngay cả khi sidebar bị include lỗi.
+  (function () {
+    window.handleLogout = window.handleLogout || function () {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        try { localStorage.clear(); } catch (e) {}
+        setTimeout(() => { window.location.href = 'login.html'; }, 200);
+      }
+    };
+  })();
+</script>
+
+<!-- ===== Task E + F (2026-09-14): GPS heartbeat web + chuông/popup nhận đơn ===== -->
+<!-- GPS: mỗi lần mở trang / mỗi 5 phút → POST /api/tracking/gps-heartbeat/ (cùng API mobile) -->
+<script src="../static/js/worker_gps_heartbeat.js"></script>
+<!-- 2026-09-27: heartbeat TRONG CA cho CP làm trên web — chống báo động nhầm "mất kết nối" -->
+<script src="../static/js/worker_shift_heartbeat.js"></script>
+<!-- Nhận đơn: poll awaiting_commitment mỗi 15s + chuông "Có Phụ Huynh Lựa Chọn" lặp 60s + modal Xác nhận/Chi tiết/Từ chối -->
+<script src="../static/js/job_assigned_alert.js"></script>
+<!-- 2026-09-20: chuông thông báo chung — admin → nhạc Messenger, khẩn cấp → còi hú cảnh sát + Notification API -->
+<script src="../static/js/notification_sound.js"></script>
+
+
+    <!-- ========== PARENT BACK BANNER (visible only when parent views carepartner profile) ========== -->
+    <div id="parent-back-banner" class="parent-back-banner md:ml-[260px]">
+        <a href="parent-home.html">
+            <div class="back-arrow-circle">
+                <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
+            </div>
+            <div>
+                <div>Quay về Trang chủ Phụ huynh</div>
+                <div style="font-size:12px; opacity:0.8; font-weight:500;">Bấm vào đây để trở về trang của bạn</div>
+            </div>
+            <div class="back-text-label">← Trang chủ</div>
+        </a>
+    </div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-area lg:ml-[260px] min-h-screen pb-24 md:pb-8">
+        <!-- Top header bar -->
+        <header class="bg-white border-b border-gray-100 sticky top-0 z-30">
+            <div class="px-4 md:px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <!-- Mobile logo -->
+                        <img src="../static/images/logo.png" alt="Logo EduCareLink" class="md:hidden w-9 h-9 rounded-xl object-contain shrink-0" loading="eager">
+                        <div>
+                            <h1 id="page-title" class="font-manrope font-extrabold text-2xl text-textPrimary">Hồ sơ của tôi</h1>
+                            <p id="header-greeting" class="text-sm text-textSecondary mt-0.5">Quản lý thông tin cá nhân</p>
+                        </div>
+                        <!-- Notification Bell -->
+                        <div id="notification-bell-area" class="flex items-center gap-2 ml-3">
+                            <button onclick="toggleNotificationPanel()" class="relative w-10 h-10 rounded-xl bg-primaryLight flex items-center justify-center hover:bg-primary/10 transition-all duration-200">
+                                <span class="material-symbols-outlined text-primary text-xl">notifications</span>
+                                <span id="notification-badge" class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-error text-white text-[10px] font-bold flex items-center justify-center" style="display:none;">0</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- Replay tour button -->
+                        <button onclick="replayProfileTour()" class="w-9 h-9 rounded-xl bg-primaryLight hover:bg-primarySoft flex items-center justify-center text-primary transition-all duration-200" title="Xem hướng dẫn">
+                            <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">help_outline</span>
+                        </button>
+                        <!-- Mobile: avatar -->
+                        <div class="md:hidden w-10 h-10 rounded-full overflow-hidden bg-primaryLight flex-shrink-0">
+                            <img id="mobile-avatar" class="w-full h-full object-cover" src="https://ui-avatars.com/api/?name=W&background=F26522&color=fff" alt="Avatar"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Profile Content -->
+        <div class="max-w-6xl mx-auto px-4 md:px-8 py-6 space-y-6">
+
+            <!-- ====== SKELETON LOADING STATE ====== -->
+            <div id="loading-state" class="space-y-6">
+                <!-- Profile header skeleton -->
+                <div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="skeleton w-28 h-28 rounded-full mb-4"></div>
+                        <div class="skeleton w-48 h-7 mb-3"></div>
+                        <div class="skeleton w-32 h-6 mb-2"></div>
+                        <div class="skeleton w-24 h-5"></div>
+                    </div>
+                </div>
+                <!-- AI Summary skeleton -->
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <div class="skeleton w-36 h-5 mb-3"></div>
+                    <div class="skeleton w-full h-4 mb-2"></div>
+                    <div class="skeleton w-3/4 h-4"></div>
+                </div>
+                <!-- Stats skeleton -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="skeleton w-11 h-11 rounded-xl"></div>
+                            <div>
+                                <div class="skeleton w-16 h-7 mb-1"></div>
+                                <div class="skeleton w-20 h-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="skeleton w-11 h-11 rounded-xl"></div>
+                            <div>
+                                <div class="skeleton w-16 h-7 mb-1"></div>
+                                <div class="skeleton w-20 h-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Info skeleton -->
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+                    <div class="skeleton w-36 h-6 mb-2"></div>
+                    <div class="skeleton w-full h-12"></div>
+                    <div class="skeleton w-full h-12"></div>
+                    <div class="skeleton w-full h-12"></div>
+                </div>
+            </div>
+
+            <!-- ====== ACTUAL CONTENT (hidden until loaded) ====== -->
+            <div id="profile-content" class="space-y-6" style="display: none;">
+
+                <!-- 1. Profile Header Card -->
+                <section class="profile-card bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
+                    <div class="flex flex-col items-center text-center">
+                        <!-- Avatar -->
+                        <div class="relative mb-5">
+                            <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-primaryLight shadow-md">
+                                <img id="profile-avatar" class="w-full h-full object-cover" src="https://ui-avatars.com/api/?name=W&background=F26522&color=fff" alt="Avatar người dùng"/>
+                            </div>
+                            <!-- Verification badge on avatar -->
+                            <div id="verify-badge" class="absolute -bottom-1 -right-1 w-9 h-9 rounded-full flex items-center justify-center border-[3px] border-white shadow-md" style="display: none;">
+                                <span class="material-symbols-outlined text-white text-lg filled" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            </div>
+                        </div>
+                        <!-- Full Name -->
+                        <h2 id="profile-name" class="font-manrope font-extrabold text-2xl text-textPrimary mb-2">Carepartner</h2>
+                        <!-- Role Badge -->
+                        <div class="inline-flex items-center gap-1.5 bg-primaryLight text-primary px-4 py-1.5 rounded-full text-xs font-bold mb-3">
+                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">work</span>
+                            Carepartner
+                        </div>
+                        <!-- Verification Status Badge -->
+                        <div id="verify-status" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold mb-3">
+                            <!-- Dynamically set by JS -->
+                        </div>
+                        <!-- Rating Display -->
+                        <div id="rating-display" class="flex items-center gap-2 mt-1" style="display: none;">
+                            <div class="flex items-center gap-0.5">
+                                <span class="material-symbols-outlined text-amber-400 star-pulse" style="font-variation-settings: 'FILL' 1; font-size: 20px;">star</span>
+                                <span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1; font-size: 20px;">star</span>
+                                <span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1; font-size: 20px;">star</span>
+                                <span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1; font-size: 20px;">star</span>
+                                <span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1; font-size: 20px;">star</span>
+                            </div>
+                            <span id="rating-value" class="font-manrope font-bold text-textPrimary">5.0</span>
+                            <span class="text-textSecondary text-sm">/ 5</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. AI Summary Box -->
+                <section id="ai-summary-section" class="profile-card bg-gradient-to-br from-[#FFF8F0] to-[#FFF4ED] border border-primary/10 rounded-2xl p-6 relative overflow-hidden">
+                    <!-- Decorative background icon -->
+                    <div class="absolute -right-4 -top-4 opacity-[0.06]">
+                        <span class="material-symbols-outlined text-8xl text-primary ai-float">auto_awesome</span>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-2.5 mb-3">
+                            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary text-lg filled" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                            </div>
+                            <h3 class="font-manrope font-bold text-textPrimary">Đánh giá từ AI</h3>
+                        </div>
+                        <p id="ai-summary-text" class="text-textSecondary italic leading-relaxed text-sm pl-1">
+                            Chưa có đánh giá AI
+                        </p>
+                    </div>
+                </section>
+
+                <!-- 3. Quick Stats Row -->
+                <section class="grid grid-cols-2 gap-4">
+                    <div class="profile-card bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-primaryLight flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-primary text-xl filled" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+                            </div>
+                            <div>
+                                <p id="stat-completed" class="font-manrope font-extrabold text-2xl text-textPrimary">0</p>
+                                <p class="text-xs text-textSecondary font-medium">Việc hoàn thành</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-card bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-success text-xl filled" style="font-variation-settings: 'FILL' 1;">payments</span>
+                            </div>
+                            <div>
+                                <p id="stat-earnings" class="font-manrope font-extrabold text-2xl text-success">0đ</p>
+                                <p class="text-xs text-textSecondary font-medium">Thu nhập</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. Personal Info Section -->
+                <section class="profile-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="px-6 pt-6 pb-3">
+                        <h3 class="font-manrope font-bold text-lg text-textPrimary">Thông tin cá nhân</h3>
+                    </div>
+                    <div class="divide-y divide-gray-50">
+                        <!-- Phone -->
+                        <div class="px-6 py-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-primaryLight flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-primary text-lg">phone</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs text-textSecondary font-medium mb-0.5">Số điện thoại</p>
+                                <p id="info-phone" class="font-semibold text-sm text-textPrimary truncate">Chưa cập nhật</p>
+                            </div>
+                        </div>
+                        <!-- Address -->
+                        <div class="px-6 py-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-success text-lg">location_on</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs text-textSecondary font-medium mb-0.5">Địa chỉ</p>
+                                <p id="info-address" class="font-semibold text-sm text-textPrimary truncate">Chưa cập nhật</p>
+                            </div>
+                        </div>
+                        <!-- Email -->
+                        <div class="px-6 py-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-amber-500 text-lg">mail</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs text-textSecondary font-medium mb-0.5">Email</p>
+                                <p id="info-email" class="font-semibold text-sm text-textPrimary truncate">Chưa cập nhật</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. Menu Options -->
+                <section class="space-y-3">
+                    <!-- Edit Profile / Submit Credential -->
+                    <button id="btn-edit-profile" onclick="openEditProfileModal()" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-primaryLight flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary text-lg">edit</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Chỉnh sửa hồ sơ</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </button>
+                    <!-- My Credentials -->
+                    <button id="btn-my-credentials" onclick="openMyCredentialsModal()" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-amber-500 text-lg">workspace_premium</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Bằng cấp của tôi</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </button>
+                    <!-- Profile Change Requests -->
+                    <button id="btn-change-requests" onclick="openChangeRequestsModal()" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-purple-500 text-lg">pending_actions</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Yêu cầu thay đổi hồ sơ</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </button>
+                    <!-- Lịch rảnh làm việc -->
+                    <a href="lich-ranh.html" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[#F26522] text-lg">calendar_month</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Lịch rảnh (ghép cặp)</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </a>
+                    <!-- Ngày bận đột xuất -->
+                    <a href="ngay-ban.html" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-rose-500 text-lg">event_busy</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Ngày bận đột xuất</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </a>
+                    <!-- GPS cho ghép nối (Task E — đồng bộ mobile WorkerProfileScreen) -->
+                    <div id="gps-consent-row" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-4 min-w-0">
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-sky-500 text-lg">my_location</span>
+                            </div>
+                            <div class="min-w-0">
+                                <span class="font-semibold text-sm text-textPrimary block">GPS cho ghép nối</span>
+                                <span class="text-[11px] text-textSecondary block truncate">Dùng vị trí hiện tại để gợi ý đơn gần bạn nhất</span>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+                            <input type="checkbox" id="gps-consent-switch" class="sr-only peer" onchange="handleGpsConsentChange(this)">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                    </div>
+                    <!-- Đơn ghép cặp của tôi -->
+                    <a href="don-cua-toi.html" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">auto_awesome</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Đơn ghép cặp của tôi</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </a>
+                    <!-- Thu nhập của tôi (parity mobile MyEarningsScreen) -->
+                    <a href="worker-earnings.html" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-amber-500 text-lg">account_balance_wallet</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Thu nhập của tôi</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </a>
+                    <!-- Khiếu nại (parity mobile MyComplaintsScreen) -->
+                    <a href="worker-complaints.html" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-rose-500 text-lg">report_problem</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Khiếu nại</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </a>
+                    <!-- Help Center -->
+                    <button onclick="openHelpCenterModal()" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-blue-500 text-lg">help_center</span>
+                            </div>
+                            <span class="font-semibold text-sm text-textPrimary">Trung tâm trợ giúp</span>
+                        </div>
+                        <span class="material-symbols-outlined text-textSecondary text-lg">chevron_right</span>
+                    </button>
+                    <!-- Logout -->
+                    <button onclick="handleLogout()" class="menu-item w-full bg-white flex items-center justify-between p-4 rounded-xl border border-gray-100 shadow-sm cursor-pointer group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-error text-lg">logout</span>
+                            </div>
+                            <span class="font-semibold text-sm text-error">Đăng xuất</span>
+                        </div>
+                        <span class="material-symbols-outlined text-error/40 group-hover:text-error text-lg transition-all duration-200">chevron_right</span>
+                    </button>
+                </section>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Mobile bottom nav chuyển vào _worker_chrome.html (Batch 1 — đồng bộ chuẩn 4 tab) -->
+
+    <!-- ========== NOTIFICATION PANEL ========== -->
+    <div id="notification-panel" class="fixed top-0 right-0 h-full w-full md:w-[400px] bg-white shadow-2xl z-[100] transform translate-x-full transition-transform duration-300 ease-in-out">
+        <div class="flex flex-col h-full">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <h3 class="font-manrope font-bold text-lg text-textPrimary">Thông báo</h3>
+                <button onclick="toggleNotificationPanel()" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-textSecondary">close</span>
+                </button>
+            </div>
+            <div id="notification-list" class="flex-1 overflow-y-auto p-4 space-y-3">
+                <div class="flex items-center justify-center py-12 text-textSecondary">
+                    <span class="material-symbols-outlined mr-2">notifications_off</span>
+                    Chưa có thông báo
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="notification-overlay" class="fixed inset-0 bg-black/30 z-[99] hidden" onclick="toggleNotificationPanel()"></div>
+
+    <!-- ========== EDIT PROFILE MODAL ========== -->
+    <div id="edit-profile-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 modal-bg-enter" onclick="closeEditProfileModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="sticky top-0 bg-white rounded-t-2xl px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10">
+                <h3 class="font-manrope font-bold text-lg text-textPrimary">Chỉnh sửa hồ sơ</h3>
+                <button onclick="closeEditProfileModal()" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-textSecondary">close</span>
+                </button>
+            </div>
+            <!-- Admin approval notice -->
+            <div class="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5">
+                <span class="material-symbols-outlined text-amber-500 text-lg mt-0.5" style="font-variation-settings: 'FILL' 1;">info</span>
+                <p class="text-xs text-amber-700 leading-relaxed">Lưu ý: Thay đổi thông tin cá nhân sẽ được gửi đến Admin để xem xét và duyệt. Bạn sẽ nhận được thông báo khi Admin đưa ra quyết định.</p>
+            </div>
+            <div class="px-6 py-5 space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-textPrimary mb-1.5">Họ</label>
+                    <input type="text" id="edit-first-name" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Nhập họ"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-textPrimary mb-1.5">Tên</label>
+                    <input type="text" id="edit-last-name" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Nhập tên"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-textPrimary mb-1.5">Số điện thoại</label>
+                    <input type="tel" id="edit-phone" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Nhập số điện thoại"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-textPrimary mb-1.5">Địa chỉ <span class="text-textMuted text-xs font-normal">(Bấm trên bản đồ hoặc gõ)</span></label>
+                    <input type="text" id="edit-address" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Bấm trên bản đồ hoặc gõ địa chỉ..."/>
+                    <input type="hidden" id="edit-lat" />
+                    <input type="hidden" id="edit-lng" />
+                    <!-- Map picker in modal -->
+                    <div id="edit-map-container" class="mt-2 rounded-xl overflow-hidden border border-gray-200" style="height: 220px;">
+                        <div id="edit-location-map" style="width: 100%; height: 100%;"></div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2">
+                        <button type="button" onclick="useMyLocationForProfile()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primaryLight text-primary text-xs font-semibold hover:bg-primarySoft transition-all">
+                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">my_location</span>
+                            Vị trí của tôi
+                        </button>
+                        <button type="button" onclick="searchAddressForProfile()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-100 text-textSecondary text-xs font-semibold hover:bg-gray-200 transition-all">
+                            <span class="material-symbols-outlined text-sm">search</span>
+                            Tìm
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-textPrimary mb-1.5">Email</label>
+                    <input type="email" id="edit-email" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Nhập email"/>
+                </div>
+                <!-- Credential Upload Section -->
+                <div class="pt-3 border-t border-gray-100">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined text-amber-500 text-lg">workspace_premium</span>
+                        <h4 class="font-manrope font-bold text-base text-textPrimary">Gửi bằng cấp cho Admin duyệt</h4>
+                    </div>
+                    <p class="text-xs text-textSecondary mb-3">Tải lên ảnh minh chứng bằng cấp và viết mô tả để Admin xem xét và đánh giá.</p>
+                    <div>
+                        <label class="block text-sm font-semibold text-textPrimary mb-1.5">Ảnh bằng cấp / chứng chỉ</label>
+                        <input type="file" id="edit-certificate-photo" accept="image/*" class="w-full text-sm text-textSecondary file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primaryLight file:text-primary hover:file:bg-primary/20 transition-all"/>
+                    </div>
+                    <div class="mt-3">
+                        <label class="block text-sm font-semibold text-textPrimary mb-1.5">Mô tả về bằng cấp</label>
+                        <textarea id="edit-credential-desc" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none" placeholder="Ví dụ: Cử nhân Sư phạm Toán, Chứng chỉ IELTS 7.0..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="sticky bottom-0 bg-white rounded-b-2xl px-6 py-4 border-t border-gray-100 flex gap-3">
+                <button onclick="closeEditProfileModal()" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-textSecondary font-semibold text-sm hover:bg-gray-50 transition-all">Hủy</button>
+                <button onclick="saveProfileAndCredential()" class="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primaryDark transition-all">Gửi yêu cầu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MY CREDENTIALS MODAL ========== -->
+    <div id="my-credentials-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 modal-bg-enter" onclick="closeMyCredentialsModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="sticky top-0 bg-white rounded-t-2xl px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10">
+                <h3 class="font-manrope font-bold text-lg text-textPrimary">Bằng cấp của tôi</h3>
+                <button onclick="closeMyCredentialsModal()" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-textSecondary">close</span>
+                </button>
+            </div>
+            <div id="credentials-list" class="p-5 space-y-4">
+                <div class="flex items-center justify-center py-8 text-textSecondary">
+                    <span class="material-symbols-outlined mr-2">description</span>
+                    Chưa gửi bằng cấp nào
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== HELP CENTER MODAL (AI Chat) ========== -->
+    <div id="help-center-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 modal-bg-enter" onclick="closeHelpCenterModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg h-[85vh] flex flex-col modal-content-enter">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-blue-500 text-lg" style="font-variation-settings: 'FILL' 1;">help_center</span>
+                    </div>
+                    <div>
+                        <h3 class="font-manrope font-bold text-base text-textPrimary">Trung tâm trợ giúp</h3>
+                        <p class="text-[11px] text-textSecondary">Hỏi AI về cách sử dụng EduCareLink</p>
+                    </div>
+                </div>
+                <button onclick="closeHelpCenterModal()" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-textSecondary">close</span>
+                </button>
+            </div>
+            <!-- Chat messages -->
+            <div id="help-chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+                <!-- Welcome message -->
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-blue-500 text-sm" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                    </div>
+                    <div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] border border-gray-100 shadow-sm">
+                        <p class="text-sm text-textPrimary leading-relaxed">Xin chào! Tôi là trợ lý AI của EduCareLink. Tôi có thể giúp bạn:</p>
+                        <ul class="text-sm text-textSecondary mt-2 space-y-1.5">
+                            <li class="flex items-start gap-2"><span class="text-primary mt-0.5">•</span> Hướng dẫn sử dụng nền tảng</li>
+                            <li class="flex items-start gap-2"><span class="text-primary mt-0.5">•</span> Giải đáp thắc mắc về tài khoản</li>
+                            <li class="flex items-start gap-2"><span class="text-primary mt-0.5">•</span> Tư vấn cách ứng tuyển hiệu quả</li>
+                            <li class="flex items-start gap-2"><span class="text-primary mt-0.5">•</span> Hỗ trợ quy trình gửi bằng cấp</li>
+                        </ul>
+                        <p class="text-sm text-textPrimary mt-2">Hãy đặt câu hỏi cho tôi nhé!</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Quick questions -->
+            <div id="help-quick-questions" class="px-4 py-2 border-t border-gray-100 bg-white flex-shrink-0">
+                <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <button onclick="sendHelpQuickQuestion('Cách ứng tuyển việc?')" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-medium hover:bg-blue-100 transition-all">Cách ứng tuyển?</button>
+                    <button onclick="sendHelpQuickQuestion('Làm sao để gửi bằng cấp?')" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-medium hover:bg-blue-100 transition-all">Gửi bằng cấp?</button>
+                    <button onclick="sendHelpQuickQuestion('Cách chỉnh sửa hồ sơ?')" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-medium hover:bg-blue-100 transition-all">Chỉnh sửa hồ sơ?</button>
+                    <button onclick="sendHelpQuickQuestion('Tại sao tài khoản chưa được duyệt?')" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-medium hover:bg-blue-100 transition-all">Chưa được duyệt?</button>
+                </div>
+            </div>
+            <!-- Input area -->
+            <div class="px-4 py-3 border-t border-gray-100 bg-white flex-shrink-0">
+                <div class="flex items-end gap-2">
+                    <textarea id="help-chat-input" rows="1" class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none max-h-24" placeholder="Nhập câu hỏi của bạn..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendHelpMessage();}"></textarea>
+                    <button onclick="sendHelpMessage()" id="help-send-btn" class="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-all flex-shrink-0">
+                        <span class="material-symbols-outlined text-lg">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== PROFILE CHANGE REQUESTS MODAL ========== -->
+    <div id="change-requests-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 modal-bg-enter" onclick="closeChangeRequestsModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto modal-content-enter">
+            <div class="sticky top-0 bg-white rounded-t-2xl px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10">
+                <h3 class="font-manrope font-bold text-lg text-textPrimary">Yêu cầu thay đổi hồ sơ</h3>
+                <button onclick="closeChangeRequestsModal()" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-textSecondary">close</span>
+                </button>
+            </div>
+            <div id="change-requests-list" class="p-5 space-y-4">
+                <div class="flex items-center justify-center py-8 text-textSecondary">
+                    <span class="material-symbols-outlined mr-2">pending_actions</span>
+                    Chưa có yêu cầu nào
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== JAVASCRIPT ========== -->
+    <script>
+        const API_BASE = window.API_BASE;
+        const LOGIN_URL = "login.html";
+
+        async function apiFetch(url, options = {}) {
+            let token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = LOGIN_URL;
+                return new Response(null, { status: 401 });
+            }
+            options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
+            let response = await fetch(url, options);
+
+            if (response.status === 401) {
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (refreshToken) {
+                    try {
+                        const refreshResp = await fetch(API_BASE + '/auth/token/refresh/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ refresh: refreshToken })
+                        });
+                        if (refreshResp.ok) {
+                            const refreshData = await refreshResp.json();
+                            localStorage.setItem('token', refreshData.access);
+                            if (refreshData.refresh) localStorage.setItem('refresh_token', refreshData.refresh);
+                            options.headers['Authorization'] = 'Bearer ' + refreshData.access;
+                            response = await fetch(url, options);
+                        } else {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('refresh_token');
+                            window.location.href = LOGIN_URL;
+                            return new Response(null, { status: 401 });
+                        }
+                    } catch (e) {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('refresh_token');
+                        window.location.href = LOGIN_URL;
+                        return new Response(null, { status: 401 });
+                    }
+                } else {
+                    localStorage.removeItem('token');
+                    window.location.href = LOGIN_URL;
+                    return new Response(null, { status: 401 });
+                }
+            }
+            return response;
+        }
+
+        // Auth check — redirect to login if no token
+        if (!localStorage.getItem('token')) window.location.href = LOGIN_URL;
+
+        // ===== GLOBAL STATE =====
+        let profileData = null;
+        let confirmResolve = null;
+        let viewingWorkerId = null;  // Nếu != null thì đang xem hồ sơ của worker khác
+        let isOwnProfile = true;     // Có phải hồ sơ của mình không
+
+        // ===== TOAST SYSTEM (replaces all alert()) =====
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        }
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const icons = {
+                success: 'check_circle',
+                error: 'error',
+                info: 'info',
+                warning: 'warning'
+            };
+            const colors = {
+                success: 'bg-emerald-500',
+                error: 'bg-red-500',
+                info: 'bg-primary',
+                warning: 'bg-amber-500'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-lg text-white text-sm font-medium toast-enter ${colors[type] || colors.info}`;
+            toast.innerHTML = `
+                <span class="material-symbols-outlined text-xl filled" style="font-variation-settings: 'FILL' 1;">${icons[type] || icons.info}</span>
+                <span class="flex-1">${escapeHtml(message)}</span>
+                <button onclick="this.parentElement.remove()" class="ml-2 hover:opacity-80">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // ===== CONFIRM MODAL =====
+        function showConfirmModal(title, message) {
+            return new Promise((resolve) => {
+                confirmResolve = resolve;
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').textContent = message;
+                const modal = document.getElementById('confirm-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+        }
+
+        function closeConfirmModal(result) {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (confirmResolve) {
+                confirmResolve(result);
+                confirmResolve = null;
+            }
+        }
+
+        // ===== LOGOUT (clears localStorage, redirects to login) =====
+        function handleLogout() {
+            showConfirmModal('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất?').then(confirmed => {
+                if (confirmed) {
+                    localStorage.clear();
+                    showToast('Đăng xuất thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = "login.html";
+                    }, 800);
+                }
+            });
+        }
+
+        // ===== FORMAT CURRENCY =====
+        function formatCurrency(amount) {
+            if (!amount || amount === 0) return '0đ';
+            return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+        }
+
+        // ===== SAFE DOM SETTERS — chống "Cannot set properties of null" =====
+        // Khi một phần tử bị ẩn/đổi ID giữa các phiên bản web/mobile, gán trực tiếp
+        // sẽ ném ngoại lệ rồi bị catch lớn bắt lại → toast "Không thể tải hồ sơ" sai sự thật.
+        function setElText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+        function setElSrc(id, src) {
+            const el = document.getElementById(id);
+            if (el) el.src = src;
+        }
+
+        // ===== RENDER RATING STARS =====
+        function renderStars(rating) {
+            const container = document.getElementById('rating-display');
+            if (!container) return;
+            const starsContainer = container.querySelector('.flex');
+            if (!starsContainer) return;
+
+            const fullStars = Math.floor(rating);
+            const hasHalf = rating - fullStars >= 0.3;
+            let starsHTML = '';
+
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    starsHTML += `<span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1; font-size: 20px;">star</span>`;
+                } else if (i === fullStars && hasHalf) {
+                    starsHTML += `<span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1; font-size: 20px;">star_half</span>`;
+                } else {
+                    starsHTML += `<span class="material-symbols-outlined text-gray-300" style="font-variation-settings: 'FILL' 0; font-size: 20px;">star</span>`;
+                }
+            }
+            starsContainer.innerHTML = starsHTML;
+        }
+
+        // ===== FETCH ALL DATA FROM API =====
+        async function fetchProfileData() {
+            try {
+                // Kiểm tra URL parameter worker_id — nếu có thì đang xem hồ sơ của worker khác
+                const urlParams = new URLSearchParams(window.location.search);
+                const workerIdFromUrl = urlParams.get('worker_id');
+                
+                if (workerIdFromUrl) {
+                    viewingWorkerId = parseInt(workerIdFromUrl);
+                    isOwnProfile = false;
+                } else {
+                    isOwnProfile = true;
+                    viewingWorkerId = null;
+                }
+
+                if (isOwnProfile) {
+                    // XEM HỒ SƠ CỦA MÌNH — fetch từ /api/profile/
+                    const profileResp = await apiFetch(API_BASE + "/profile/");
+                    if (profileResp && !profileResp.ok) {
+                        if (profileResp.status === 401) {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('refresh_token');
+                            window.location.href = LOGIN_URL;
+                            return;
+                        }
+                        throw new Error('Không thể tải hồ sơ');
+                    }
+                    if (!profileResp) return;
+                    profileData = await profileResp.json();
+
+                    // Fetch jobs for stats
+                    let jobsData = [];
+                    try {
+                        const jobsResp = await apiFetch(API_BASE + "worker-jobs.html");
+                        if (jobsResp.ok) jobsData = await jobsResp.json();
+                    } catch (e) { console.error('Lỗi tải danh sách việc:', e); }
+
+                    // Fetch rating detail
+                    let ratingData = null;
+                    try {
+                        const ratingResp = await apiFetch(API_BASE + "worker-feed.html" + profileData.id + "/profile/");
+                        if (ratingResp.ok) ratingData = await ratingResp.json();
+                    } catch (e) { console.error('Lỗi tải đánh giá:', e); }
+
+                    // Chuẩn hóa jobsData: endpoint /worker/my-jobs/ có thể trả mảng thuần,
+                    // object phân trang {count, results} hoặc object khác — luôn đảm bảo mảng an toàn
+                    // trước khi truyền vào renderProfile (tránh TypeError: jobs.filter is not a function)
+                    let safeJobs = [];
+                    if (Array.isArray(jobsData)) {
+                        safeJobs = jobsData;
+                    } else if (jobsData && Array.isArray(jobsData.results)) {
+                        safeJobs = jobsData.results;
+                    }
+                    renderProfile(profileData, safeJobs, ratingData);
+                } else {
+                    // XEM HỒ SƠ CỦA WORKER KHÁC — fetch từ /api/worker/<id>/profile/
+                    const workerResp = await apiFetch(API_BASE + "worker-feed.html" + viewingWorkerId + "/profile/");
+                    if (!workerResp || !workerResp.ok) {
+                        throw new Error('Không thể tải hồ sơ Carepartner');
+                    }
+                    const workerData = await workerResp.json();
+                    
+                    // Cần thêm thông tin cá nhân (phone, address, email)
+                    let profileExtra = {};
+                    try {
+                        const profileResp = await apiFetch(API_BASE + "/profile/");
+                        if (profileResp.ok) profileData = await profileResp.json();
+                    } catch(e) {}
+
+                    // Tạo profile object từ worker detail API
+                    const profile = {
+                        id: workerData.id,
+                        username: workerData.username,
+                        first_name: workerData.first_name,
+                        last_name: workerData.last_name,
+                        is_approved: workerData.is_verified,
+                        is_verified: workerData.is_verified,
+                        ai_profile_summary: workerData.ai_profile_summary,
+                        phone_number: workerData.phone_number || '',
+                        address: workerData.address || '',
+                        email: workerData.email || '',
+                    };
+                    
+                    renderProfile(profile, [], workerData, true);
+                }
+
+            } catch (e) {
+                console.error('Lỗi tải hồ sơ:', e);
+                showToast('Không thể tải thông tin hồ sơ. Vui lòng thử lại.', 'error');
+                document.getElementById('loading-state').innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-16 text-center">
+                        <div class="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                            <span class="material-symbols-outlined text-4xl text-error">wifi_off</span>
+                        </div>
+                        <h3 class="font-manrope font-bold text-lg text-textPrimary mb-2">Lỗi kết nối</h3>
+                        <p class="text-textSecondary text-sm max-w-xs">Không thể tải thông tin hồ sơ. Vui lòng thử lại.</p>
+                        <button onclick="init()" class="mt-4 px-5 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primaryDark transition-all duration-200">Thử lại</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ===== RENDER PROFILE WITH DYNAMIC DATA =====
+        function renderProfile(profile, jobs, ratingDetail, isViewingOther = false) {
+            // Hide loading, show content
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('profile-content').style.display = '';
+
+            // Cập nhật tiêu đề trang nếu đang xem hồ sơ người khác
+            if (isViewingOther || !isOwnProfile) {
+                document.getElementById('page-title').textContent = 'Hồ sơ Carepartner';
+                document.getElementById('header-greeting').textContent = 'Xem thông tin Carepartner';
+                // Ẩn các nút chỉnh sửa, logout, credentials — chỉ hiển thị khi là hồ sơ của mình
+                const editBtn = document.getElementById('btn-edit-profile');
+                const credBtn = document.getElementById('btn-my-credentials');
+                const changeReqBtn = document.getElementById('btn-change-requests');
+                const helpBtn = document.querySelector('[onclick="openHelpCenterModal()"]');
+                const logoutBtn = document.querySelector('[onclick="handleLogout()"]');
+                const notifBell = document.getElementById('notification-bell-area');
+                const replayTourBtn = document.querySelector('[onclick="replayProfileTour()"]');
+                if (editBtn) editBtn.style.display = 'none';
+                if (credBtn) credBtn.style.display = 'none';
+                if (changeReqBtn) changeReqBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'none';
+                if (notifBell) notifBell.style.display = 'none';
+                if (replayTourBtn) replayTourBtn.style.display = 'none';
+
+                // Hiển thị banner "Quay về Trang chủ Phụ huynh"
+                const backBanner = document.getElementById('parent-back-banner');
+                if (backBanner) backBanner.classList.add('visible');
+
+                // Ẩn sidebar + mobile nav (phụ huynh không cần thấy menu carepartner)
+                // Batch 1: sidebar giờ nằm trong _worker_chrome.html (id="sidebar",
+                // nav id="worker-bottom-nav") — giữ selector cũ cho tương thích ngược.
+                const sidebar = document.querySelector('.sidebar') || document.getElementById('sidebar');
+                if (sidebar) sidebar.style.display = 'none';
+                const mobileNav = document.querySelector('.mobile-bottom-nav') || document.getElementById('worker-bottom-nav');
+                if (mobileNav) mobileNav.style.display = 'none';
+                // Bỏ margin-left của main content
+                const mainArea = document.querySelector('.main-area');
+                if (mainArea) mainArea.style.marginLeft = '0';
+                // Bỏ margin-left của back banner
+                if (backBanner) backBanner.style.marginLeft = '0';
+            }
+
+            // --- Full Name (first_name + last_name from API) ---
+            const fullName = [profile.first_name, profile.last_name].filter(Boolean).join(' ').trim() || profile.username || 'Carepartner';
+            setElText('profile-name', fullName);
+
+            // --- Avatar (from ui-avatars.com using username) ---
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'W')}&background=F26522&color=fff&size=128`;
+            setElSrc('profile-avatar', avatarUrl);
+            setElSrc('sidebar-avatar', `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'W')}&background=F26522&color=fff`);
+            setElSrc('mobile-avatar', `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username || 'W')}&background=F26522&color=fff`);
+
+            // --- Sidebar name & role (sidebar-role là ID cũ; _worker_sidebar.html dùng sidebar-subtitle) ---
+            setElText('sidebar-name', fullName);
+            setElText('sidebar-role', 'Carepartner');
+            setElText('sidebar-subtitle', 'Carepartner');
+
+            // --- Verification Badge on avatar + status text ---
+            const verifyBadge = document.getElementById('verify-badge');
+            const verifyStatus = document.getElementById('verify-status');
+
+            if (profile.is_approved) {
+                // Approved — green badge
+                if (verifyBadge) {
+                    verifyBadge.style.display = 'flex';
+                    verifyBadge.className = verifyBadge.className.replace(/bg-\S+/g, '');
+                    verifyBadge.classList.add('bg-success');
+                }
+                if (verifyStatus) {
+                    verifyStatus.className = 'inline-flex items-center gap-1.5 bg-emerald-50 text-success px-4 py-1.5 rounded-full text-xs font-bold mb-3';
+                    verifyStatus.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified</span> Đã xác thực`;
+                }
+            } else {
+                // Pending — amber badge
+                if (verifyBadge) {
+                    verifyBadge.style.display = 'flex';
+                    verifyBadge.className = verifyBadge.className.replace(/bg-\S+/g, '');
+                    verifyBadge.classList.add('bg-amber-400');
+                }
+                if (verifyStatus) {
+                    verifyStatus.className = 'inline-flex items-center gap-1.5 bg-amber-50 text-amber-600 px-4 py-1.5 rounded-full text-xs font-bold mb-3';
+                    verifyStatus.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">schedule</span> Chờ duyệt`;
+                }
+            }
+
+            // --- Average Rating (from ratingDetail if available) ---
+            const ratingDisplay = document.getElementById('rating-display');
+            if (ratingDetail && ratingDetail.avg_rating && ratingDisplay) {
+                ratingDisplay.style.display = 'flex';
+                setElText('rating-value', ratingDetail.avg_rating.toFixed(1));
+                renderStars(ratingDetail.avg_rating);
+            } else if (ratingDisplay) {
+                ratingDisplay.style.display = 'none';
+            }
+
+            // --- AI Summary (from ai_profile_summary field) ---
+            const aiSummaryText = document.getElementById('ai-summary-text');
+            if (aiSummaryText) {
+                if (profile.ai_profile_summary && profile.ai_profile_summary.trim()) {
+                    aiSummaryText.textContent = `"${profile.ai_profile_summary}"`;
+                    aiSummaryText.classList.remove('text-textSecondary/50');
+                    aiSummaryText.classList.add('text-textSecondary');
+                } else {
+                    aiSummaryText.textContent = 'Chưa có đánh giá AI';
+                    aiSummaryText.classList.remove('text-textSecondary');
+                    aiSummaryText.classList.add('text-textSecondary/50');
+                }
+            }
+
+            // --- Quick Stats (luôn lọc trên mảng an toàn) ---
+            // Completed jobs = jobs where task_status === 'completed'
+            const safeJobsList = Array.isArray(jobs) ? jobs : [];
+            const completedJobs = safeJobsList.filter(j => j && j.task_status === 'completed');
+            setElText('stat-completed', completedJobs.length);
+
+            // Total earnings = sum of task_price from completed jobs
+            const totalEarnings = completedJobs.reduce((sum, j) => {
+                const price = parseFloat(j.task_price) || 0;
+                return sum + price;
+            }, 0);
+            setElText('stat-earnings', formatCurrency(totalEarnings));
+
+            // --- Personal Info ---
+            setElText('info-phone', profile.phone_number || 'Chưa cập nhật');
+            setElText('info-address', profile.address || 'Chưa cập nhật');
+            setElText('info-email', profile.email || 'Chưa cập nhật');
+        }
+
+        // ===== PROFILE TOUR SYSTEM =====
+        const TOUR_KEY = 'educarelink_worker_profile_tour_done';
+        let tourActive = false;
+        let currentTourStep = 0;
+
+        const tourSteps = [
+            {
+                target: null, // Welcome step — no specific target
+                title: 'Chào mừng bạn đến với Hồ sơ!',
+                description: 'Đây là trang hồ sơ cá nhân của bạn. Hãy để chúng tôi hướng dẫn bạn cách sử dụng từng mục. Bạn có thể bỏ qua bất cứ lúc nào.',
+                icon: 'waving_hand',
+                position: 'center'
+            },
+            {
+                target: '#profile-content .profile-card:first-child',
+                title: 'Hồ sơ cá nhân',
+                description: 'Tại đây hiển thị ảnh đại diện, tên của bạn và trạng thái xác thực. Trạng thái "Chờ duyệt" nghĩa là hồ sơ đang chờ Admin kiểm tra bằng cấp. Khi được duyệt, huy hiệu xanh "Đã xác thực" sẽ xuất hiện.',
+                icon: 'badge',
+                position: 'bottom'
+            },
+            {
+                target: '#ai-summary-section',
+                title: 'Đánh giá từ AI',
+                description: 'AI sẽ tự động phân tích hồ sơ và đánh giá năng lực của bạn dựa trên kinh nghiệm, bằng cấp và phản hồi từ phụ huynh. Phần này giúp phụ huynh hiểu rõ hơn về bạn.',
+                icon: 'auto_awesome',
+                position: 'bottom'
+            },
+            {
+                target: '#profile-content .grid.grid-cols-2',
+                title: 'Thống kê nhanh',
+                description: 'Hiển thị số việc bạn đã hoàn thành và tổng thu nhập. Những con số này tăng lên khi bạn hoàn thành nhiều việc hơn, giúp phụ huynh đánh giá kinh nghiệm của bạn.',
+                icon: 'leaderboard',
+                position: 'bottom'
+            },
+            {
+                target: '#profile-content .profile-card:nth-of-type(4)',
+                title: 'Thông tin cá nhân',
+                description: 'Số điện thoại, địa chỉ và email của bạn được hiển thị tại đây. Để cập nhật thông tin, hãy nhấn "Chỉnh sửa hồ sơ" ở bên dưới. Đảm bảo thông tin liên lạc chính xác để phụ huynh có thể liên hệ bạn.',
+                icon: 'contact_page',
+                position: 'bottom'
+            },
+            {
+                target: '#btn-edit-profile',
+                title: 'Chỉnh sửa hồ sơ & Gửi bằng cấp',
+                description: 'Nhấn vào đây để chỉnh sửa thông tin cá nhân VÀ gửi ảnh bằng cấp cho Admin duyệt. Bạn cũng có thể chọn vị trí nhà trên bản đồ để hệ thống tính khoảng cách đến công việc. Việc cung cấp bằng cấp và vị trí rất quan trọng để được xác thực và tăng cơ hội nhận việc!',
+                icon: 'edit',
+                position: 'bottom'
+            },
+            {
+                target: '#btn-my-credentials',
+                title: 'Bằng cấp của tôi',
+                description: 'X lại danh sách các bằng cấp bạn đã gửi và trạng thái duyệt từ Admin (Chờ duyệt / Đã duyệt / Từ chối). Nếu bị từ chối, bạn có thể gửi lại bằng cấp mới.',
+                icon: 'workspace_premium',
+                position: 'bottom'
+            },
+            {
+                target: '#btn-change-requests',
+                title: 'Yêu cầu thay đổi hồ sơ',
+                description: 'Xem lại các yêu cầu thay đổi thông tin cá nhân đã gửi và phản hồi từ Admin. Mọi thay đổi hồ sơ đều cần được Admin phê duyệt trước khi áp dụng.',
+                icon: 'pending_actions',
+                position: 'bottom'
+            },
+            {
+                target: '#profile-content .space-y-3 button:nth-of-type(4)',
+                title: 'Trung tâm trợ giúp',
+                description: 'Chat với AI trợ giúp nếu bạn có thắc mắc về cách sử dụng nền tảng. AI sẵn sàng hỗ trợ bạn 24/7! Nhấn nút (?) ở góc phải header để xem lại hướng dẫn này bất cứ lúc nào.',
+                icon: 'help_center',
+                position: 'bottom'
+            }
+        ];
+
+        function shouldShowTour() {
+            try {
+                return !localStorage.getItem(TOUR_KEY);
+            } catch(e) { return true; }
+        }
+
+        function markTourDone() {
+            try {
+                localStorage.setItem(TOUR_KEY, '1');
+            } catch(e) {}
+        }
+
+        function startProfileTour() {
+            if (tourActive) return;
+            tourActive = true;
+            currentTourStep = 0;
+
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'tour-overlay';
+            overlay.className = 'tour-overlay';
+            document.body.appendChild(overlay);
+
+            // Create spotlight
+            const spotlight = document.createElement('div');
+            spotlight.id = 'tour-spotlight';
+            spotlight.className = 'tour-spotlight hidden';
+            document.body.appendChild(spotlight);
+
+            // Create tooltip
+            const tooltip = document.createElement('div');
+            tooltip.id = 'tour-tooltip';
+            tooltip.className = 'tour-tooltip hidden';
+            document.body.appendChild(tooltip);
+
+            renderTourStep();
+        }
+
+        function renderTourStep() {
+            const step = tourSteps[currentTourStep];
+            const overlay = document.getElementById('tour-overlay');
+            const spotlight = document.getElementById('tour-spotlight');
+            const tooltip = document.getElementById('tour-tooltip');
+
+            if (!step || !overlay || !tooltip) {
+                endProfileTour();
+                return;
+            }
+
+            // Build step dots HTML
+            let dotsHTML = '';
+            for (let i = 0; i < tourSteps.length; i++) {
+                const cls = i === currentTourStep ? 'active' : (i < currentTourStep ? 'completed' : '');
+                dotsHTML += '<div class="tour-step-dot ' + cls + '"></div>';
+            }
+
+            const isFirst = currentTourStep === 0;
+            const isLast = currentTourStep === tourSteps.length - 1;
+
+            // Build tooltip content — with close (X) button as safety net
+            tooltip.innerHTML = ''
+                + '<div class="tour-animate" style="position:relative;">'
+                + '  <button onclick="skipProfileTour()" class="tour-close-btn" title="Đóng hướng dẫn">&times;</button>'
+                + '  <div class="flex items-center gap-3 mb-3 pr-8">'
+                + '    <div class="w-10 h-10 rounded-xl bg-primaryLight flex items-center justify-center flex-shrink-0">'
+                + '      <span class="material-symbols-outlined text-primary text-xl filled" style="font-variation-settings: \'FILL\' 1;">' + step.icon + '</span>'
+                + '    </div>'
+                + '    <div class="flex-1">'
+                + '      <div class="flex items-center gap-2">'
+                + '        <h4 class="font-manrope font-bold text-textPrimary text-base">' + step.title + '</h4>'
+                + '        <span class="text-xs text-textSecondary font-medium bg-gray-100 px-2 py-0.5 rounded-full">' + (currentTourStep + 1) + '/' + tourSteps.length + '</span>'
+                + '      </div>'
+                + '    </div>'
+                + '  </div>'
+                + '  <p class="text-sm text-textSecondary leading-relaxed mb-4">' + step.description + '</p>'
+                + '  <div class="flex items-center justify-between">'
+                + '    <button onclick="skipProfileTour()" class="text-sm text-textSecondary font-medium hover:text-textPrimary transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-50">Bỏ qua</button>'
+                + '    <div class="flex items-center gap-2">'
+                + (isFirst ? '' : '<button onclick="prevTourStep()" class="px-4 py-2 rounded-xl border border-gray-200 text-textSecondary text-sm font-semibold hover:bg-gray-50 transition-all">Trước</button>')
+                + '<button onclick="nextTourStep()" class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primaryDark transition-all">' + (isLast ? 'Hoàn thành' : 'Tiếp theo') + '</button>'
+                + '    </div>'
+                + '  </div>'
+                + '  <div class="tour-step-dots">' + dotsHTML + '</div>'
+                + '</div>';
+
+            // Position spotlight and tooltip
+            if (step.position === 'center' || !step.target) {
+                // Welcome step — center the tooltip, no spotlight
+                spotlight.classList.add('hidden');
+                tooltip.style.left = '50%';
+                tooltip.style.top = '50%';
+                tooltip.style.transform = 'translate(-50%, -50%)';
+                tooltip.style.right = 'auto';
+                tooltip.style.bottom = 'auto';
+                tooltip.style.margin = '0';
+                tooltip.classList.remove('hidden');
+            } else {
+                const targetEl = document.querySelector(step.target);
+                if (targetEl) {
+                    // Scroll target into view first
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    setTimeout(() => {
+                        const rect = targetEl.getBoundingClientRect();
+                        const padding = 10;
+                        const gap = 14;
+
+                        // Position spotlight (orange border highlight, no dimming)
+                        spotlight.classList.remove('hidden');
+                        spotlight.style.top = (rect.top - padding) + 'px';
+                        spotlight.style.left = (rect.left - padding) + 'px';
+                        spotlight.style.width = (rect.width + padding * 2) + 'px';
+                        spotlight.style.height = (rect.height + padding * 2) + 'px';
+
+                        // Temporarily show tooltip off-screen to measure its actual height
+                        tooltip.style.left = '-9999px';
+                        tooltip.style.top = '0';
+                        tooltip.style.transform = 'none';
+                        tooltip.classList.remove('hidden');
+                        const tooltipHeight = tooltip.offsetHeight;
+                        const tooltipWidth = Math.min(380, window.innerWidth - 32);
+
+                        const spaceBelow = window.innerHeight - rect.bottom - padding - gap;
+                        const spaceAbove = rect.top - padding - gap;
+                        const vw = window.innerWidth;
+                        const vh = window.innerHeight;
+
+                        let tooltipTop, tooltipLeft;
+
+                        // Decide: place below or above the spotlight
+                        if (spaceBelow >= tooltipHeight) {
+                            tooltipTop = rect.bottom + padding + gap;
+                        } else if (spaceAbove >= tooltipHeight) {
+                            tooltipTop = rect.top - padding - gap - tooltipHeight;
+                        } else {
+                            if (spaceBelow >= spaceAbove) {
+                                tooltipTop = rect.bottom + padding + gap;
+                            } else {
+                                tooltipTop = Math.max(16, rect.top - padding - gap - tooltipHeight);
+                            }
+                        }
+
+                        // Center horizontally relative to spotlight
+                        tooltipLeft = rect.left + rect.width / 2 - tooltipWidth / 2;
+                        tooltipLeft = Math.max(16, Math.min(tooltipLeft, vw - tooltipWidth - 16));
+
+                        // Clamp within viewport — ensure buttons are always visible
+                        tooltipTop = Math.max(16, Math.min(tooltipTop, vh - tooltipHeight - 16));
+
+                        tooltip.style.top = tooltipTop + 'px';
+                        tooltip.style.left = tooltipLeft + 'px';
+                        tooltip.style.transform = 'none';
+                        tooltip.style.right = 'auto';
+                        tooltip.style.bottom = 'auto';
+                        tooltip.style.margin = '0';
+                    }, 400);
+                } else {
+                    spotlight.classList.add('hidden');
+                    tooltip.classList.remove('hidden');
+                    // Center tooltip if target not found
+                    tooltip.style.left = '50%';
+                    tooltip.style.top = '50%';
+                    tooltip.style.transform = 'translate(-50%, -50%)';
+                    tooltip.style.right = 'auto';
+                    tooltip.style.bottom = 'auto';
+                    tooltip.style.margin = '0';
+                }
+            }
+        }
+
+        function nextTourStep() {
+            if (currentTourStep < tourSteps.length - 1) {
+                currentTourStep++;
+                renderTourStep();
+            } else {
+                endProfileTour();
+            }
+        }
+
+        function prevTourStep() {
+            if (currentTourStep > 0) {
+                currentTourStep--;
+                renderTourStep();
+            }
+        }
+
+        function skipProfileTour() {
+            endProfileTour();
+        }
+
+        function replayProfileTour() {
+            if (tourActive) return;
+            try { localStorage.removeItem(TOUR_KEY); } catch(e) {}
+            startProfileTour();
+        }
+
+        function endProfileTour() {
+            tourActive = false;
+            markTourDone();
+
+            const overlay = document.getElementById('tour-overlay');
+            const spotlight = document.getElementById('tour-spotlight');
+            const tooltip = document.getElementById('tour-tooltip');
+
+            if (overlay) overlay.remove();
+            if (spotlight) spotlight.remove();
+            if (tooltip) tooltip.remove();
+
+            showToast('Bạn có thể xem lại hướng dẫn bất cứ lúc nào tại Trung tâm trợ giúp!', 'success');
+        }
+
+        // Escape key to close tour
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && tourActive) {
+                endProfileTour();
+            }
+        });
+
+        // ===== INIT =====
+        async function init() {
+            await fetchProfileData();
+            // Chỉ load notifications nếu là hồ sơ của mình
+            if (isOwnProfile) {
+                loadUnreadCount();
+                // Poll notifications mỗi 30 giây
+                setInterval(loadUnreadCount, 30000);
+                // GPS cho ghép nối (Task E — đồng bộ mobile)
+                loadGpsConsent();
+            } else {
+                const row = document.getElementById('gps-consent-row');
+                if (row) row.classList.add('hidden');
+            }
+
+            // Start profile tour if first time
+            if (shouldShowTour()) {
+                // Wait a bit for content to render and settle
+                setTimeout(() => {
+                    startProfileTour();
+                }, 800);
+            }
+        }
+
+        // ===== GPS CHO GHÉP NỐI (Task E — đồng bộ mobile WorkerProfileScreen) =====
+        // GET  /api/tracking/matching-gps-consent/  → { matching_gps_consent }
+        // POST /api/tracking/matching-gps-consent/  body {granted: bool}
+        async function loadGpsConsent() {
+            const sw = document.getElementById('gps-consent-switch');
+            if (!sw) return;
+            try {
+                const resp = await apiFetch(API_BASE + '/tracking/matching-gps-consent/');
+                if (!resp.ok) return;
+                const data = await resp.json();
+                sw.checked = !!data.matching_gps_consent;
+            } catch (e) { /* im lặng — giữ trạng thái mặc định */ }
+        }
+
+        async function handleGpsConsentChange(el) {
+            const granted = el.checked;
+            el.disabled = true;
+            try {
+                const resp = await apiFetch(API_BASE + '/tracking/matching-gps-consent/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ granted })
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    el.checked = !!data.matching_gps_consent;
+                    showToast(
+                        granted
+                            ? 'Đã bật GPS cho ghép nối — hệ thống sẽ gợi ý đơn gần vị trí hiện tại của bạn.'
+                            : 'Đã tắt GPS cho ghép nối — ghép nối sẽ dùng vị trí hồ sơ của bạn.',
+                        granted ? 'success' : 'info');
+                } else {
+                    el.checked = !granted;
+                    showToast('Không thay đổi được cài đặt GPS. Vui lòng thử lại.', 'error');
+                }
+            } catch (e) {
+                el.checked = !granted;
+                showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
+            } finally {
+                el.disabled = false;
+            }
+        }
+
+        // ===== NOTIFICATION PANEL =====
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notification-panel');
+            const overlay = document.getElementById('notification-overlay');
+            const isOpen = !panel.classList.contains('translate-x-full');
+            if (isOpen) {
+                panel.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            } else {
+                panel.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+                loadNotifications();
+            }
+        }
+
+        async function loadNotifications() {
+            try {
+                const resp = await apiFetch(API_BASE + '/notifications/');
+                if (resp && resp.ok) {
+                    const notifications = await resp.json();
+                    renderNotifications(notifications);
+                }
+            } catch (e) { console.error('Lỗi tải thông báo:', e); }
+        }
+
+        function renderNotifications(notifications) {
+            const list = document.getElementById('notification-list');
+            if (!notifications || notifications.length === 0) {
+                list.innerHTML = '<div class="flex items-center justify-center py-12 text-textSecondary"><span class="material-symbols-outlined mr-2">notifications_off</span>Chưa có thông báo</div>';
+                return;
+            }
+            const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id);
+            list.innerHTML = notifications.map(n => {
+                const bgColor = n.is_read ? 'bg-gray-50/50' : 'bg-primaryLight/30';
+                const icon = n.is_broadcast ? 'campaign' : 'notifications';
+                const unreadDot = n.is_read ? '' : '<div class="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2"></div>';
+                return `
+                <div class="p-4 rounded-xl ${bgColor} border border-gray-100 cursor-pointer hover:bg-orange-50/50 transition-all" onclick="markNotificationRead(${n.id})">
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-primaryLight flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="material-symbols-outlined text-primary text-lg">${icon}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-sm text-textPrimary">${escapeHtml(n.title)}</p>
+                            <p class="text-xs text-textSecondary mt-1 leading-relaxed">${escapeHtml(n.message)}</p>
+                            <p class="text-[10px] text-textMuted mt-2">${n.created_at}</p>
+                        </div>
+                        ${unreadDot}
+                    </div>
+                </div>`;
+            }).join('') + (unreadIds.length > 0 ? `
+                <button onclick="markAllNotificationsRead()" class="w-full mt-3 py-2.5 rounded-xl bg-primary/10 text-primary font-semibold text-xs hover:bg-primary/20 transition-all">
+                    Đánh dấu tất cả đã đọc
+                </button>
+            ` : '');
+            // Cập nhật badge
+            loadUnreadCount();
+        }
+
+        async function markNotificationRead(notificationId) {
+            try {
+                await apiFetch(API_BASE + '/notifications/mark-read/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notification_ids: [notificationId] })
+                });
+                loadNotifications();
+            } catch (e) { console.error('Lỗi đánh dấu đã đọc:', e); }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                await apiFetch(API_BASE + '/notifications/mark-read/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                loadNotifications();
+            } catch (e) { console.error('Lỗi đánh dấu tất cả đã đọc:', e); }
+        }
+
+        async function loadUnreadCount() {
+            try {
+                const resp = await apiFetch(API_BASE + '/notifications/unread-count/');
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    const badge = document.getElementById('notification-badge');
+                    if (data.unread_count > 0) {
+                        badge.textContent = data.unread_count > 9 ? '9+' : data.unread_count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch (e) { console.error('Lỗi tải unread count:', e); }
+        }
+
+        // ===== EDIT PROFILE MODAL =====
+        function openEditProfileModal() {
+            if (!profileData) return;
+            document.getElementById('edit-first-name').value = profileData.first_name || '';
+            document.getElementById('edit-last-name').value = profileData.last_name || '';
+            document.getElementById('edit-phone').value = profileData.phone_number || '';
+            document.getElementById('edit-address').value = profileData.address || '';
+            document.getElementById('edit-lat').value = profileData.latitude || '';
+            document.getElementById('edit-lng').value = profileData.longitude || '';
+            document.getElementById('edit-email').value = profileData.email || '';
+            document.getElementById('edit-certificate-photo').value = '';
+            document.getElementById('edit-credential-desc').value = '';
+            const modal = document.getElementById('edit-profile-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // Initialize edit map after modal is shown
+            setTimeout(() => initEditMap(), 200);
+        }
+
+        function closeEditProfileModal() {
+            const modal = document.getElementById('edit-profile-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function saveProfileAndCredential() {
+            // 0) Save latitude/longitude directly (no approval needed for location)
+            const editLat = document.getElementById('edit-lat').value;
+            const editLng = document.getElementById('edit-lng').value;
+            if (editLat && editLng) {
+                try {
+                    await apiFetch(API_BASE + '/profile/', {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ latitude: parseFloat(editLat), longitude: parseFloat(editLng) })
+                    });
+                } catch (e) { console.error('Lỗi lưu vị trí:', e); }
+            }
+
+            // 1) Gửi yêu cầu thay đổi hồ sơ (thay vì cập nhật trực tiếp)
+            const patchData = {
+                first_name: document.getElementById('edit-first-name').value.trim(),
+                last_name: document.getElementById('edit-last-name').value.trim(),
+                phone_number: document.getElementById('edit-phone').value.trim(),
+                address: document.getElementById('edit-address').value.trim(),
+                email: document.getElementById('edit-email').value.trim(),
+            };
+            
+            try {
+                const resp = await apiFetch(API_BASE + '/worker/profile-change-request/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(patchData)
+                });
+                if (resp && resp.ok) {
+                    const result = await resp.json();
+                    showToast(result.message || 'Đã gửi yêu cầu thay đổi hồ sơ!', 'success');
+                } else {
+                    const err = await resp.json().catch(() => ({}));
+                    if (err.error) {
+                        showToast(err.error, 'warning');
+                    } else {
+                        showToast('Lỗi gửi yêu cầu: ' + (err.detail || JSON.stringify(err)), 'error');
+                    }
+                }
+            } catch (e) {
+                showToast('Lỗi kết nối khi gửi yêu cầu thay đổi.', 'error');
+            }
+
+            // 2) Gửi bằng cấp nếu có ảnh hoặc mô tả
+            const certPhoto = document.getElementById('edit-certificate-photo').files[0];
+            const certDesc = document.getElementById('edit-credential-desc').value.trim();
+            
+            if (certPhoto || certDesc) {
+                const formData = new FormData();
+                if (certPhoto) formData.append('certificate_photo', certPhoto);
+                if (certDesc) formData.append('description', certDesc);
+                
+                try {
+                    const credResp = await apiFetch(API_BASE + '/worker/submit-credential/', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (credResp && credResp.ok) {
+                        showToast('Đã gửi bằng cấp cho Admin duyệt!', 'success');
+                    } else {
+                        const err = await credResp.json().catch(() => ({}));
+                        showToast('Lỗi gửi bằng cấp: ' + (err.error || JSON.stringify(err)), 'error');
+                    }
+                } catch (e) {
+                    showToast('Lỗi kết nối khi gửi bằng cấp.', 'error');
+                }
+            }
+
+            closeEditProfileModal();
+            // Reload profile
+            await fetchProfileData();
+        }
+
+        // ===== MY CREDENTIALS MODAL =====
+        function openMyCredentialsModal() {
+            const modal = document.getElementById('my-credentials-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            loadMyCredentials();
+        }
+
+        function closeMyCredentialsModal() {
+            const modal = document.getElementById('my-credentials-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function loadMyCredentials() {
+            const list = document.getElementById('credentials-list');
+            list.innerHTML = '<div class="flex items-center justify-center py-8"><div class="spinner w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>';
+            
+            try {
+                const resp = await apiFetch(API_BASE + '/worker/submit-credential/');
+                if (resp && resp.ok) {
+                    const credentials = await resp.json();
+                    if (credentials.length === 0) {
+                        list.innerHTML = '<div class="flex items-center justify-center py-8 text-textSecondary"><span class="material-symbols-outlined mr-2">description</span>Chưa gửi bằng cấp nào</div>';
+                        return;
+                    }
+                    list.innerHTML = credentials.map(c => {
+                        let statusColor, statusBg, statusIcon;
+                        if (c.status === 'approved') { statusColor = 'text-success'; statusBg = 'bg-emerald-50'; statusIcon = 'check_circle'; }
+                        else if (c.status === 'rejected') { statusColor = 'text-error'; statusBg = 'bg-red-50'; statusIcon = 'cancel'; }
+                        else { statusColor = 'text-amber-500'; statusBg = 'bg-amber-50'; statusIcon = 'schedule'; }
+                        
+                        return `
+                        <div class="p-4 rounded-xl ${statusBg} border border-gray-100">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="inline-flex items-center gap-1.5 ${statusColor} text-xs font-bold">
+                                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">${statusIcon}</span>
+                                    ${c.status_display}
+                                </span>
+                                <span class="text-[10px] text-textMuted">${c.created_at}</span>
+                            </div>
+                            ${c.certificate_photo ? `<img src="${escapeHtml(c.certificate_photo)}" class="w-full h-32 object-cover rounded-lg mb-2 border border-gray-200" alt="Bằng cấp"/>` : ''}
+                            ${c.description ? `<p class="text-sm text-textPrimary">${escapeHtml(c.description)}</p>` : ''}
+                            ${c.admin_review ? `<div class="mt-2 p-2 bg-white rounded-lg border border-gray-100"><p class="text-xs text-textSecondary font-medium">Đánh giá từ Admin:</p><p class="text-sm text-textPrimary mt-1">${escapeHtml(c.admin_review)}</p></div>` : ''}
+                        </div>`;
+                    }).join('');
+                }
+            } catch (e) {
+                list.innerHTML = '<div class="text-center py-8 text-error text-sm">Lỗi tải bằng cấp</div>';
+            }
+        }
+
+        init();
+
+        // ===== HELP CENTER (AI CHAT) =====
+        let helpChatHistory = [];
+
+        function openHelpCenterModal() {
+            const modal = document.getElementById('help-center-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            helpChatHistory = [];
+        }
+
+        function closeHelpCenterModal() {
+            const modal = document.getElementById('help-center-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function sendHelpQuickQuestion(question) {
+            document.getElementById('help-chat-input').value = question;
+            sendHelpMessage();
+        }
+
+        async function sendHelpMessage() {
+            const input = document.getElementById('help-chat-input');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            input.value = '';
+            const chatMessages = document.getElementById('help-chat-messages');
+            
+            // Add user message
+            chatMessages.innerHTML += `
+                <div class="flex items-start gap-3 justify-end">
+                    <div class="bg-primary text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
+                        <p class="text-sm leading-relaxed">${escapeHtml(message)}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-primaryLight flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">person</span>
+                    </div>
+                </div>`;
+            
+            // Add loading indicator
+            const loadingId = 'help-loading-' + Date.now();
+            chatMessages.innerHTML += `
+                <div id="${loadingId}" class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-blue-500 text-sm" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                    </div>
+                    <div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                        </div>
+                    </div>
+                </div>`;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const resp = await apiFetch(API_BASE + '/help-center/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message, history: helpChatHistory })
+                });
+
+                // Remove loading
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.remove();
+
+                if (resp && resp.ok) {
+                    const data = await resp.json();
+                    const aiResponse = data.response || 'Xin lỗi, tôi không thể trả lời lúc này.';
+                    
+                    // Add to history
+                    helpChatHistory.push({ role: 'user', text: message });
+                    helpChatHistory.push({ role: 'model', text: aiResponse });
+                    
+                    // Render AI response with markdown-like formatting
+                    const formattedResponse = formatAIResponse(aiResponse);
+                    chatMessages.innerHTML += `
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-blue-500 text-sm" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                            </div>
+                            <div class="bg-white rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] border border-gray-100 shadow-sm">
+                                <div class="text-sm text-textPrimary leading-relaxed">${formattedResponse}</div>
+                            </div>
+                        </div>`;
+                } else {
+                    chatMessages.innerHTML += `
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-error text-sm" style="font-variation-settings: 'FILL' 1;">error</span>
+                            </div>
+                            <div class="bg-red-50 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] border border-red-100">
+                                <p class="text-sm text-error">Lỗi kết nối AI. Vui lòng thử lại.</p>
+                            </div>
+                        </div>`;
+                }
+            } catch (e) {
+                const loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.remove();
+                chatMessages.innerHTML += `
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                            <span class="material-symbols-outlined text-error text-sm" style="font-variation-settings: 'FILL' 1;">error</span>
+                        </div>
+                        <div class="bg-red-50 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] border border-red-100">
+                            <p class="text-sm text-error">Lỗi kết nối. Vui lòng thử lại sau.</p>
+                        </div>
+                    </div>`;
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatAIResponse(text) {
+            // Simple markdown-like formatting
+            let formatted = escapeHtml(text);
+            // Bold: **text**
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            // Lists: - item
+            formatted = formatted.replace(/^- (.+)$/gm, '<span class="flex items-start gap-1.5"><span class="text-primary mt-0.5">•</span><span>$1</span></span>');
+            return formatted;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ===== LEAFLET MAP FOR EDIT PROFILE =====
+        let editMapInstance = null;
+        let editMapMarker = null;
+
+        function initEditMap() {
+            const lat = parseFloat(document.getElementById('edit-lat').value) || 16.4637;
+            const lng = parseFloat(document.getElementById('edit-lng').value) || 107.5909;
+            const zoom = (document.getElementById('edit-lat').value) ? 15 : 12;
+
+            if (editMapInstance) {
+                editMapInstance.setView([lat, lng], zoom);
+                if (document.getElementById('edit-lat').value) setEditMapPin(lat, lng);
+                return;
+            }
+
+            editMapInstance = L.map('edit-location-map').setView([lat, lng], zoom);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>', maxZoom: 19
+            }).addTo(editMapInstance);
+
+            editMapInstance.on('click', function(e) {
+                setEditMapPin(e.latlng.lat, e.latlng.lng);
+                reverseGeocodeEdit(e.latlng.lat, e.latlng.lng);
+            });
+
+            if (document.getElementById('edit-lat').value) {
+                setEditMapPin(lat, lng);
+            }
+        }
+
+        function setEditMapPin(lat, lng) {
+            document.getElementById('edit-lat').value = lat;
+            document.getElementById('edit-lng').value = lng;
+            if (editMapMarker) {
+                editMapMarker.setLatLng([lat, lng]);
+            } else {
+                const orangeIcon = L.divIcon({
+                    className: 'custom-map-pin',
+                    html: '<div style="background:#F26522;width:28px;height:28px;border-radius:50% 50% 50% 0;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);color:white;font-size:12px;">📍</span></div>',
+                    iconSize: [28, 28], iconAnchor: [14, 28],
+                });
+                editMapMarker = L.marker([lat, lng], { icon: orangeIcon }).addTo(editMapInstance);
+            }
+            editMapInstance.setView([lat, lng], Math.max(editMapInstance.getZoom(), 15));
+        }
+
+        async function reverseGeocodeEdit(lat, lng) {
+            try {
+                const resp = await fetch(`${window.__API_ORIGIN}/api/geocode/?lat=${lat}&lon=${lng}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('edit-address').value = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        async function searchAddressForProfile() {
+            const query = document.getElementById('edit-address').value.trim();
+            if (!query) { showToast('Vui lòng nhập địa chỉ', 'warning'); return; }
+            try {
+                const resp = await fetch(`${window.__API_ORIGIN}/api/geocode/?q=${encodeURIComponent(query)}`);
+                if (resp.ok) {
+                    const results = await resp.json();
+                    if (Array.isArray(results) && results.length > 0) {
+                        const r = results[0];
+                        setEditMapPin(parseFloat(r.lat), parseFloat(r.lon));
+                        document.getElementById('edit-address').value = r.display_name;
+                        showToast('Đã tìm thấy!', 'success');
+                    } else {
+                        showToast('Không tìm thấy địa chỉ', 'warning');
+                    }
+                }
+            } catch (e) { showToast('Lỗi tìm kiếm', 'error'); }
+        }
+
+        function useMyLocationForProfile() {
+            if (!navigator.geolocation) { showToast('Trình duyệt không hỗ trợ', 'warning'); return; }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    setEditMapPin(pos.coords.latitude, pos.coords.longitude);
+                    reverseGeocodeEdit(pos.coords.latitude, pos.coords.longitude);
+                    showToast('Đã lấy vị trí!', 'success');
+                },
+                () => { showToast('Không thể lấy vị trí', 'warning'); },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        // Enter key in address field triggers search
+        document.getElementById('edit-address').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); searchAddressForProfile(); }
+        });
+
+        // ===== PROFILE CHANGE REQUESTS =====
+        function openChangeRequestsModal() {
+            const modal = document.getElementById('change-requests-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            loadChangeRequests();
+        }
+
+        function closeChangeRequestsModal() {
+            const modal = document.getElementById('change-requests-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function loadChangeRequests() {
+            const list = document.getElementById('change-requests-list');
+            list.innerHTML = '<div class="flex items-center justify-center py-8"><div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div></div>';
+            
+            try {
+                const resp = await apiFetch(API_BASE + '/worker/profile-change-request/');
+                if (resp && resp.ok) {
+                    const requests = await resp.json();
+                    if (requests.length === 0) {
+                        list.innerHTML = '<div class="flex items-center justify-center py-8 text-textSecondary"><span class="material-symbols-outlined mr-2">pending_actions</span>Chưa có yêu cầu nào</div>';
+                        return;
+                    }
+                    const fieldLabels = {
+                        'first_name': 'Họ',
+                        'last_name': 'Tên',
+                        'phone_number': 'Số điện thoại',
+                        'address': 'Địa chỉ',
+                        'email': 'Email'
+                    };
+                    list.innerHTML = requests.map(r => {
+                        let statusColor, statusBg, statusIcon;
+                        if (r.status === 'approved') { statusColor = 'text-success'; statusBg = 'bg-emerald-50'; statusIcon = 'check_circle'; }
+                        else if (r.status === 'rejected') { statusColor = 'text-error'; statusBg = 'bg-red-50'; statusIcon = 'cancel'; }
+                        else { statusColor = 'text-amber-500'; statusBg = 'bg-amber-50'; statusIcon = 'schedule'; }
+                        
+                        const changesHtml = Object.entries(r.proposed_changes).map(([field, value]) => {
+                            const label = fieldLabels[field] || field;
+                            return `<div class="flex items-center gap-2 text-sm"><span class="text-textSecondary">${label}:</span><span class="font-semibold text-textPrimary">${escapeHtml(String(value))}</span></div>`;
+                        }).join('');
+                        
+                        return `
+                        <div class="p-4 rounded-xl ${statusBg} border border-gray-100">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="inline-flex items-center gap-1.5 ${statusColor} text-xs font-bold">
+                                    <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">${statusIcon}</span>
+                                    ${r.status_display}
+                                </span>
+                                <span class="text-[10px] text-textMuted">${r.created_at}</span>
+                            </div>
+                            <div class="space-y-1.5 mb-2">${changesHtml}</div>
+                            ${r.admin_review ? `<div class="mt-2 p-2 bg-white rounded-lg border border-gray-100"><p class="text-xs text-textSecondary font-medium">Phản hồi từ Admin:</p><p class="text-sm text-textPrimary mt-1">${escapeHtml(r.admin_review)}</p></div>` : ''}
+                        </div>`;
+                    }).join('');
+                }
+            } catch (e) {
+                list.innerHTML = '<div class="text-center py-8 text-error text-sm">Lỗi tải yêu cầu</div>';
+            }
+        }
+    </script>
+    <style>
+        @media (max-width: 767px) {
+            body {
+                opacity: 0;
+                transform: translateY(15px) scale(0.98);
+                transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            body.page-loaded {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            body.page-exit {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.98);
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth <= 767) {
+                // Initial load animation
+                requestAnimationFrame(() => {
+                    document.body.classList.add('page-loaded');
+                });
+
+                // Link click transitions
+                document.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        const href = link.getAttribute('href');
+                        const target = link.getAttribute('target');
+                        if (href && href.startsWith('/') && !href.startsWith('#') && target !== '_blank' && !e.ctrlKey && !e.metaKey) {
+                            e.preventDefault();
+                            document.body.classList.remove('page-loaded');
+                            document.body.classList.add('page-exit');
+                            setTimeout(() => {
+                                window.location.href = window.__edcToPage(href);
+                            }, 300); // match transition duration
+                        }
+                    });
+                });
+            } else {
+                // Ensure visibility on desktop if resized
+                document.body.style.opacity = '1';
+                document.body.style.transform = 'none';
+            }
+        });
+        
+        // Handle back/forward navigation cache
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted && window.innerWidth <= 767) {
+                document.body.classList.remove('page-exit');
+                document.body.classList.add('page-loaded');
+            }
+        });
+    </script>
+
+    <!-- B4 — Badge hạng CarePartner trên hồ sơ worker (inject vào #verify-status) -->
+    <script src="../static/js/worker_profile_tier_b4.js"></script>
+</body>
+</html>

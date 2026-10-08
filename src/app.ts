@@ -1,18 +1,14 @@
-// ZaUI stylesheet
-import "zmp-ui/zaui.css";
-// Tailwind stylesheet
-import "@/css/tailwind.scss";
-// Your stylesheet
-import "@/css/app.scss";
-
-// React core
 import React from "react";
 import { createRoot } from "react-dom/client";
 
-// Mount the app
+// Style của shell (rất mỏng — giao diện thật của từng trang nằm trong iframe)
+import "@/css/shell.css";
+
+// Mount the app — EduCareLink Zalo Mini App
+// Shell mỏng: iframe full-screen chạy nguyên bản giao diện gốc
+// (copy y xì từ educarelink-backend-4-12-2026, xem src/public/pages)
 import Layout from "@/components/layout";
 
-// Expose app configuration
 import appConfig from "../app-config.json";
 
 if (!window.APP_CONFIG) {

@@ -1,0 +1,1035 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<script src="../static/js/edc-bootstrap.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theo dõi Carepartner — EduCareLink</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
+    <link rel="shortcut icon" href="../static/images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="../static/css/tailwind-plain.css">
+    <link rel="stylesheet" href="../static/css/cdn-tracking.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Manrope', sans-serif; }
+    body { margin: 0; padding: 0; background: #f7f7f7; color: #1a1a2e; }
+    #map { width: 100%; height: calc(100vh - 200px); border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .live-badge { animation: pulse 1.5s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .worker-marker, .parent-marker {
+      width: 44px; height: 44px; border-radius: 22px;
+      border: 3px solid #fff; display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .worker-marker { background: #F26522; }
+    .parent-marker { background: #10B981; }
+    .leaflet-popup-content-wrapper { border-radius: 12px; }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #1a1a2e; color: #fff; padding: 12px 20px; border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; opacity: 0;
+      transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .sos-btn {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      animation: sosPulse 2s infinite;
+    }
+    @keyframes sosPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="bg-[#F26522] text-white shadow-lg">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="../static/images/logo.png" alt="Logo EduCareLink" width="36" height="36" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px; object-fit: contain;" class="w-9 h-9 rounded-xl bg-white p-0.5 shadow-sm shrink-0 object-contain" loading="eager">
+      <a href="parent-tasks.html" class="bg-white/20 hover:bg-white/30 rounded-lg w-10 h-10 flex items-center justify-center transition">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+      <div>
+        <h1 class="text-lg font-bold">Theo dõi Carepartner</h1>
+        <p id="task-title" class="text-xs text-white/80">Đang tải...</p>
+      </div>
+    </div>
+    <div id="live-badge" class="bg-green-500 live-badge px-3 py-1 rounded-full text-xs font-bold hidden">
+      ● LIVE
+    </div>
+  </div>
+</header>
+
+<!-- Main content -->
+<main class="max-w-6xl mx-auto p-4">
+  <!-- Stats bar -->
+  <div class="grid grid-cols-4 gap-3 mb-4">
+    <div class="bg-white rounded-xl p-3 shadow-sm">
+      <div class="text-xs text-gray-500 font-semibold uppercase">Trạng thái</div>
+      <div id="stat-status" class="text-base font-bold text-gray-800 mt-1">Đang tải...</div>
+    </div>
+    <div class="bg-white rounded-xl p-3 shadow-sm">
+      <div class="text-xs text-gray-500 font-semibold uppercase">Khoảng cách</div>
+      <div id="stat-distance" class="text-base font-bold text-[#F26522] mt-1">—</div>
+    </div>
+    <div class="bg-white rounded-xl p-3 shadow-sm">
+      <div class="text-xs text-gray-500 font-semibold uppercase">Tốc độ</div>
+      <div id="stat-speed" class="text-base font-bold text-gray-800 mt-1">—</div>
+    </div>
+    <div class="bg-white rounded-xl p-3 shadow-sm">
+      <div class="text-xs text-gray-500 font-semibold uppercase">Cập nhật</div>
+      <div id="stat-update" class="text-base font-bold text-gray-800 mt-1">—</div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Carepartner info card -->
+  <div id="carepartner-card" class="bg-white rounded-xl p-4 shadow-sm mt-4 hidden">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 bg-[#F26522] rounded-full flex items-center justify-center text-white font-bold text-xl" id="carepartner-avatar">C</div>
+      <div class="flex-1">
+        <div class="text-lg font-bold text-gray-800" id="carepartner-name">Carepartner</div>
+        <div class="text-sm text-gray-500 flex items-center gap-1" id="carepartner-status">
+          <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+          <span>Đang làm việc</span>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-xs text-gray-500">Vị trí hiện tại</div>
+        <div class="text-sm font-mono text-gray-700" id="carepartner-coords">—</div>
+      </div>
+    </div>
+
+    <!-- Geofence warning -->
+    <div id="geofence-warning" class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg hidden">
+      <div class="flex items-center gap-2 text-red-700">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="font-semibold">Carepartner đã rời vùng an toàn!</span>
+      </div>
+      <div class="text-sm text-red-600 mt-1" id="geofence-detail">Cách vị trí làm việc — mét</div>
+    </div>
+
+    <!-- Device status bar — online/offline + battery (chống tắt máy) -->
+    <div id="device-status-bar" class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hidden">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div id="device-status-dot" class="w-3 h-3 rounded-full bg-green-500"></div>
+          <span id="device-status-text" class="text-sm text-green-600 font-semibold">🟢 Online</span>
+        </div>
+        <div id="device-battery" class="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hidden"></div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex gap-2 mt-4">
+      <button onclick="callCarepartner()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Gọi
+      </button>
+      <!-- N — nút chat thật (cửa sổ còn hiệu lực), thay toast placeholder -->
+      <a href="chat.html?task_id=" id="chat-btn"
+         onclick="event.preventDefault(); window.location.href='chat.html?task_id=' + taskId;"
+         class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Nhắn
+      </a>
+      <button onclick="triggerSOS()" class="sos-btn text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M12 9v4m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        SOS
+      </button>
+    </div>
+  </div>
+
+  <!-- Verification PIN History — Phần B.2: đồng bộ tính năng mobile lên web -->
+  <div id="verification-history-section" class="bg-white rounded-xl p-4 shadow-sm mt-4 hidden">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <svg width="20" height="20" fill="none" stroke="#F26522" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4m-4 0h8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h3 class="text-base font-bold text-gray-800">Xác minh bảo mật</h3>
+      </div>
+      <button onclick="fetchVerificationHistory()" class="text-xs text-[#F26522] hover:underline font-semibold">
+        🔄 Làm mới
+      </button>
+    </div>
+    <p class="text-xs text-gray-500 mb-3">Hệ thống ngẫu nhiên yêu cầu CarePartner xác nhận vẫn đang cầm máy: nhập mã cá nhân (🔐) hoặc chụp ảnh tại chỗ (📷) — chống để máy lại rồi bỏ đi.</p>
+    <div id="verification-history-list" class="space-y-2">
+      <div class="text-sm text-gray-400 text-center py-4">Đang tải lịch sử xác minh...</div>
+    </div>
+    <div id="verification-history-empty" class="text-sm text-gray-500 text-center py-4 hidden">
+      Chưa có lần xác minh nào cho công việc này.
+    </div>
+  </div>
+
+  <!-- B5 — Modal xem ảnh xác minh (load qua API có auth, không URL public) -->
+  <div id="verification-photo-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <h4 class="text-sm font-bold text-gray-800" id="verification-photo-title">Ảnh xác minh</h4>
+        <button onclick="closeVerificationPhotoModal()" class="text-gray-400 hover:text-gray-600" aria-label="Đóng">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div id="verification-photo-body" class="p-4 min-h-[200px] flex items-center justify-center">
+        <div class="text-sm text-gray-400">Đang tải ảnh...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Not tracking state -->
+  <div id="not-tracking" class="bg-white rounded-xl p-8 shadow-sm mt-4 text-center hidden">
+    <div class="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3">
+      <svg width="40" height="40" fill="none" stroke="#9ca3af" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M21 21l-4.35-4.35M21 21a8 8 0 11-12-7.87 8 8 0 0112 7.87z" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="3" y1="3" x2="21" y2="21" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="text-lg font-bold text-gray-800 mb-1" id="not-tracking-title">Carepartner chưa chia sẻ vị trí</div>
+    <div class="text-sm text-gray-500" id="not-tracking-desc">Vị trí sẽ hiện tại đây khi carepartner bật chia sẻ.</div>
+  </div>
+
+  <!-- Refresh button -->
+  <div class="text-center mt-4 pb-8">
+    <button onclick="fetchLiveLocation()" class="text-sm text-[#F26522] hover:underline font-semibold">
+      🔄 Làm mới
+    </button>
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API_BASE = window.API_BASE;
+const POLL_INTERVAL_MS = 5000;
+const DEVICE_STATUS_POLL_MS = 10000; // Poll device status mỗi 10s
+const GEOFENCE_RADIUS = 500; // mét
+
+let map = null;
+let workerMarker = null;
+let parentMarker = null;
+let geofenceCircle = null;
+let routeLine = null;
+let pollTimer = null;
+let deviceStatusTimer = null;
+let taskId = null;
+let taskTitle = null;
+let taskLat = null;
+let taskLng = null;
+let geofenceLat = null;
+let geofenceLng = null;
+let geofenceRadius = 500;
+let wasOutsideGeofence = false;
+let lastOfflineAlertId = null;  // Track alert mới để trigger alarm 1 lần
+let currentOfflineAlertId = null; // Alert đang active — dùng cho acknowledge
+let alarmAudioCtx = null;
+let alarmInterval = null;
+
+// ====================================================================
+// CHUÔNG BÁO ĐỘNG (2026-09-27) — còi hú cảnh sát THẬT (police_siren.mp3)
+// lặp LIÊN TỤC cho tới khi phụ huynh bấm "Đã biết" hoặc thiết bị online lại
+// (trước đây là oscillator 30 giây tự tắt — khó chịu ít, dễ bỏ lỡ).
+// File + cơ chế prime autoplay đồng bộ notification_sound.js /
+// job_assigned_alert.js. Nếu file không tải được → fallback oscillator.
+// ====================================================================
+const POLICE_SIREN_URL = '../static/sounds/police_siren.mp3';
+let sirenAudio = null;
+let sirenPrimed = false;
+
+function primeSiren() {
+  if (sirenPrimed) return;
+  sirenPrimed = true;
+  try {
+    sirenAudio = new Audio(POLICE_SIREN_URL);
+    sirenAudio.preload = 'auto';
+    sirenAudio.loop = true;
+    // Mở khoá autoplay: play muted 1 lần rồi pause
+    sirenAudio.muted = true;
+    const p = sirenAudio.play();
+    if (p && p.then) {
+      p.then(() => {
+        try { sirenAudio.pause(); sirenAudio.currentTime = 0; sirenAudio.muted = false; } catch (e) {}
+      }).catch(() => { try { sirenAudio.muted = false; } catch (e) {} });
+    }
+  } catch (e) { sirenAudio = null; }
+}
+// Lần chạm đầu tiên vào trang → nạp sẵn chuông (muted) để sau này kêu được
+['click', 'touchstart', 'keydown'].forEach(evt =>
+  document.addEventListener(evt, primeSiren, { once: true }));
+
+function triggerAlarm() {
+  // Hiển thị thông báo lỗi
+  showToast('🚨🚨🚨 CẢNH BÁO KHẨN: Cần liên hệ Carepartner NGAY! 🚨🚨🚨');
+
+  // Rung máy (mobile web hỗ trợ)
+  try { if (navigator.vibrate) navigator.vibrate([0, 1500, 400, 1500]); } catch (e) {}
+
+  // Ưu tiên file siren thật — LẶP LIÊN TỤC (không tự tắt sau 30s nữa)
+  primeSiren();
+  if (sirenAudio) {
+    try {
+      sirenAudio.currentTime = 0;
+      sirenAudio.muted = false;
+      const p = sirenAudio.play();
+      if (p && p.catch) {
+        p.catch(() => {
+          // autoplay bị chặn → fallback oscillator
+          startOscillatorFallback();
+        });
+      }
+      return;
+    } catch (e) { /* rơi xuống fallback */ }
+  }
+  startOscillatorFallback();
+}
+
+function startOscillatorFallback() {
+  // Fallback: beep Web Audio 880/440Hz mỗi 1.5s — dùng khi file siren lỗi
+  try {
+    if (!alarmAudioCtx) {
+      alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (alarmAudioCtx.state === 'suspended') alarmAudioCtx.resume();
+    if (alarmInterval) clearInterval(alarmInterval);
+    playBeep();
+    alarmInterval = setInterval(playBeep, 1500);
+  } catch (e) {
+    console.warn('Audio alarm không khả dụng:', e);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('🚨 EduCareLink: Cảnh báo khẩn cấp!', {
+        body: 'Thiết bị Carepartner mất kết nối hoặc rời vùng an toàn!',
+        icon: '../static/images/logo.png'
+      });
+    }
+  }
+}
+
+// ====================================================================
+// AUTHENTICATION
+// ====================================================================
+function getAuthToken() {
+  // Fix C3: dùng key 'token' cho đồng bộ với login.html.
+  // Trước đây dùng 'access_token' → token luôn null → user bị redirect
+  // về /login/ ngay khi vào trang tracking.
+  return localStorage.getItem('token');
+}
+
+async function authFetch(url, options = {}) {
+  const token = getAuthToken();
+  if (!token) {
+    window.location.href = 'login.html';
+    throw new Error('No auth token');
+  }
+  const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
+  if (options.body && typeof options.body === 'object') {
+    headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(options.body);
+  }
+  const resp = await fetch(url, { ...options, headers });
+  if (resp.status === 401) {
+    // Try refresh token
+    const refreshed = await tryRefreshToken();
+    if (refreshed) return authFetch(url, options);
+    window.location.href = 'login.html';
+    throw new Error('Auth expired');
+  }
+  return resp;
+}
+
+async function tryRefreshToken() {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) return false;
+  try {
+    const r = await fetch(`${API_BASE}/auth/token/refresh/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh: refreshToken })
+    });
+    if (!r.ok) return false;
+    const data = await r.json();
+    // Fix C3: đồng bộ key với login.html ('token' thay vì 'access_token')
+    localStorage.setItem('token', data.access);
+    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+    return true;
+  } catch (e) { return false; }
+}
+
+// ====================================================================
+// INIT
+// ====================================================================
+async function init() {
+  // Get task_id from URL query param: ?task_id=123
+  const params = new URLSearchParams(window.location.search);
+  taskId = params.get('task_id');
+  if (!taskId) {
+    showToast('❌ Thiếu task_id. Quay lại danh sách việc.');
+    setTimeout(() => window.location.href = 'parent-tasks.html', 1500);
+    return;
+  }
+
+  // Fetch task detail để có title + lat/lng + geofence
+  try {
+    const r = await authFetch(`${API_BASE}/tasks/${taskId}/`);
+    if (r.ok) {
+      const task = await r.json();
+      taskTitle = task.title;
+      taskLat = task.latitude ? parseFloat(task.latitude) : null;
+      taskLng = task.longitude ? parseFloat(task.longitude) : null;
+      // Geofence từ task (parent vẽ khi đăng việc)
+      if (task.geofence_lat && task.geofence_lng) {
+        geofenceLat = parseFloat(task.geofence_lat);
+        geofenceLng = parseFloat(task.geofence_lng);
+        geofenceRadius = parseFloat(task.geofence_radius) || 500;
+      }
+      document.getElementById('task-title').textContent = taskTitle || `Task #${taskId}`;
+    }
+  } catch (e) { /* ignore */ }
+
+  initMap();
+  fetchLiveLocation();
+  fetchDeviceStatus();
+  pollTimer = setInterval(fetchLiveLocation, POLL_INTERVAL_MS);
+  deviceStatusTimer = setInterval(fetchDeviceStatus, DEVICE_STATUS_POLL_MS);
+}
+
+function initMap() {
+  // Default center: geofence center nếu có, else task location, else Huế
+  const centerLat = geofenceLat || taskLat || 16.4637;
+  const centerLng = geofenceLng || taskLng || 107.5909;
+  map = L.map('map', { zoomControl: true }).setView([centerLat, centerLng], 14);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Parent home marker (task location)
+  if (taskLat && taskLng) {
+    const parentIcon = L.divIcon({
+      html: '<div class="parent-marker">🏠</div>',
+      className: '', iconSize: [44, 44], iconAnchor: [22, 22]
+    });
+    parentMarker = L.marker([taskLat, taskLng], { icon: parentIcon }).addTo(map)
+      .bindPopup('<b>Nhà bạn</b><br>Điểm đến của carepartner');
+  }
+
+  // Geofence circle (vùng an toàn — parent vẽ khi đăng việc)
+  if (geofenceLat && geofenceLng) {
+    geofenceCircle = L.circle([geofenceLat, geofenceLng], {
+      color: '#3b82f6',
+      fillColor: '#3b82f6',
+      fillOpacity: 0.08,
+      weight: 2,
+      dashArray: '6,4',
+      radius: geofenceRadius
+    }).addTo(map).bindPopup(`<b>Vùng an toàn</b><br>Bán kính ${geofenceRadius}m`);
+  }
+}
+
+// ====================================================================
+// FETCH LIVE LOCATION
+// ====================================================================
+async function fetchLiveLocation() {
+  try {
+    const r = await authFetch(`${API_BASE}/tracking/${taskId}/live/`);
+    if (!r.ok) throw new Error('Network error');
+    const data = await r.json();
+    updateUI(data);
+  } catch (e) {
+    console.error('fetchLiveLocation error:', e);
+  }
+}
+
+// ====================================================================
+// FETCH DEVICE STATUS — kiểm tra thiết bị online/offline (chống tắt máy)
+// ====================================================================
+async function fetchDeviceStatus() {
+  try {
+    const r = await authFetch(`${API_BASE}/tracking/${taskId}/device-status/`);
+    if (!r.ok) return;
+    const data = await r.json();
+    updateDeviceStatusUI(data);
+
+    // Nếu có offline alert mới → trigger chuông kêu (lặp tới khi xử lý)
+    const activeAlert = data.active_alerts && data.active_alerts[0];
+    if (activeAlert && activeAlert.id !== lastOfflineAlertId) {
+      lastOfflineAlertId = activeAlert.id;
+      currentOfflineAlertId = activeAlert.id;
+      triggerAlarm();  // chuông kêu to (siren lặp) + vibration (nếu web hỗ trợ)
+      showOfflineAlertModal(data);
+    } else if (!activeAlert && lastOfflineAlertId !== null) {
+      // Đã online trở lại
+      lastOfflineAlertId = null;
+      currentOfflineAlertId = null;
+      stopAlarm();
+      hideOfflineAlertModal();
+      showToast('✅ Thiết bị Carepartner đã online trở lại');
+    }
+  } catch (e) {
+    console.error('fetchDeviceStatus error:', e);
+  }
+}
+
+function updateDeviceStatusUI(data) {
+  const statusBar = document.getElementById('device-status-bar');
+  if (!statusBar) return;
+
+  if (!data.has_heartbeat) {
+    statusBar.classList.add('hidden');
+    return;
+  }
+
+  statusBar.classList.remove('hidden');
+  const dot = document.getElementById('device-status-dot');
+  const text = document.getElementById('device-status-text');
+  const battery = document.getElementById('device-battery');
+
+  if (data.is_offline) {
+    dot.className = 'w-3 h-3 rounded-full bg-red-500 animate-pulse';
+    text.textContent = `⚠️ Offline · ${data.seconds_since_last_seen}s trước`;
+    text.className = 'text-sm text-red-600 font-semibold';
+  } else {
+    dot.className = 'w-3 h-3 rounded-full bg-green-500';
+    text.textContent = `🟢 Online · ${data.seconds_since_last_seen}s trước`;
+    text.className = 'text-sm text-green-600 font-semibold';
+  }
+
+  if (data.battery_level != null) {
+    battery.textContent = `${data.battery_level}% pin`;
+    battery.className = `text-xs px-2 py-1 rounded ${data.battery_level < 20 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+    battery.classList.remove('hidden');
+  } else {
+    battery.classList.add('hidden');
+  }
+}
+
+function showOfflineAlertModal(data) {
+  let modal = document.getElementById('offline-alert-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'offline-alert-modal';
+    modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70';
+    modal.innerHTML = `
+      <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border-4 border-red-500">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="text-5xl">🚨</div>
+          <div>
+            <h2 class="text-xl font-bold text-red-600">CẢNH BÁO KHẨN CẤP</h2>
+            <p class="text-sm text-gray-700">Thiết bị Carepartner mất kết nối!</p>
+          </div>
+        </div>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-gray-800">
+          <p id="offline-modal-detail"></p>
+        </div>
+        <div class="flex gap-2">
+          <a href="tel:113" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg text-center">
+            📞 Gọi 113
+          </a>
+          <a href="tel:" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg text-center">
+            👤 Gọi carepartner
+          </a>
+        </div>
+        <button onclick="acknowledgeCurrentAlert(); stopAlarm(); hideOfflineAlertModal();" class="mt-3 w-full text-gray-600 hover:text-gray-800 text-sm font-semibold">
+          Đã biết (đóng + xác nhận đã tiếp nhận)
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  const detail = document.getElementById('offline-modal-detail');
+  let html = `Carepartner đã ngừng gửi tín hiệu.<br>`;
+  if (data.last_seen) {
+    html += `<strong>Lần cuối online:</strong> ${new Date(data.last_seen).toLocaleString('vi-VN')}<br>`;
+  }
+  if (data.seconds_since_last_seen != null) {
+    html += `<strong>Đã offline:</strong> ${data.seconds_since_last_seen} giây<br>`;
+  }
+  if (data.last_location && data.last_location.latitude) {
+    html += `<strong>Vị trí cuối:</strong> ${data.last_location.latitude.toFixed(5)}, ${data.last_location.longitude.toFixed(5)}<br>`;
+    html += `<a href="https://www.google.com/maps?q=${data.last_location.latitude},${data.last_location.longitude}" target="_blank" class="text-blue-600 hover:underline">Xem trên bản đồ →</a>`;
+  }
+  detail.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
+function hideOfflineAlertModal() {
+  const modal = document.getElementById('offline-alert-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function updateUI(data) {
+  const now = new Date();
+  document.getElementById('stat-update').textContent = now.toLocaleTimeString('vi-VN');
+
+  if (!data.is_tracking || !data.location) {
+    document.getElementById('live-badge').classList.add('hidden');
+    document.getElementById('carepartner-card').classList.add('hidden');
+    document.getElementById('not-tracking').classList.remove('hidden');
+    document.getElementById('not-tracking-desc').textContent = data.message || 'Vị trí sẽ hiện tại đây khi carepartner bật chia sẻ.';
+    document.getElementById('stat-status').textContent = 'Chưa chia sẻ';
+    document.getElementById('stat-distance').textContent = '—';
+    document.getElementById('stat-speed').textContent = '—';
+    return;
+  }
+
+  document.getElementById('live-badge').classList.remove('hidden');
+  document.getElementById('carepartner-card').classList.remove('hidden');
+  document.getElementById('not-tracking').classList.add('hidden');
+
+  const loc = data.location;
+  const workerLat = parseFloat(loc.latitude);
+  const workerLng = parseFloat(loc.longitude);
+
+  // Update status
+  document.getElementById('stat-status').textContent = loc.is_outside_geofence ? '⚠️ Rời vùng' : '🟢 Đang làm';
+  document.getElementById('stat-status').style.color = loc.is_outside_geofence ? '#ef4444' : '#10b981';
+
+  // Update coords
+  document.getElementById('carepartner-coords').textContent = `${workerLat.toFixed(5)}, ${workerLng.toFixed(5)}`;
+
+  // Update speed
+  if (loc.speed != null) {
+    const kmh = (parseFloat(loc.speed) * 3.6).toFixed(1);
+    document.getElementById('stat-speed').textContent = `${kmh} km/h`;
+  }
+
+  // Update geofence warning
+  if (loc.is_outside_geofence) {
+    document.getElementById('geofence-warning').classList.remove('hidden');
+    // 🚨 CHUÔNG CẢNH BÁO TO KHI CAREPARTNER RỜI VÙNG AN TOÀN
+    if (!wasOutsideGeofence) {
+      wasOutsideGeofence = true;
+      triggerAlarm();
+    }
+  } else {
+    document.getElementById('geofence-warning').classList.add('hidden');
+    if (wasOutsideGeofence) {
+      wasOutsideGeofence = false;
+      stopAlarm();
+      showToast('✅ Carepartner đã quay lại vùng an toàn');
+    }
+  }
+
+  // Calculate distance from geofence center (ưu tiên geofence_lat/lng)
+  const refLat = geofenceLat || taskLat;
+  const refLng = geofenceLng || taskLng;
+  if (refLat && refLng) {
+    const dist = haversine(workerLat, workerLng, refLat, refLng);
+    document.getElementById('stat-distance').textContent = dist < 1000 ? `${Math.round(dist)} m` : `${(dist/1000).toFixed(1)} km`;
+    if (loc.is_outside_geofence) {
+      document.getElementById('geofence-detail').textContent = `Cách tâm vùng an toàn ${Math.round(dist)} mét (vượt giới hạn ${geofenceRadius}m)`;
+    }
+  }
+
+  // Update worker marker
+  const workerIcon = L.divIcon({
+    html: '<div class="worker-marker">🚶</div>',
+    className: '', iconSize: [44, 44], iconAnchor: [22, 22]
+  });
+  if (workerMarker) {
+    workerMarker.setLatLng([workerLat, workerLng]);
+  } else {
+    workerMarker = L.marker([workerLat, workerLng], { icon: workerIcon }).addTo(map)
+      .bindPopup('<b>Carepartner</b><br>Đang ở đây');
+  }
+
+  // Update route line
+  if (taskLat && taskLng) {
+    if (routeLine) {
+      routeLine.setLatLngs([[workerLat, workerLng], [taskLat, taskLng]]);
+    } else {
+      routeLine = L.polyline([[workerLat, workerLng], [taskLat, taskLng]], {
+        color: '#F26522', weight: 3, dashArray: '6,4', opacity: 0.7
+      }).addTo(map);
+    }
+
+    // Fit bounds để thấy cả 2 marker
+    const bounds = L.latLngBounds([workerLat, workerLng], [taskLat, taskLng]);
+    map.fitBounds(bounds, { padding: [50, 50] });
+  } else {
+    map.setView([workerLat, workerLng], 16);
+  }
+}
+
+// ====================================================================
+// ACTIONS
+// ====================================================================
+async function callCarepartner() {
+  // Try to fetch carepartner phone from task applications
+  try {
+    const r = await authFetch(`${API_BASE}/parent/tasks/${taskId}/candidates/`);
+    if (r.ok) {
+      const candidates = await r.json();
+      const accepted = candidates.find(c => c.status === 'accepted');
+      if (accepted) {
+        showToast('📞 Đang gọi carepartner...');
+        // In production: window.location.href = `tel:${phone}`;
+        return;
+      }
+    }
+  } catch (e) {}
+  showToast('Không tìm thấy thông tin carepartner');
+}
+
+function messageCarepartner() {
+  // N — chuyển hẳn sang trang chat thật (giữ lại hàm cho tương thích
+  // các chỗ onclick cũ nếu có)
+  if (taskId) {
+    window.location.href = 'chat.html?task_id=' + taskId;
+  } else {
+    showToast('Không xác định được công việc');
+  }
+}
+
+async function triggerSOS() {
+  if (!confirm('🆘 Gửi SOS khẩn cấp cho Carepartner?')) return;
+  try {
+    const r = await authFetch(`${API_BASE}/tracking/sos/`, {
+      method: 'POST',
+      body: { task_id: parseInt(taskId), message: 'Phụ huynh cần hỗ trợ khẩn cấp!' }
+    });
+    if (r.ok) {
+      showToast('✅ Đã gửi SOS cho carepartner');
+    } else {
+      showToast('❌ Không thể gửi SOS');
+    }
+  } catch (e) {
+    showToast('❌ Lỗi mạng');
+  }
+}
+
+// ====================================================================
+// HELPERS
+// ====================================================================
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ====================================================================
+// ALARM — bản cũ (oscillator 30s) đã bị THAY THẾ bởi hệ thống siren
+// police_siren.mp3 lặp liên tục + acknowledge ở ĐẦU trang (2026-09-27).
+// playBeep giữ lại làm fallback cho startOscillatorFallback().
+// ====================================================================
+function playBeep() {
+  if (!alarmAudioCtx) return;
+  const oscillator = alarmAudioCtx.createOscillator();
+  const gainNode = alarmAudioCtx.createGain();
+  oscillator.connect(gainNode);
+  gainNode.connect(alarmAudioCtx.destination);
+
+  // Chuông cảnh báo: tần số cao (880Hz) + thấp (440Hz) xen kẽ
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(880, alarmAudioCtx.currentTime);
+  oscillator.frequency.setValueAtTime(440, alarmAudioCtx.currentTime + 0.2);
+  oscillator.frequency.setValueAtTime(880, alarmAudioCtx.currentTime + 0.4);
+
+  gainNode.gain.setValueAtTime(0.3, alarmAudioCtx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, alarmAudioCtx.currentTime + 0.6);
+
+  oscillator.start(alarmAudioCtx.currentTime);
+  oscillator.stop(alarmAudioCtx.currentTime + 0.6);
+}
+
+function stopAlarm() {
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+  if (sirenAudio) {
+    try { sirenAudio.pause(); sirenAudio.currentTime = 0; } catch (e) {}
+  }
+}
+
+// ====================================================================
+// ACKNOWLEDGE — phụ huynh bấm "Đã biết" → backend ghi nhận đã tiếp nhận
+// (dừng vòng retry push 5×30s của scheduler, đồng bộ trạng thái alert)
+// Endpoint: POST /api/tracking/<task_id>/offline-alerts/<alert_id>/acknowledge/
+// ====================================================================
+async function acknowledgeCurrentAlert() {
+  const alertId = currentOfflineAlertId;
+  currentOfflineAlertId = null;
+  if (!alertId || !taskId) return; // geofence alarm không có alert id — chỉ đóng
+  try {
+    await authFetch(`${API_BASE}/tracking/${taskId}/offline-alerts/${alertId}/acknowledge/`, {
+      method: 'POST',
+      body: {}
+    });
+    showToast('✅ Đã xác nhận tiếp nhận cảnh báo');
+  } catch (e) {
+    console.warn('Acknowledge lỗi (không chặn):', e);
+  }
+}
+
+// Xin quyền Notification để show alert ngay cả khi tab nền
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
+// ====================================================================
+// VERIFICATION PIN HISTORY — Phần B.2
+// Backend: ParentVerificationHistoryAPIView — GET /tracking/{task_id}/verification-checks/history/
+// Backend: CancelVerificationCheckAPIView — POST /tracking/verification-checks/{check_id}/cancel/
+// ====================================================================
+let verificationHistoryLoaded = false;
+
+async function fetchVerificationHistory() {
+  if (!taskId) return;
+  const section = document.getElementById('verification-history-section');
+  const list = document.getElementById('verification-history-list');
+  const empty = document.getElementById('verification-history-empty');
+
+  try {
+    const r = await authFetch(`${API_BASE}/tracking/${taskId}/verification-checks/history/`);
+    if (!r.ok) {
+      if (r.status === 403) {
+        // 403 = not parent of this task — hide section silently
+        section.classList.add('hidden');
+      } else {
+        // 500, network error, timeout — show error with retry
+        section.classList.remove('hidden');
+        const list = document.getElementById('verification-history-list');
+        list.innerHTML = `
+          <div class="flex items-center justify-between p-3 rounded-lg border border-red-200 bg-red-50">
+            <span class="text-sm text-red-600">Không thể tải lịch sử xác minh.</span>
+            <button onclick="fetchVerificationHistory()" class="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 font-semibold">Thử lại</button>
+          </div>
+        `;
+        const empty = document.getElementById('verification-history-empty');
+        if (empty) empty.classList.add('hidden');
+      }
+      return;
+    }
+    const data = await r.json();
+    section.classList.remove('hidden');
+
+    const checks = data.checks || [];
+    if (checks.length === 0) {
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    // Render check items — giống pattern mobile RandomVerificationModal
+    // B5: check ảnh (verification_type='photo') có icon/nút riêng + nút Xem ảnh
+    let html = '';
+    for (const check of checks) {
+      const time = new Date(check.triggered_at).toLocaleString('vi-VN');
+      const statusConfig = getVerificationStatusConfig(check.status, check.verification_type);
+      const isPending = check.status === 'pending';
+      const isPhotoCheck = check.verification_type === 'photo';
+
+      html += `
+        <div class="flex items-start gap-3 p-3 rounded-lg border ${statusConfig.borderClass}">
+          <div class="text-lg mt-0.5">${statusConfig.icon}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm font-semibold ${statusConfig.textClass}">${statusConfig.label}</span>
+              ${isPhotoCheck ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 font-semibold">📷 Ảnh</span>' : ''}
+              <span class="text-xs text-gray-400">${time}</span>
+            </div>
+            ${check.responded_at ? `<div class="text-xs text-gray-500 mt-0.5">Phản hồi: ${new Date(check.responded_at).toLocaleString('vi-VN')}</div>` : ''}
+            ${check.attempts > 0 ? `<div class="text-xs text-gray-500">Số lần nhập: ${check.attempts}</div>` : ''}
+            ${check.consecutive_timeouts_count > 0 ? `<div class="text-xs text-amber-600">⚠️ Timeout liên tiếp: ${check.consecutive_timeouts_count}</div>` : ''}
+          </div>
+          ${check.has_photo ? `<button onclick="viewVerificationPhoto(${check.id})" class="text-xs px-2 py-1 rounded bg-[#F26522] text-white hover:bg-[#D4541E] font-semibold whitespace-nowrap">📷 Xem ảnh</button>` : ''}
+          ${isPending ? `<button onclick="cancelVerificationCheck(${check.id})" class="text-xs px-2 py-1 rounded bg-amber-100 text-amber-700 hover:bg-amber-200 font-semibold whitespace-nowrap">Huỷ</button>` : ''}
+        </div>
+      `;
+    }
+    list.innerHTML = html;
+
+    // Show summary count in section header
+    const confirmed = checks.filter(c => c.status === 'confirmed').length;
+    const timeouts = checks.filter(c => c.status === 'timeout').length;
+    const total = checks.length;
+    const summaryEl = document.getElementById('verification-summary');
+    if (!summaryEl) {
+      const summary = document.createElement('div');
+      summary.id = 'verification-summary';
+      summary.className = 'text-xs text-gray-500 mt-2 pt-2 border-t border-gray-100';
+      section.querySelector('.space-y-2')?.after(summary);
+    }
+    const summary = document.getElementById('verification-summary');
+    if (summary) {
+      summary.textContent = `Tổng: ${total} lần xác minh · ✅ ${confirmed} thành công · ⏰ ${timeouts} timeout`;
+    }
+  } catch (e) {
+    console.error('fetchVerificationHistory error:', e);
+    // Network error / timeout — show retry UI (not silent hide)
+    section.classList.remove('hidden');
+    const list = document.getElementById('verification-history-list');
+    if (list && !list.querySelector('.retry-btn')) {
+      list.innerHTML = `
+        <div class="flex items-center justify-between p-3 rounded-lg border border-red-200 bg-red-50 retry-btn">
+          <span class="text-sm text-red-600">Không thể tải lịch sử xác minh.</span>
+          <button onclick="fetchVerificationHistory()" class="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 font-semibold">Thử lại</button>
+        </div>
+      `;
+    }
+    const empty = document.getElementById('verification-history-empty');
+    if (empty) empty.classList.add('hidden');
+  }
+  verificationHistoryLoaded = true;
+}
+
+function getVerificationStatusConfig(status, verificationType) {
+  // B5 — check ảnh dùng label riêng (chụp ảnh thay vì nhập mã)
+  const isPhoto = verificationType === 'photo';
+  switch (status) {
+    case 'confirmed':
+      return isPhoto
+        ? { icon: '📷', label: 'Đã gửi ảnh', textClass: 'text-green-600', borderClass: 'border-green-200 bg-green-50' }
+        : { icon: '✅', label: 'Xác nhận đúng', textClass: 'text-green-600', borderClass: 'border-green-200 bg-green-50' };
+    case 'wrong_code':
+      return { icon: '❌', label: 'Sai mã', textClass: 'text-red-600', borderClass: 'border-red-200 bg-red-50' };
+    case 'timeout':
+      return isPhoto
+        ? { icon: '⏰', label: 'Không gửi ảnh', textClass: 'text-amber-600', borderClass: 'border-amber-200 bg-amber-50' }
+        : { icon: '⏰', label: 'Không phản hồi', textClass: 'text-amber-600', borderClass: 'border-amber-200 bg-amber-50' };
+    case 'pending':
+      return isPhoto
+        ? { icon: '⏳', label: 'Đang chờ ảnh...', textClass: 'text-blue-600', borderClass: 'border-blue-200 bg-blue-50' }
+        : { icon: '⏳', label: 'Đang chờ phản hồi...', textClass: 'text-blue-600', borderClass: 'border-blue-200 bg-blue-50' };
+    case 'cancelled':
+      return { icon: '🚫', label: 'Đã huỷ', textClass: 'text-gray-500', borderClass: 'border-gray-200 bg-gray-50' };
+    default:
+      return { icon: '❓', label: status, textClass: 'text-gray-600', borderClass: 'border-gray-200 bg-gray-50' };
+  }
+}
+
+// ====================================================================
+// B5 — XEM ẢNH XÁC MINH (load blob qua API có auth → object URL)
+// Ảnh KHÔNG public qua /media/ — phải kèm Authorization header nên
+// <img src> trực tiếp không dùng được; fetch blob rồi tạo objectURL.
+// ====================================================================
+let verificationPhotoObjectUrl = null;
+
+function closeVerificationPhotoModal() {
+  const modal = document.getElementById('verification-photo-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  // Giải phóng object URL tránh memory leak khi đóng modal
+  if (verificationPhotoObjectUrl) {
+    URL.revokeObjectURL(verificationPhotoObjectUrl);
+    verificationPhotoObjectUrl = null;
+  }
+}
+
+async function viewVerificationPhoto(checkId) {
+  const modal = document.getElementById('verification-photo-modal');
+  const body = document.getElementById('verification-photo-body');
+  const title = document.getElementById('verification-photo-title');
+  if (!modal || !body) return;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  title.textContent = `Ảnh xác minh #${checkId}`;
+  body.innerHTML = '<div class="text-sm text-gray-400 py-8">Đang tải ảnh...</div>';
+
+  try {
+    const r = await authFetch(`${API_BASE}/tracking/verification-checks/${checkId}/photo/`);
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({}));
+      body.innerHTML = `
+        <div class="text-center py-8">
+          <div class="text-3xl mb-2">⚠️</div>
+          <div class="text-sm text-red-600 mb-3">${data.error || 'Không tải được ảnh.'}</div>
+          <button onclick="viewVerificationPhoto(${checkId})" class="text-xs px-3 py-1.5 rounded bg-red-100 text-red-700 hover:bg-red-200 font-semibold">Thử lại</button>
+        </div>`;
+      return;
+    }
+    const blob = await r.blob();
+    // Giải phóng object URL cũ nếu còn (mở ảnh khác liên tiếp)
+    if (verificationPhotoObjectUrl) URL.revokeObjectURL(verificationPhotoObjectUrl);
+    verificationPhotoObjectUrl = URL.createObjectURL(blob);
+    body.innerHTML = `
+      <img src="${verificationPhotoObjectUrl}" alt="Ảnh xác minh" class="w-full rounded-lg" />
+      <a href="${verificationPhotoObjectUrl}" download="xac-minh-${checkId}.jpg" class="mt-3 inline-block text-xs text-[#F26522] hover:underline font-semibold">⬇️ Tải ảnh về</a>`;
+  } catch (e) {
+    body.innerHTML = `
+      <div class="text-center py-8">
+        <div class="text-3xl mb-2">📡</div>
+        <div class="text-sm text-red-600 mb-3">Lỗi mạng — không tải được ảnh.</div>
+        <button onclick="viewVerificationPhoto(${checkId})" class="text-xs px-3 py-1.5 rounded bg-red-100 text-red-700 hover:bg-red-200 font-semibold">Thử lại</button>
+      </div>`;
+  }
+}
+
+async function cancelVerificationCheck(checkId) {
+  if (!confirm('Huỷ lần xác minh này? (Phụ huynh huỷ khi biết CarePartner đang bận, tránh báo động sai)')) return;
+  try {
+    const r = await authFetch(`${API_BASE}/tracking/verification-checks/${checkId}/cancel/`, {
+      method: 'POST',
+      body: { reason: 'Phụ huynh huỷ từ web tracking' }
+    });
+    if (r.ok) {
+      showToast('✅ Đã huỷ lần xác minh');
+      fetchVerificationHistory(); // refresh list
+    } else {
+      const data = await r.json();
+      showToast(`❌ ${data.error || 'Không thể huỷ'}`);
+    }
+  } catch (e) {
+    showToast('❌ Lỗi mạng');
+  }
+}
+
+// ====================================================================
+// MODIFIED INIT — also fetch verification history after init
+// ====================================================================
+const _origInit = init;
+init = async function() {
+  await _origInit();
+  // Fetch verification history once after init (only if task is in_progress with geofence)
+  if (taskId) {
+    setTimeout(fetchVerificationHistory, 2000); // slight delay to not race with other API calls
+    // Poll verification history every 30s (less frequent than location polling)
+    setInterval(fetchVerificationHistory, 30000);
+  }
+};
+
+// Start
+init();
+</script>
+
+</body>
+</html>

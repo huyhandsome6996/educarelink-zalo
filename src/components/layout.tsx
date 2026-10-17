@@ -12,6 +12,14 @@
  *  - Nhận log lỗi từ các trang để debug
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { nativeStorage } from "zmp-sdk";
+
+// Trang con dùng kho đồng bộ của SDK để giữ đăng nhập khi đổi trang trên Zalo.
+(window as any).__edcNativeStorage = nativeStorage;
+// Tài nguyên nằm cạnh bundle trong thư mục phiên bản, không cạnh index của Zalo.
+const BUNDLE_BASE = import.meta.env.PROD
+  ? new URL(/* @vite-ignore */ "../", import.meta.url).href
+  : new URL("./", window.location.href).href;
 
 const PAGES_BASE = "pages/";
 const DEFAULT_PAGE = PAGES_BASE + "splash.html";
@@ -35,7 +43,7 @@ const SplashOverlay: React.FC<{ visible: boolean }> = ({ visible }) => (
     className="edc-splash"
     style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
   >
-    <img src="static/images/logo.png" alt="EduCareLink" />
+    <img src={new URL("static/images/logo.png", BUNDLE_BASE).href} alt="EduCareLink" />
     <div className="edc-splash-bar">
       <div className="edc-splash-fill" />
     </div>
@@ -91,6 +99,7 @@ const Layout: React.FC = () => {
   useEffect(() => {
     const onMsg = (ev: MessageEvent) => {
       const d: any = ev.data;
+      if (ev.source !== iframeRef.current?.contentWindow) return;
       if (!d || typeof d !== "object") return;
       if (d.type === "edc-error") {
         console.warn("[EduCareLink]", d.page, d.msg);
@@ -133,7 +142,7 @@ const Layout: React.FC = () => {
       <iframe
         ref={iframeRef}
         key={src}
-        src={src}
+        src={new URL(src, BUNDLE_BASE).href}
         title="EduCareLink"
         className="edc-frame"
         onLoad={handleIframeLoad}

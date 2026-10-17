@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
   <title>Thu nhập — EduCareLink</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="shortcut icon" href="../static/images/favicon.ico" type="image/x-icon">
@@ -21,12 +22,31 @@
       transition: opacity 0.3s; pointer-events: none; max-width: 90%;
     }
     .toast.show { opacity: 1; }
+
+    /* ===== Task 2-c: Mobile Web UX (spec 1.4) — media query responsive ===== */
+    .break-words { overflow-wrap: break-word; word-wrap: break-word; }
+    /* Safe-area iOS cho header sticky + nội dung đáy */
+    .we-header { padding-top: max(10px, env(safe-area-inset-top)); }
+    .we-main { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
+    /* Touch feedback cho card + nút */
+    .we-card, .we-btn { transition: transform .15s ease; -webkit-tap-highlight-color: transparent; }
+    @media (hover: none) {
+      .we-card:active { transform: scale(.98); }
+      .we-btn:active { transform: scale(.97); }
+    }
+    @media (max-width: 640px) {
+      .we-main { padding-left: 0.875rem; padding-right: 0.875rem; }
+      /* Text co giãn trên mobile */
+      .we-amount { font-size: 1.05rem; }
+      /* Nút ≥44px */
+      .we-btn { min-height: 44px; }
+    }
   </style>
 </head>
 <body class="bg-[#F7F7F7]">
 
 <!-- Header -->
-<header class="bg-[#F26522] text-white shadow-lg sticky top-0 z-20">
+<header class="we-header bg-[#F26522] text-white shadow-lg sticky top-0 z-20">
   <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <img src="../static/images/logo.png" alt="Logo EduCareLink" width="36" height="36" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px; object-fit: contain;" class="w-9 h-9 rounded-xl bg-white p-0.5 shadow-sm shrink-0 object-contain" loading="eager">
@@ -43,7 +63,7 @@
   </div>
 </header>
 
-<main class="max-w-3xl mx-auto px-4 py-4 pb-16">
+<main class="we-main max-w-3xl mx-auto px-4 py-4 pb-16">
   <!-- Loading -->
   <div id="loading-state" class="text-center py-16">
     <div class="w-10 h-10 border-4 border-[#F26522]/30 border-t-[#F26522] rounded-full animate-spin mx-auto"></div>
@@ -54,7 +74,7 @@
   <div id="error-state" class="hidden text-center py-12">
     <div class="text-4xl mb-3">⚠️</div>
     <p class="text-sm text-gray-600 mb-4">Không tải được dữ liệu thu nhập.</p>
-    <button onclick="loadAll()" class="px-5 py-2.5 rounded-xl bg-[#F26522] text-white text-sm font-semibold hover:bg-[#D4541E] transition">
+    <button onclick="loadAll()" class="we-btn px-5 py-2.5 rounded-xl bg-[#F26522] text-white text-sm font-semibold hover:bg-[#D4541E] transition">
       Thử lại
     </button>
   </div>
@@ -116,7 +136,7 @@ const SETTLEMENT_STATUS = {
 };
 const formatVnd = (v) => Number(v || 0).toLocaleString('vi-VN') + 'đ';
 
-function getAuthToken() { return localStorage.getItem('token'); }
+function getAuthToken() { return window.__edcStorage.getItem('token'); }
 
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
@@ -137,7 +157,7 @@ async function authFetch(url, options = {}) {
 }
 
 async function tryRefreshToken() {
-  const refreshToken = localStorage.getItem('refresh_token');
+  const refreshToken = window.__edcStorage.getItem('refresh_token');
   if (!refreshToken) return false;
   try {
     const r = await fetch(`${API_BASE}/auth/token/refresh/`, {
@@ -147,8 +167,8 @@ async function tryRefreshToken() {
     });
     if (!r.ok) return false;
     const data = await r.json();
-    localStorage.setItem('token', data.access);
-    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+    window.__edcStorage.setItem('token', data.access);
+    if (data.refresh) window.__edcStorage.setItem('refresh_token', data.refresh);
     return true;
   } catch (e) { return false; }
 }
@@ -163,14 +183,14 @@ function escapeHtml(value) {
 function paymentRow(p) {
   const st = PAY_STATUS[p.status] || { label: p.status, cls: 'bg-gray-100 text-gray-600 border-gray-200' };
   return `
-    <div class="bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between gap-3 flex-wrap">
+    <div class="we-card bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-between gap-3 flex-wrap">
       <div class="min-w-0">
-        <p class="text-sm font-semibold truncate">${escapeHtml(p.task_title || 'Việc #' + p.task)}</p>
+        <p class="text-sm font-semibold line-clamp-2 break-words">${escapeHtml(p.task_title || 'Việc #' + p.task)}</p>
         <p class="text-xs text-gray-400 mt-0.5">${escapeHtml(new Date(p.initiated_at).toLocaleDateString('vi-VN'))}</p>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 ml-auto shrink-0">
         <span class="text-xs px-2 py-0.5 rounded-full border ${st.cls} font-semibold whitespace-nowrap">${st.label}</span>
-        <span class="text-sm font-extrabold text-emerald-600 whitespace-nowrap">+${formatVnd(p.worker_payout_amount)}</span>
+        <span class="we-amount text-sm font-extrabold text-emerald-600 whitespace-nowrap">+${formatVnd(p.worker_payout_amount)}</span>
       </div>
     </div>`;
 }
@@ -180,21 +200,21 @@ function settlementHtml(s) {
   const period = `Tháng ${s.period_month}/${s.period_year}`;
   const canPayQr = s.status === 'qr_generated' && s.momo_pay_url;
   return `
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div class="we-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <div class="flex items-start justify-between gap-2 flex-wrap">
-        <div>
-          <p class="text-sm font-bold">${period} · ${s.total_tasks} công việc</p>
-          <p class="text-xs text-gray-500 mt-0.5">
+        <div class="min-w-0">
+          <p class="text-sm font-bold break-words">${period} · ${s.total_tasks} công việc</p>
+          <p class="text-xs text-gray-500 mt-0.5 break-words">
             ${s.due_at ? 'Hạn: ' + escapeHtml(new Date(s.due_at).toLocaleDateString('vi-VN')) : ''}
             ${s.paid_at ? ' · Đã trả: ' + escapeHtml(new Date(s.paid_at).toLocaleDateString('vi-VN')) : ''}
           </p>
         </div>
-        <span class="text-xs px-2 py-0.5 rounded-full border ${st.cls} font-semibold whitespace-nowrap">${st.label}</span>
+        <span class="text-xs px-2 py-0.5 rounded-full border ${st.cls} font-semibold whitespace-nowrap ml-auto shrink-0">${st.label}</span>
       </div>
-      <p class="text-lg font-extrabold text-[#F26522] mt-2">${formatVnd(s.total_amount)}</p>
+      <p class="we-amount text-lg font-extrabold text-[#F26522] mt-2">${formatVnd(s.total_amount)}</p>
       ${canPayQr ? `
         <button onclick="window.open('${escapeHtml(s.momo_pay_url)}', '_blank')"
-          class="mt-3 w-full py-2.5 rounded-xl bg-[#F26522] text-white text-sm font-semibold hover:bg-[#D4541E] transition">
+          class="we-btn mt-3 w-full py-3 min-h-[44px] rounded-xl bg-[#F26522] text-white text-sm font-semibold hover:bg-[#D4541E] transition">
           💳 Thanh toán qua MoMo
         </button>
         ${s.momo_qr_code_url ? `<img src="${escapeHtml(s.momo_qr_code_url)}" alt="QR hoa hồng" class="mx-auto mt-3 w-40 h-40 rounded-xl border border-gray-100" />` : ''}` : ''}

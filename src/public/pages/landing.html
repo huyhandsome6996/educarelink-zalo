@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
     <title>EduCareLink — Đăng ký tư vấn, dùng thử miễn phí & góp ý cho chúng tôi</title>
@@ -18,6 +19,11 @@
     <link rel="stylesheet" href="../static/css/tailwind-radius-a.css">
 
     <style>
+      /* ===== Task 2-c: Mobile Web UX (spec 1.4) ===== */
+      /* Input ≥16px trên mobile chống iOS Safari auto-zoom khi focus */
+      @media (max-width: 767px) {
+        input, select, textarea { font-size: 16px !important; }
+      }
       :root{
         --primary: #F26522;
         --primary-dark: #D4541E;

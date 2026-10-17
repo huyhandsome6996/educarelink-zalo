@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
   <title>Khiếu nại — EduCareLink</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="shortcut icon" href="../static/images/favicon.ico" type="image/x-icon">
@@ -152,7 +153,7 @@ const PRIORITY_CONFIG = {
   low: { label: 'Thấp', cls: 'bg-gray-100 text-gray-600' },
 };
 
-function getAuthToken() { return localStorage.getItem('token'); }
+function getAuthToken() { return window.__edcStorage.getItem('token'); }
 
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
@@ -173,7 +174,7 @@ async function authFetch(url, options = {}) {
 }
 
 async function tryRefreshToken() {
-  const refreshToken = localStorage.getItem('refresh_token');
+  const refreshToken = window.__edcStorage.getItem('refresh_token');
   if (!refreshToken) return false;
   try {
     const r = await fetch(`${API_BASE}/auth/token/refresh/`, {
@@ -183,8 +184,8 @@ async function tryRefreshToken() {
     });
     if (!r.ok) return false;
     const data = await r.json();
-    localStorage.setItem('token', data.access);
-    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+    window.__edcStorage.setItem('token', data.access);
+    if (data.refresh) window.__edcStorage.setItem('refresh_token', data.refresh);
     return true;
   } catch (e) { return false; }
 }

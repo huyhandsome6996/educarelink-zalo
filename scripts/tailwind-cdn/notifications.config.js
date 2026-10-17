@@ -9,6 +9,11 @@ var cfg = {
         }
       }
     };
-cfg.content = ["/home/z/my-project/work/educarelink-zalo/src/public/pages/notifications.html"];
+cfg.content = ["./src/public/pages/notifications.html"];
 cfg.plugins = cfg.plugins || [];
 module.exports = cfg;
+var shared = require('../upstream-tailwind/shared-theme');
+var theme = module.exports.theme = module.exports.theme || {};
+var ext = theme.extend = theme.extend || {};
+ext.colors = Object.assign({}, shared.colors, ext.colors || {});
+ext.fontFamily = Object.assign({}, shared.fontFamily, ext.fontFamily || {});

@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
   <title>EduCareLink — Đăng việc Đón trẻ tan trường | Parity Mobile</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
   <link rel="shortcut icon" href="../static/images/favicon.ico">
@@ -163,7 +164,7 @@
   function fmtVND(n) { return (Number(n) || 0).toLocaleString('vi-VN') + 'đ'; }
 
   async function authFetch(url, options = {}) {
-    let token = localStorage.getItem(MCM_TOKEN_KEY);
+    let token = window.__edcStorage.getItem(MCM_TOKEN_KEY);
     if (!token) {
       toast('Vui lòng đăng nhập tài khoản Phụ huynh để tiếp tục.', false);
       setTimeout(() => {
@@ -180,7 +181,7 @@
     let response = await fetch(url, options);
     if (response.status === 401) {
       let refreshed = false;
-      const refreshToken = localStorage.getItem(MCM_REFRESH_KEY);
+      const refreshToken = window.__edcStorage.getItem(MCM_REFRESH_KEY);
       if (refreshToken) {
         try {
           const refreshResp = await fetch(API_BASE + '/auth/token/refresh/', {
@@ -190,8 +191,8 @@
           });
           if (refreshResp.ok) {
             const refreshData = await refreshResp.json();
-            localStorage.setItem(MCM_TOKEN_KEY, refreshData.access);
-            if (refreshData.refresh) localStorage.setItem(MCM_REFRESH_KEY, refreshData.refresh);
+            window.__edcStorage.setItem(MCM_TOKEN_KEY, refreshData.access);
+            if (refreshData.refresh) window.__edcStorage.setItem(MCM_REFRESH_KEY, refreshData.refresh);
             options.headers['Authorization'] = 'Bearer ' + refreshData.access;
             response = await fetch(url, options);
             if (response.status !== 401) refreshed = true;
@@ -199,12 +200,12 @@
         } catch (e) {}
       }
       if (!refreshed && response.status === 401) {
-        localStorage.removeItem(MCM_TOKEN_KEY);
-        localStorage.removeItem(MCM_REFRESH_KEY);
-        localStorage.removeItem('role');
-        localStorage.removeItem('user');
-        localStorage.removeItem('is_staff');
-        localStorage.removeItem('admin_username');
+        window.__edcStorage.removeItem(MCM_TOKEN_KEY);
+        window.__edcStorage.removeItem(MCM_REFRESH_KEY);
+        window.__edcStorage.removeItem('role');
+        window.__edcStorage.removeItem('user');
+        window.__edcStorage.removeItem('is_staff');
+        window.__edcStorage.removeItem('admin_username');
         toast('Phiên đăng nhập đã hết hạn hoặc tài khoản không tồn tại. Đang chuyển đến trang đăng nhập...', false);
         setTimeout(() => {
           const next = encodeURIComponent(window.location.pathname + window.location.search);
@@ -241,10 +242,10 @@
   //   2) Tile bản đồ dùng CARTO (Fastly CDN) làm mặc định, tự chuyển sang
   //      OSM tile nếu CARTO lỗi, và hiện thông báo thân thiện nếu cả hai fail.
   const MCM_TILE_PROVIDERS = [
-    { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-      options: { attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 20 } },
     { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      options: { attribution: '© OpenStreetMap', maxZoom: 19 } },
+      options: { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains: ['a', 'b', 'c'], maxZoom: 19 } },
+    { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+      options: { attribution: '&copy; OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team', maxZoom: 19 } },
   ];
 
   function attachResilientTiles(map) {
@@ -392,8 +393,9 @@
 <!-- phía phụ huynh (QA 2026-09-10: trước đây chỉ trang chủ có      -->
 <!-- sidebar, các trang /dang-viec/*, ung-vien, don, vi-credit      -->
 <!-- không có điều hướng → thêm đồng bộ).                           -->
-<!-- Tham số: active_tab = home | tasks | matching | chatbot        -->
-<!-- Gồm: sidebar desktop + bottom-nav mobile + runtime user/logout -->
+<!-- Tham số: active_tab = home | tasks | matching | diary | account | chatbot -->
+<!-- Gồm: sidebar desktop + bottom-nav mobile 5 TAB (spec 1.4, xem           -->
+<!-- _parent_bottom_nav.html) + nút nổi AI Trợ lý + runtime user/logout -->
 <!-- ============================================================ -->
 
 <!-- ===== SIDEBAR (Desktop ≥1024px) ===== -->
@@ -540,10 +542,10 @@
 
     <!-- 4. Đăng việc ghép cặp (Special with High Contrast Badge) -->
     <a href="dang-viec-select.html"
-       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active_tab == 'matching' or active_tab == 'create' %}active font-semibold rounded-l-none shadow-xs">
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active font-semibold rounded-l-none shadow-xs">
       <div class="flex items-center gap-3 min-w-0">
         <span class="material-symbols-outlined text-xl fill-icon text-[#F26522]">auto_awesome</span>
-        <span class="truncate active_tab == 'matching' or active_tab == 'create' %}font-bold text-[#c2410c]">Đăng việc ghép cặp</span>
+        <span class="truncate font-bold text-[#c2410c]">Đăng việc ghép cặp</span>
       </div>
       <span class="px-2 py-0.5 rounded-full bg-[#F26522] text-white font-bold text-[10px] tracking-wide shadow-sm shadow-orange-500/20 shrink-0">MỚI</span>
     </a>
@@ -642,7 +644,7 @@
     // văng sang luồng phụ huynh.
     function psbApplyRoleGuard() {
       var role = null;
-      try { role = localStorage.getItem('role'); } catch (e) {}
+      try { role = window.__edcStorage.getItem('role'); } catch (e) {}
       if (role === 'worker') {
         document.querySelectorAll('[data-psb-settings-link]').forEach(function (a) {
           a.setAttribute('href', 'worker-profile.html');
@@ -655,7 +657,7 @@
     document.addEventListener('DOMContentLoaded', psbApplyRoleGuard);
 
     try {
-      const raw = localStorage.getItem('user');
+      const raw = window.__edcStorage.getItem('user');
       if (raw) {
         const u = JSON.parse(raw);
         const nameEl = document.getElementById('sidebar-name');
@@ -676,13 +678,13 @@
 
     if (typeof window.handleLogout !== 'function') {
       window.handleLogout = function() {
-        localStorage.clear();
+        window.__edcStorage.clear();
         sessionStorage.clear();
         window.location.href = 'login.html';
       };
     }
 
-    // Fallback riêng của EduCareLink: web login KHÔNG lưu localStorage 'user'
+    // Fallback riêng của EduCareLink: web login KHÔNG lưu window.__edcStorage 'user'
     // (chỉ lưu token/role/avatar_url rời) — nên lấy trực tiếp từ /api/profile/,
     // cùng nguồn sự thật với _parent_chrome.html, để mọi trang phụ huynh đều
     // có tên + avatar ngay cả khi trang chưa có script đổ dữ liệu riêng.
@@ -691,7 +693,7 @@
         const nameEl = document.getElementById('sidebar-name');
         const avtEl = document.getElementById('sidebar-avatar');
         if (!nameEl || !avtEl) return;
-        const token = localStorage.getItem('token');
+        const token = window.__edcStorage.getItem('token');
         if (!token) {
           if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
             nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
@@ -701,9 +703,9 @@
         const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers: { 'Authorization': 'Bearer ' + token } });
         if (r.status === 401) {
           // Token hỏng hoặc tài khoản không tồn tại trên DB
-          localStorage.removeItem('token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
+          window.__edcStorage.removeItem('token');
+          window.__edcStorage.removeItem('refresh_token');
+          window.__edcStorage.removeItem('user');
           if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
             nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
           }
@@ -732,43 +734,100 @@
 
 </aside>
 
-<!-- ===== BOTTOM NAV (Mobile <1024px) — đồng bộ 100% markup/class với /parent/ ===== -->
+<!-- ===== BOTTOM NAV (Mobile <1024px) — chuẩn 5 tab theo spec 1.4 ===== -->
+<!-- Tách partial dùng chung: _parent_bottom_nav.html (Trang chủ ·      -->
+<!-- Việc của tôi · Đăng việc (+) · Nhật ký · Tài khoản + nút nổi       -->
+<!-- AI Trợ lý). Mọi trang parent dùng chung để đồng bộ 100%.           -->
+
+<!-- ============================================================ -->
+<!-- _parent_bottom_nav.html — Bottom Navigation MOBILE (<1024px)  -->
+<!-- Chuẩn 5 tab theo spec 1.4 (Mobile Web UX):                     -->
+<!--   Trang chủ · Việc của tôi · Đăng việc (+) · Nhật ký ·         -->
+<!--   Tài khoản                                                    -->
+<!-- AI Trợ lý không mất tính năng: nút nổi (floating) góc phải     -->
+<!-- phía trên bottom-nav, trỏ /parent/chatbot/ — TỰ ĐỘNG ẨN khi    -->
+<!-- trang gọi include với active_tab='chatbot'.                    -->
+<!-- Tham số: active_tab = home | tasks | matching | diary |        -->
+<!--                     account | chatbot                          -->
+<!-- An toàn cả 2 chế độ CSS: build local (tailwind-*.css) lẫn      -->
+<!-- Tailwind CDN — mọi kích thước quan trọng nằm ở <style> bên     -->
+<!-- dưới nên không phụ thuộc class build có sẵn.                   -->
+<!-- ============================================================ -->
+
 <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-xl border-t border-border shadow-lg">
-    <div class="flex justify-around items-center px-2 py-2" style="padding-bottom: max(0.6rem, env(safe-area-inset-bottom));">
-        <!-- Trang chủ -->
-        <a href="parent-home.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
-            <span class="material-symbols-outlined text-xl">home</span>
-            <span class="font-medium text-[10px] mt-0.5">Trang chủ</span>
-        </a>
-        <!-- Việc của tôi -->
-        <a href="parent-tasks.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
-            <span class="material-symbols-outlined text-xl">assignment</span>
-            <span class="font-medium text-[10px] mt-0.5">Việc của tôi</span>
-        </a>
-        <!-- Đăng việc (Nổi bật — nút tròn cam như /parent/) -->
-        <a href="dang-viec-select.html" class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-primary transition-all">
-            <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
-                <span class="material-symbols-outlined text-lg">add</span>
-            </div>
-            <span class="font-bold text-[10px] mt-0.5 text-primary">Đăng việc</span>
-        </a>
-        <!-- AI Trợ lý -->
-        <a href="chatbot.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
-            <span class="material-symbols-outlined text-xl">smart_toy</span>
-            <span class="font-medium text-[10px] mt-0.5">AI Trợ lý</span>
-        </a>
-    </div>
+  <div class="flex justify-around items-center px-2 py-1.5" style="padding-bottom: max(14px, env(safe-area-inset-bottom));">
+    <!-- 1. Trang chủ -->
+    <a href="parent-home.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">home</span>
+      <span class="font-medium text-[10px] mt-0.5">Trang chủ</span>
+    </a>
+    <!-- 2. Việc của tôi -->
+    <a href="parent-tasks.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">assignment</span>
+      <span class="font-medium text-[10px] mt-0.5">Việc của tôi</span>
+    </a>
+    <!-- 3. Đăng việc — nút tròn nổi bật màu primary ở giữa -->
+    <a href="dang-viec-select.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-primary">
+      <div class="parent-bn-add w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
+        <span class="material-symbols-outlined text-xl">add</span>
+      </div>
+      <span class="font-bold text-[10px] mt-0.5 text-primary">Đăng việc</span>
+    </a>
+    <!-- 4. Nhật ký -->
+    <a href="parent-care-diary-history.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">book</span>
+      <span class="font-medium text-[10px] mt-0.5">Nhật ký</span>
+    </a>
+    <!-- 5. Tài khoản -->
+    <a href="parent-profile.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">person</span>
+      <span class="font-medium text-[10px] mt-0.5">Tài khoản</span>
+    </a>
+  </div>
 </nav>
 
+<!-- AI Trợ lý — nút nổi góc phải, phía trên bottom-nav (ẩn ở trang chatbot) -->
+
+<a href="chatbot.html" id="ai-fab"
+   class="lg:hidden fixed right-4 z-50 flex items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30"
+   aria-label="AI Trợ lý">
+  <span class="material-symbols-outlined text-2xl">smart_toy</span>
+</a>
+
+
 <style>
-    /* Chừa chỗ cho bottom-nav trên mobile để nội dung không bị che */
-    @media (max-width: 1023px) {
-        main { padding-bottom: 5.5rem; }
-    }
+  /* Touch target ≥44px + touch feedback (spec 1.4) — dùng CSS thuần để
+     hoạt động cả khi trang dùng build local không có class utility này */
+  .parent-bn-item {
+    min-width: 56px;
+    min-height: 52px;
+    padding: 6px 6px;
+    transition: transform .15s ease, background-color .15s ease, color .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .parent-bn-item:active { transform: scale(.94); }
+  .parent-bn-add { transition: transform .15s ease; }
+  .parent-bn-item:active .parent-bn-add { transform: scale(.94) rotate(90deg); }
+  #ai-fab {
+    width: 48px;
+    height: 48px;
+    bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    transition: transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #ai-fab:active { transform: scale(.92); }
+
+  /* Chừa chỗ cho bottom-nav 5 tab trên mobile — nội dung không bị che */
+  @media (max-width: 1023px) {
+    main, .main-area, .main-content { padding-bottom: 6rem; }
+  }
 </style>
+
 
 <script>
   // Runtime cho sidebar: đăng xuất + hiển thị tên/avatar (null-safe).
@@ -777,13 +836,13 @@
   (function () {
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        try { localStorage.clear(); } catch (e) {}
+        try { window.__edcStorage.clear(); } catch (e) {}
         setTimeout(() => { window.location.href = 'login.html'; }, 200);
       }
     };
     async function pcrLoadUser() {
       try {
-        const token = localStorage.getItem('token');
+        const token = window.__edcStorage.getItem('token');
         const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
         const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers });
         if (!r.ok) return;
@@ -943,8 +1002,8 @@
                 <button type="button" onclick="setSchoolQuick('Trường Tiểu học ')" class="text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-orange-50 text-slate-600 hover:text-brand rounded-lg border border-slate-200/60 transition-colors flex items-center">
                   <span class="material-symbols-outlined text-sm mr-1 text-slate-500">school</span>Tiểu học
                 </button>
-                <button type="button" onclick="setSchoolQuick('Trường Mầm non ')" class="text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-orange-50 text-slate-600 hover:text-brand rounded-lg border border-slate-200/60 transition-colors flex items-center">
-                  <span class="material-symbols-outlined text-sm mr-1 text-slate-500">child_care</span>Mầm non
+                <button type="button" onclick="setSchoolQuick('Trường THCS ')" class="text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-orange-50 text-slate-600 hover:text-brand rounded-lg border border-slate-200/60 transition-colors flex items-center">
+                  <span class="material-symbols-outlined text-sm mr-1 text-slate-500">school</span>THCS
                 </button>
                 <button type="button" onclick="setSchoolQuick('Trung tâm Tiếng Anh ')" class="text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-orange-50 text-slate-600 hover:text-brand rounded-lg border border-slate-200/60 transition-colors flex items-center">
                   <span class="material-symbols-outlined text-sm mr-1 text-slate-500">translate</span>TT Tiếng Anh
@@ -1609,7 +1668,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       // Check auth status
-      const initToken = localStorage.getItem('token');
+      const initToken = window.__edcStorage.getItem('token');
       const authBanner = document.getElementById('authNoticeBanner');
       if (!initToken && authBanner) {
         authBanner.classList.remove('hidden');
@@ -1909,18 +1968,25 @@
     async function handleFormSubmit(e) {
       e.preventDefault();
 
-      const schoolName = (state.school_or_pickup_place_name || document.getElementById('schoolNameInput').value || '').trim();
+      const schoolName = (state.school_or_pickup_place_name || document.getElementById('schoolNameInput')?.value || '').trim();
       if (!schoolName) {
-        toast("Vui lòng nhập tên trường hoặc điểm đón của bé.", false);
-        document.getElementById('schoolNameInput').focus();
+        toast("Vui lòng nhập tên trường học hoặc điểm đón bé.", false);
+        const sInput = document.getElementById('schoolNameInput');
+        if (sInput) {
+          sInput.focus();
+          sInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+          sInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         return;
       }
 
       if (state.pickup_dates.length === 0) {
         toast("Vui lòng chọn ít nhất 1 ngày đón bé trong lịch tan trường.", false);
+        document.getElementById('datesSection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
+      // Kiểm tra vị trí trường đón
       const latVal = document.getElementById('lat').value;
       const lngVal = document.getElementById('lng').value;
       const lat = latVal ? parseFloat(latVal) : state.latitude;
@@ -1932,9 +1998,9 @@
 
       let destLocation = null;
       if (state.destination_type === 'other_address') {
-        const dLat = document.getElementById('destLat').value;
-        const dLng = document.getElementById('destLng').value;
-        const dAddr = document.getElementById('destAddr').textContent.replace('📍 ', '').trim();
+        const dLat = document.getElementById('destLat')?.value;
+        const dLng = document.getElementById('destLng')?.value;
+        const dAddr = document.getElementById('destAddr')?.textContent.replace('📍', '').trim();
         if (!dLat || !dLng) {
           toast("Vui lòng chọn vị trí điểm đến khác trên bản đồ.", false);
           return;
@@ -1952,9 +2018,19 @@
       const destNoteVal = destNoteInput ? destNoteInput.value.trim() : '';
       const transNoteInput = document.getElementById('inputTransportNote');
       const transNoteVal = transNoteInput ? transNoteInput.value.trim() : '';
+
+      // Kiểm tra bắt buộc: Yêu cầu cụ thể (tối thiểu 10 ký tự, BỎ fallback ngầm)
       const reqInput = document.getElementById('specificRequirementsInput');
-      const finalRequirements = (reqInput ? reqInput.value.trim() : '') ||
-        'Đưa đón bé đúng giờ, đội mũ bảo hiểm và đảm bảo an toàn giao thông.';
+      const finalRequirements = reqInput ? reqInput.value.trim() : '';
+      if (!finalRequirements || finalRequirements.length < 10) {
+        toast("Vui lòng nhập yêu cầu cụ thể khi đưa đón bé (tối thiểu 10 ký tự).", false);
+        if (reqInput) {
+          reqInput.focus();
+          reqInput.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+          reqInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
 
       const payload = {
         job_type: 'pickup',
@@ -1977,7 +2053,7 @@
       };
 
       // Kiểm tra đăng nhập trước khi phát sóng radar
-      const token = localStorage.getItem('token');
+      const token = window.__edcStorage.getItem('token');
       if (!token) {
         toast('Vui lòng đăng nhập tài khoản Phụ huynh để đăng việc.', false);
         setTimeout(() => {
@@ -2008,18 +2084,20 @@
         const data = await resp.json();
 
         if (resp.status === 201 && data.id) {
+          // BƯỚC 2: Publish Job
           await authFetch(`${API_BASE}/matching/jobs/${data.id}/publish/`, {
             method: 'POST'
           });
 
-          setTimeout(() => {
-            searchView.classList.add('hidden');
-            successView.classList.remove('hidden');
+          // Cập nhật trạng thái quét Radar
+          const searchTitle = searchView.querySelector('h3');
+          const searchDesc = searchView.querySelector('p');
+          if (searchTitle) searchTitle.textContent = 'Đang rà soát người đón bé tin cậy tại TP. Huế...';
+          if (searchDesc) searchDesc.textContent = 'Hệ thống đang đối soát bằng lái xe, phương tiện an toàn và điểm tín nhiệm của các CarePartner quanh khu vực trường học.';
 
-            setTimeout(() => {
-              window.location.href = `ung-vien.html?id=${data.id}`;
-            }, 1200);
-          }, 1500);
+          setTimeout(() => {
+            window.location.href = `ung-vien.html?id=${data.id}`;
+          }, 1800);
 
         } else {
           modal.classList.add('hidden');
@@ -2028,9 +2106,9 @@
           btnBottom.disabled = false;
 
           if (resp.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('role');
+            window.__edcStorage.removeItem('token');
+            window.__edcStorage.removeItem('refresh_token');
+            window.__edcStorage.removeItem('role');
             toast('Phiên đăng nhập đã hết hạn hoặc tài khoản không tồn tại. Đang chuyển tới trang đăng nhập...', false);
             setTimeout(() => {
               window.location.href = 'login.html?next=' + encodeURIComponent(window.location.pathname);
@@ -2051,6 +2129,17 @@
         }
       }
     }
+
+    document.getElementById('schoolNameInput')?.addEventListener('input', function() {
+      if (this.value.trim().length > 0) {
+        this.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
+      }
+    });
+    document.getElementById('specificRequirementsInput')?.addEventListener('input', function() {
+      if (this.value.trim().length >= 10) {
+        this.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
+      }
+    });
   </script>
 </body>
 </html>

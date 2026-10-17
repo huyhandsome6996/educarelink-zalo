@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
   <title>Chat với đối tác — EduCareLink</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="shortcut icon" href="../static/images/favicon.ico" type="image/x-icon">
@@ -26,13 +27,32 @@
       transition: opacity 0.3s; pointer-events: none; max-width: 90%;
     }
     .toast.show { opacity: 1; }
+
+    /* ===== Task 2-c: Mobile Web UX (spec 1.4) — media query responsive ===== */
+    .break-words { overflow-wrap: break-word; word-wrap: break-word; }
+    /* Safe-area iOS: tai thỏ / Dynamic Island + home indicator */
+    .ch-header { padding-top: max(10px, env(safe-area-inset-top)); }
+    #composer { padding-bottom: max(0px, env(safe-area-inset-bottom)); }
+    #readonly-banner { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+    .ch-main { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); }
+    /* Touch feedback cho nút gửi + bubble */
+    #send-btn { -webkit-tap-highlight-color: transparent; transition: transform .15s ease, background-color .15s ease; }
+    #send-btn:active { transform: scale(.92); }
+    #chat-scroll > div { -webkit-tap-highlight-color: transparent; }
+    @media (max-width: 640px) {
+      /* Composer + header full-width, font-size hợp lý, không tràn */
+      .ch-header-inner { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .ch-main { padding-left: 0.75rem; padding-right: 0.75rem; }
+      .ch-composer-inner { padding-left: 0.625rem; padding-right: 0.625rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      #message-input { font-size: 16px; /* ≥16px chống iOS Safari auto-zoom */ }
+    }
   </style>
 </head>
 <body class="bg-[#F7F7F7]">
 
 <!-- Header -->
-<header class="bg-[#F26522] text-white shadow-lg sticky top-0 z-20">
-  <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+<header class="ch-header bg-[#F26522] text-white shadow-lg sticky top-0 z-20">
+  <div class="ch-header-inner max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3 min-w-0">
       <img src="../static/images/logo.png" alt="Logo EduCareLink" width="36" height="36" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px; object-fit: contain;" class="w-9 h-9 rounded-xl bg-white p-0.5 shadow-sm shrink-0 object-contain" loading="eager">
       <a id="back-link" href="parent-tasks.html" class="bg-white/20 hover:bg-white/30 rounded-lg w-9 h-9 flex items-center justify-center transition shrink-0" aria-label="Quay lại">
@@ -64,7 +84,7 @@
 </header>
 
 <!-- Chat area -->
-<main class="max-w-3xl mx-auto px-4 pt-4 pb-28">
+<main class="ch-main max-w-3xl mx-auto px-4 pt-4 pb-28">
   <!-- Loading -->
   <div id="loading-state" class="text-center py-16">
     <div class="w-10 h-10 border-4 border-[#F26522]/30 border-t-[#F26522] rounded-full animate-spin mx-auto"></div>
@@ -95,7 +115,7 @@
 
 <!-- Composer (input) — ẩn khi cửa sổ đóng -->
 <div id="composer" class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] hidden">
-  <div class="max-w-3xl mx-auto px-4 py-3 flex items-end gap-2">
+  <div class="ch-composer-inner max-w-3xl mx-auto px-4 py-3 flex items-end gap-2">
     <textarea id="message-input" rows="1" placeholder="Nhập tin nhắn..."
       class="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#F26522] max-h-28"
       maxlength="2000"></textarea>
@@ -137,7 +157,7 @@ let sending = false;
 // AUTH (pattern tracking.html — key 'token' đồng bộ login.html)
 // ====================================================================
 function getAuthToken() {
-  return localStorage.getItem('token');
+  return window.__edcStorage.getItem('token');
 }
 
 async function authFetch(url, options = {}) {
@@ -162,7 +182,7 @@ async function authFetch(url, options = {}) {
 }
 
 async function tryRefreshToken() {
-  const refreshToken = localStorage.getItem('refresh_token');
+  const refreshToken = window.__edcStorage.getItem('refresh_token');
   if (!refreshToken) return false;
   try {
     const r = await fetch(`${API_BASE}/auth/token/refresh/`, {
@@ -172,8 +192,8 @@ async function tryRefreshToken() {
     });
     if (!r.ok) return false;
     const data = await r.json();
-    localStorage.setItem('token', data.access);
-    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+    window.__edcStorage.setItem('token', data.access);
+    if (data.refresh) window.__edcStorage.setItem('refresh_token', data.refresh);
     return true;
   } catch (e) { return false; }
 }
@@ -267,7 +287,7 @@ function renderHeader(conv) {
 // chạy khi conversation tồn tại) → task chưa có conversation (404) hoặc lỗi
 // mạng thì back-link giữ href="#" → bấm không đi đâu (chỉ thêm # vào URL).
 function initBackLink() {
-  const role = localStorage.getItem('role');
+  const role = window.__edcStorage.getItem('role');
   document.getElementById('back-link').href =
     role === 'worker' ? 'worker-jobs.html' : 'parent-tasks.html';
 }

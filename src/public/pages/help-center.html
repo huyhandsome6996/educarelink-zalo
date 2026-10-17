@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
     <title>Trung tâm trợ giúp | EduCareLink</title>
@@ -196,7 +197,7 @@
          URL /worker/help-center/ là trang DÙNG CHUNG cả 2 vai trò (1 route duy nhất
          name='help_center'), nên KHÔNG thể chọn sidebar theo request.path.
          Dùng _role_chrome.html: render sẵn cả 2 chrome (ẩn), JS đọc role
-         (localStorage 'role' → fallback /api/profile/) để hiện đúng sidebar:
+         (window.__edcStorage 'role' → fallback /api/profile/) để hiện đúng sidebar:
          Carepartner → _worker_sidebar (active_tab='help'), Phụ huynh → _parent_sidebar. -->
 
 <!-- ============================================================ -->
@@ -207,7 +208,7 @@
 <!-- "Cài đặt" bị văng sang giao diện Phụ huynh.                    -->
 <!--                                                                -->
 <!-- Cách hoạt động: render sẵn CẢ HAI chrome trong wrapper ẩn,     -->
-<!-- rồi JS đọc role (localStorage 'role', fallback /api/profile/)  -->
+<!-- rồi JS đọc role (window.__edcStorage 'role', fallback /api/profile/)  -->
 <!-- để hiển thị đúng chrome. Trang chủ yếu là phụ huynh nên mặc    -->
 <!-- định hiển thị chrome phụ huynh khi chưa xác định được role     -->
 <!-- (tránh flash trống), worker sẽ được chuyển ngay khi biết role. -->
@@ -224,8 +225,9 @@
 <!-- phía phụ huynh (QA 2026-09-10: trước đây chỉ trang chủ có      -->
 <!-- sidebar, các trang /dang-viec/*, ung-vien, don, vi-credit      -->
 <!-- không có điều hướng → thêm đồng bộ).                           -->
-<!-- Tham số: active_tab = home | tasks | matching | chatbot        -->
-<!-- Gồm: sidebar desktop + bottom-nav mobile + runtime user/logout -->
+<!-- Tham số: active_tab = home | tasks | matching | diary | account | chatbot -->
+<!-- Gồm: sidebar desktop + bottom-nav mobile 5 TAB (spec 1.4, xem           -->
+<!-- _parent_bottom_nav.html) + nút nổi AI Trợ lý + runtime user/logout -->
 <!-- ============================================================ -->
 
 <!-- ===== SIDEBAR (Desktop ≥1024px) ===== -->
@@ -409,12 +411,12 @@
 
     <!-- 7. Hướng dẫn sử dụng -->
     <a href="onboarding-parent.html"
-       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active_tab == 'help' %}active font-semibold rounded-l-none shadow-xs">
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active font-semibold rounded-l-none shadow-xs">
       <div class="flex items-center gap-3 min-w-0">
-        <span class="material-symbols-outlined text-xl active_tab == 'help' %}fill-icon text-[#F26522]">help_outline</span>
+        <span class="material-symbols-outlined text-xl fill-icon text-[#F26522]">help_outline</span>
         <span class="truncate">Hướng dẫn sử dụng</span>
       </div>
-      active_tab == 'help' %}
+      
         <span class="w-1.5 h-1.5 rounded-full bg-[#F26522] shrink-0"></span>
       
     </a>
@@ -476,7 +478,7 @@
     // văng sang luồng phụ huynh.
     function psbApplyRoleGuard() {
       var role = null;
-      try { role = localStorage.getItem('role'); } catch (e) {}
+      try { role = window.__edcStorage.getItem('role'); } catch (e) {}
       if (role === 'worker') {
         document.querySelectorAll('[data-psb-settings-link]').forEach(function (a) {
           a.setAttribute('href', 'worker-profile.html');
@@ -489,7 +491,7 @@
     document.addEventListener('DOMContentLoaded', psbApplyRoleGuard);
 
     try {
-      const raw = localStorage.getItem('user');
+      const raw = window.__edcStorage.getItem('user');
       if (raw) {
         const u = JSON.parse(raw);
         const nameEl = document.getElementById('sidebar-name');
@@ -510,13 +512,13 @@
 
     if (typeof window.handleLogout !== 'function') {
       window.handleLogout = function() {
-        localStorage.clear();
+        window.__edcStorage.clear();
         sessionStorage.clear();
         window.location.href = 'login.html';
       };
     }
 
-    // Fallback riêng của EduCareLink: web login KHÔNG lưu localStorage 'user'
+    // Fallback riêng của EduCareLink: web login KHÔNG lưu window.__edcStorage 'user'
     // (chỉ lưu token/role/avatar_url rời) — nên lấy trực tiếp từ /api/profile/,
     // cùng nguồn sự thật với _parent_chrome.html, để mọi trang phụ huynh đều
     // có tên + avatar ngay cả khi trang chưa có script đổ dữ liệu riêng.
@@ -525,7 +527,7 @@
         const nameEl = document.getElementById('sidebar-name');
         const avtEl = document.getElementById('sidebar-avatar');
         if (!nameEl || !avtEl) return;
-        const token = localStorage.getItem('token');
+        const token = window.__edcStorage.getItem('token');
         if (!token) {
           if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
             nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
@@ -535,9 +537,9 @@
         const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers: { 'Authorization': 'Bearer ' + token } });
         if (r.status === 401) {
           // Token hỏng hoặc tài khoản không tồn tại trên DB
-          localStorage.removeItem('token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
+          window.__edcStorage.removeItem('token');
+          window.__edcStorage.removeItem('refresh_token');
+          window.__edcStorage.removeItem('user');
           if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
             nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
           }
@@ -566,43 +568,100 @@
 
 </aside>
 
-<!-- ===== BOTTOM NAV (Mobile <1024px) — đồng bộ 100% markup/class với /parent/ ===== -->
+<!-- ===== BOTTOM NAV (Mobile <1024px) — chuẩn 5 tab theo spec 1.4 ===== -->
+<!-- Tách partial dùng chung: _parent_bottom_nav.html (Trang chủ ·      -->
+<!-- Việc của tôi · Đăng việc (+) · Nhật ký · Tài khoản + nút nổi       -->
+<!-- AI Trợ lý). Mọi trang parent dùng chung để đồng bộ 100%.           -->
+
+<!-- ============================================================ -->
+<!-- _parent_bottom_nav.html — Bottom Navigation MOBILE (<1024px)  -->
+<!-- Chuẩn 5 tab theo spec 1.4 (Mobile Web UX):                     -->
+<!--   Trang chủ · Việc của tôi · Đăng việc (+) · Nhật ký ·         -->
+<!--   Tài khoản                                                    -->
+<!-- AI Trợ lý không mất tính năng: nút nổi (floating) góc phải     -->
+<!-- phía trên bottom-nav, trỏ /parent/chatbot/ — TỰ ĐỘNG ẨN khi    -->
+<!-- trang gọi include với active_tab='chatbot'.                    -->
+<!-- Tham số: active_tab = home | tasks | matching | diary |        -->
+<!--                     account | chatbot                          -->
+<!-- An toàn cả 2 chế độ CSS: build local (tailwind-*.css) lẫn      -->
+<!-- Tailwind CDN — mọi kích thước quan trọng nằm ở <style> bên     -->
+<!-- dưới nên không phụ thuộc class build có sẵn.                   -->
+<!-- ============================================================ -->
+
 <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-xl border-t border-border shadow-lg">
-    <div class="flex justify-around items-center px-2 py-2" style="padding-bottom: max(0.6rem, env(safe-area-inset-bottom));">
-        <!-- Trang chủ -->
-        <a href="parent-home.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
-            <span class="material-symbols-outlined text-xl">home</span>
-            <span class="font-medium text-[10px] mt-0.5">Trang chủ</span>
-        </a>
-        <!-- Việc của tôi -->
-        <a href="parent-tasks.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
-            <span class="material-symbols-outlined text-xl">assignment</span>
-            <span class="font-medium text-[10px] mt-0.5">Việc của tôi</span>
-        </a>
-        <!-- Đăng việc (Nổi bật — nút tròn cam như /parent/) -->
-        <a href="dang-viec-select.html" class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-primary transition-all">
-            <div class="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center shadow-sm">
-                <span class="material-symbols-outlined text-lg">add</span>
-            </div>
-            <span class="font-bold text-[10px] mt-0.5 text-primary">Đăng việc</span>
-        </a>
-        <!-- AI Trợ lý -->
-        <a href="chatbot.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
-            <span class="material-symbols-outlined text-xl">smart_toy</span>
-            <span class="font-medium text-[10px] mt-0.5">AI Trợ lý</span>
-        </a>
-    </div>
+  <div class="flex justify-around items-center px-2 py-1.5" style="padding-bottom: max(14px, env(safe-area-inset-bottom));">
+    <!-- 1. Trang chủ -->
+    <a href="parent-home.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">home</span>
+      <span class="font-medium text-[10px] mt-0.5">Trang chủ</span>
+    </a>
+    <!-- 2. Việc của tôi -->
+    <a href="parent-tasks.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">assignment</span>
+      <span class="font-medium text-[10px] mt-0.5">Việc của tôi</span>
+    </a>
+    <!-- 3. Đăng việc — nút tròn nổi bật màu primary ở giữa -->
+    <a href="dang-viec-select.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-primary">
+      <div class="parent-bn-add w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
+        <span class="material-symbols-outlined text-xl">add</span>
+      </div>
+      <span class="font-bold text-[10px] mt-0.5 text-primary">Đăng việc</span>
+    </a>
+    <!-- 4. Nhật ký -->
+    <a href="parent-care-diary-history.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">book</span>
+      <span class="font-medium text-[10px] mt-0.5">Nhật ký</span>
+    </a>
+    <!-- 5. Tài khoản -->
+    <a href="parent-profile.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">person</span>
+      <span class="font-medium text-[10px] mt-0.5">Tài khoản</span>
+    </a>
+  </div>
 </nav>
 
+<!-- AI Trợ lý — nút nổi góc phải, phía trên bottom-nav (ẩn ở trang chatbot) -->
+
+<a href="chatbot.html" id="ai-fab"
+   class="lg:hidden fixed right-4 z-50 flex items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30"
+   aria-label="AI Trợ lý">
+  <span class="material-symbols-outlined text-2xl">smart_toy</span>
+</a>
+
+
 <style>
-    /* Chừa chỗ cho bottom-nav trên mobile để nội dung không bị che */
-    @media (max-width: 1023px) {
-        main { padding-bottom: 5.5rem; }
-    }
+  /* Touch target ≥44px + touch feedback (spec 1.4) — dùng CSS thuần để
+     hoạt động cả khi trang dùng build local không có class utility này */
+  .parent-bn-item {
+    min-width: 56px;
+    min-height: 52px;
+    padding: 6px 6px;
+    transition: transform .15s ease, background-color .15s ease, color .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .parent-bn-item:active { transform: scale(.94); }
+  .parent-bn-add { transition: transform .15s ease; }
+  .parent-bn-item:active .parent-bn-add { transform: scale(.94) rotate(90deg); }
+  #ai-fab {
+    width: 48px;
+    height: 48px;
+    bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    transition: transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #ai-fab:active { transform: scale(.92); }
+
+  /* Chừa chỗ cho bottom-nav 5 tab trên mobile — nội dung không bị che */
+  @media (max-width: 1023px) {
+    main, .main-area, .main-content { padding-bottom: 6rem; }
+  }
 </style>
+
 
 <script>
   // Runtime cho sidebar: đăng xuất + hiển thị tên/avatar (null-safe).
@@ -611,13 +670,13 @@
   (function () {
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        try { localStorage.clear(); } catch (e) {}
+        try { window.__edcStorage.clear(); } catch (e) {}
         setTimeout(() => { window.location.href = 'login.html'; }, 200);
       }
     };
     async function pcrLoadUser() {
       try {
-        const token = localStorage.getItem('token');
+        const token = window.__edcStorage.getItem('token');
         const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
         const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers });
         if (!r.ok) return;
@@ -843,12 +902,12 @@
 
     <!-- 7. Trung tâm trợ giúp -->
     <a href="help-center.html"
-       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active_tab == 'help' %}active font-semibold rounded-l-none shadow-xs">
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active font-semibold rounded-l-none shadow-xs">
       <div class="flex items-center gap-3 min-w-0">
-        <span class="material-symbols-outlined text-xl active_tab == 'help' %}fill-icon text-[#F26522]">support_agent</span>
+        <span class="material-symbols-outlined text-xl fill-icon text-[#F26522]">support_agent</span>
         <span class="truncate">Trung tâm trợ giúp</span>
       </div>
-      active_tab == 'help' %}
+      
         <span class="w-1.5 h-1.5 rounded-full bg-[#F26522] shrink-0"></span>
       
     </a>
@@ -888,7 +947,7 @@
 <script>
   (function initWorkerSidebar() {
     try {
-      const raw = localStorage.getItem('user');
+      const raw = window.__edcStorage.getItem('user');
       if (raw) {
         const u = JSON.parse(raw);
         const nameEl = document.getElementById('sidebar-name');
@@ -906,19 +965,19 @@
     if (typeof window.handleLogout !== 'function') {
       window.handleLogout = function() {
         if (confirm('Bạn có chắc muốn đăng xuất?')) {
-          try { localStorage.clear(); } catch (e) {}
+          try { window.__edcStorage.clear(); } catch (e) {}
           setTimeout(() => { window.location.href = 'login.html'; }, 200);
         }
       };
     }
 
-    // Nguồn sự thật duy nhất: /api/profile/ (web login không lưu localStorage 'user')
+    // Nguồn sự thật duy nhất: /api/profile/ (web login không lưu window.__edcStorage 'user')
     (async function wsbLoadProfile() {
       try {
         const nameEl = document.getElementById('sidebar-name');
         const avtEl = document.getElementById('sidebar-avatar');
         if (!nameEl || !avtEl) return;
-        const token = localStorage.getItem('token');
+        const token = window.__edcStorage.getItem('token');
         if (!token) return;
         const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers: { 'Authorization': 'Bearer ' + token } });
         if (!r.ok) return;
@@ -942,29 +1001,32 @@
 </aside>
 
 <!-- ===== BOTTOM NAV (Mobile <1024px) — chuẩn 4 tab Carepartner ===== -->
+<!-- Task 2-c: nâng chuẩn chất lượng mobile — touch target ≥44px,       -->
+<!-- safe-area iOS 14px, touch feedback :active scale (giữ nguyên id +   -->
+<!-- cấu trúc 4 tab mà JS/worker_profile.html đang phụ thuộc).           -->
 <nav id="worker-bottom-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-xl border-t border-border shadow-lg">
-    <div class="flex justify-around items-center px-2 py-2" style="padding-bottom: max(0.6rem, env(safe-area-inset-bottom));">
+    <div class="flex justify-around items-center px-1 py-1.5" style="padding-bottom: max(14px, env(safe-area-inset-bottom));">
         <!-- Nhận việc -->
         <a href="don-cua-toi.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+           class="worker-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
             <span class="material-symbols-outlined text-xl">notifications_active</span>
             <span class="font-medium text-[10px] mt-0.5">Nhận việc</span>
         </a>
         <!-- Lịch rảnh -->
         <a href="lich-ranh.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+           class="worker-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
             <span class="material-symbols-outlined text-xl">event_available</span>
             <span class="font-medium text-[10px] mt-0.5">Lịch rảnh</span>
         </a>
         <!-- Việc của tôi -->
         <a href="worker-jobs.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+           class="worker-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
             <span class="material-symbols-outlined text-xl">assignment</span>
             <span class="font-medium text-[10px] mt-0.5">Việc của tôi</span>
         </a>
         <!-- Hồ sơ -->
         <a href="worker-profile.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+           class="worker-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
             <span class="material-symbols-outlined text-xl">person</span>
             <span class="font-medium text-[10px] mt-0.5">Hồ sơ</span>
         </a>
@@ -972,10 +1034,20 @@
 </nav>
 
 <style>
+    /* Touch target ≥44px + touch feedback cho tab Carepartner (Task 2-c) */
+    .worker-bn-item {
+        min-width: 64px;
+        min-height: 52px;
+        padding: 6px 10px;
+        transition: transform .15s ease, background-color .15s ease, color .15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .worker-bn-item:active { transform: scale(.94); }
+
     /* Chừa chỗ cho bottom-nav trên mobile để nội dung không bị che
        (đồng bộ _parent_chrome.html) */
     @media (max-width: 1023px) {
-        main, .main-area, .chat-main-area { padding-bottom: 5.5rem; }
+        main, .main-area, .chat-main-area { padding-bottom: 6rem; }
     }
 </style>
 
@@ -986,7 +1058,7 @@
   (function () {
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        try { localStorage.clear(); } catch (e) {}
+        try { window.__edcStorage.clear(); } catch (e) {}
         setTimeout(() => { window.location.href = 'login.html'; }, 200);
       }
     };
@@ -1024,16 +1096,16 @@
       }
     }
 
-    // 1) Nguồn nhanh: localStorage 'role' (login.html lưu sau khi đăng nhập)
+    // 1) Nguồn nhanh: window.__edcStorage 'role' (login.html lưu sau khi đăng nhập)
     try {
-      var role = localStorage.getItem('role');
+      var role = window.__edcStorage.getItem('role');
       if (role) showChrome(role);
-    } catch (e) { /* localStorage chặn → fallback bên dưới */ }
+    } catch (e) { /* window.__edcStorage chặn → fallback bên dưới */ }
 
     // 2) Fallback chắc chắn: /api/profile/ trả role thật từ DB
     (async function fetchRole() {
       try {
-        const token = localStorage.getItem('token');
+        const token = window.__edcStorage.getItem('token');
         if (!token) { if (!shown) showChrome('parent'); return; }
         const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers: { 'Authorization': 'Bearer ' + token } });
         if (r.ok) {
@@ -1204,7 +1276,7 @@
 
         // ===== TOKEN REFRESH UTILITY =====
         async function apiFetch(url, options = {}) {
-            let token = localStorage.getItem('token');
+            let token = window.__edcStorage.getItem('token');
             if (!token) {
                 window.location.href = "login.html";
                 return new Response(null, { status: 401 });
@@ -1214,7 +1286,7 @@
 
             // If 401 → try refresh token
             if (response.status === 401) {
-                const refreshToken = localStorage.getItem('refresh_token');
+                const refreshToken = window.__edcStorage.getItem('refresh_token');
                 if (refreshToken) {
                     try {
                         const refreshResp = await fetch(API_BASE + '/auth/token/refresh/', {
@@ -1224,24 +1296,24 @@
                         });
                         if (refreshResp.ok) {
                             const refreshData = await refreshResp.json();
-                            localStorage.setItem('token', refreshData.access);
-                            if (refreshData.refresh) localStorage.setItem('refresh_token', refreshData.refresh);
+                            window.__edcStorage.setItem('token', refreshData.access);
+                            if (refreshData.refresh) window.__edcStorage.setItem('refresh_token', refreshData.refresh);
                             options.headers['Authorization'] = 'Bearer ' + refreshData.access;
                             response = await fetch(url, options);
                         } else {
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('refresh_token');
+                            window.__edcStorage.removeItem('token');
+                            window.__edcStorage.removeItem('refresh_token');
                             window.location.href = "login.html";
                             return new Response(null, { status: 401 });
                         }
                     } catch (e) {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('refresh_token');
+                        window.__edcStorage.removeItem('token');
+                        window.__edcStorage.removeItem('refresh_token');
                         window.location.href = "login.html";
                         return new Response(null, { status: 401 });
                     }
                 } else {
-                    localStorage.removeItem('token');
+                    window.__edcStorage.removeItem('token');
                     window.location.href = "login.html";
                     return new Response(null, { status: 401 });
                 }
@@ -1250,7 +1322,7 @@
         }
 
         // ===== AUTH CHECK =====
-        if (!localStorage.getItem('token')) {
+        if (!window.__edcStorage.getItem('token')) {
             window.location.href = "login.html";
         }
 
@@ -1298,7 +1370,7 @@
         // ===== LOGOUT =====
         function handleLogout() {
             if (confirm('Bạn có chắc muốn đăng xuất?')) {
-                localStorage.clear();
+                window.__edcStorage.clear();
                 showToast('Đã đăng xuất thành công', 'success');
                 setTimeout(() => {
                     window.location.href = "login.html";
@@ -1467,8 +1539,8 @@
 
                 if (!resp.ok) {
                     if (resp.status === 401) {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('refresh_token');
+                        window.__edcStorage.removeItem('token');
+                        window.__edcStorage.removeItem('refresh_token');
                         showToast('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', 'error');
                         setTimeout(() => {
                             window.location.href = "login.html";

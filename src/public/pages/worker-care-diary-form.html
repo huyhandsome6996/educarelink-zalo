@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
 <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
 <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
 <title>Ghi nhật ký chăm sóc - EduCareLink</title>
@@ -52,13 +53,25 @@
   @media (min-width: 768px) {
     .mobile-bottom-nav { display: none !important; }
   }
+
+  /* ===== Task 2-c: Mobile Web UX (spec 1.4) ===== */
+  .break-words { overflow-wrap: break-word; word-wrap: break-word; }
+  /* Touch target ≥44px cho tab mobile + nút mood */
+  .mobile-bottom-nav a, .mobile-bottom-nav button { min-width: 60px; min-height: 48px; justify-content: center; -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
+  .mobile-bottom-nav a:active, .mobile-bottom-nav button:active { transform: scale(.94); }
+  /* Safe-area cho bottom nav tự viết của trang này */
+  .mobile-bottom-nav { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+  .mood-option { min-width: 48px; min-height: 56px; -webkit-tap-highlight-color: transparent; }
+  .mood-option:active { transform: scale(.95); }
+  .wcdf-btn { min-height: 44px; -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
+  .wcdf-btn:active { transform: scale(.97); }
 </style>
 </head>
 
 <body class="bg-background text-textPrimary min-h-screen">
 
 <!-- TOAST CONTAINER -->
-<div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none" style="max-width:400px;"></div>
+<div id="toast-container" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none" style="max-width:min(400px, calc(100vw - 2rem));"></div>
 
 <!-- SIDEBAR (Desktop) -->
 <aside class="sidebar fixed left-0 top-0 bottom-0 w-[260px] bg-white border-r border-gray-100 flex flex-col z-40 shadow-sm">
@@ -553,12 +566,12 @@ function validateAssessmentClientSide(type, data) {
 }
 
 async function apiFetch(url, options = {}) {
-  let token = localStorage.getItem('token');
+  let token = window.__edcStorage.getItem('token');
   if (!token) { window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
   options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
   let response = await fetch(url, options);
   if (response.status === 401) {
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = window.__edcStorage.getItem('refresh_token');
     if (refreshToken) {
       try {
         const refreshResp = await fetch(API_BASE + '/auth/token/refresh/', {
@@ -567,13 +580,13 @@ async function apiFetch(url, options = {}) {
         });
         if (refreshResp.ok) {
           const rd = await refreshResp.json();
-          localStorage.setItem('token', rd.access);
-          if (rd.refresh) localStorage.setItem('refresh_token', rd.refresh);
+          window.__edcStorage.setItem('token', rd.access);
+          if (rd.refresh) window.__edcStorage.setItem('refresh_token', rd.refresh);
           options.headers['Authorization'] = 'Bearer ' + rd.access;
           response = await fetch(url, options);
-        } else { localStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
-      } catch (e) { localStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
-    } else { localStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+        } else { window.__edcStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+      } catch (e) { window.__edcStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+    } else { window.__edcStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
   }
   return response;
 }
@@ -904,11 +917,11 @@ async function loadTaskInfo() {
 }
 
 function handleLogout() {
-  localStorage.clear();
+  window.__edcStorage.clear();
   window.location.href = LOGIN_URL;
 }
 
-if (!localStorage.getItem('token')) window.location.href = LOGIN_URL;
+if (!window.__edcStorage.getItem('token')) window.location.href = LOGIN_URL;
 loadTaskInfo();
 </script>
 </body>

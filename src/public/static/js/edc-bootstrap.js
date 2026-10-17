@@ -19,6 +19,18 @@
   window.__API_ORIGIN = IS_DEV ? '' : 'https://educarelink-backend.onrender.com';
   window.API_BASE = window.__API_ORIGIN + '/api';
 
+  // Các script dùng chung từ web gốc cũng gọi API bằng đường dẫn tương đối.
+  // Trên Zalo, giữ nguyên request nhưng chuyển đích API/media về backend thật.
+  var originalFetch = window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    var url = typeof input === 'string' ? input : input && input.url;
+    if (url && /^\/(api|media)\//.test(url) && window.__API_ORIGIN) {
+      var target = window.__API_ORIGIN + url;
+      input = typeof input === 'string' ? target : new Request(target, input);
+    }
+    return originalFetch(input, init);
+  };
+
   /* 2) Map path Django -> trang html tĩnh (đồng bộ scripts/port_pages.py) */
   var ROUTES = {
     '/': 'splash.html', '/landing/': 'landing.html',
@@ -69,21 +81,27 @@
   window.addEventListener('error', function (e) { relay('edc-error', (e && e.message) || e); });
   window.addEventListener('unhandledrejection', function (e) { relay('edc-error', 'Promise: ' + ((e && e.reason) || '')); });
 
-  /* 4) localStorage an toàn: nếu webview chặn -> shim in-memory
-     (tránh crash toàn trang, đăng nhập sẽ cần đăng nhập lại mỗi phiên) */
+  /* 4) Dùng Native Storage từ shell; trình duyệt dev giữ Local Storage.
+     Memory dự phòng chia sẻ qua shell để đổi trang không mất phiên. */
   try {
-    localStorage.setItem('__edc_probe__', '1');
-    localStorage.removeItem('__edc_probe__');
+    var storage = !IS_DEV && parent.__edcNativeStorage
+      ? parent.__edcNativeStorage : window.localStorage;
+    storage.setItem('__edc_probe__', '1');
+    storage.removeItem('__edc_probe__');
+    window.__edcStorage = storage;
   } catch (e) {
-    var mem = {};
+    var mem;
+    try {
+      mem = parent.__edcMemory || (parent.__edcMemory = {});
+    } catch (e2) { mem = {}; }
     var shim = {
       getItem: function (k) { return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null; },
       setItem: function (k, v) { mem[k] = String(v); },
       removeItem: function (k) { delete mem[k]; },
-      clear: function () { mem = {}; },
+      clear: function () { Object.keys(mem).forEach(function (k) { delete mem[k]; }); },
       key: function (i) { return Object.keys(mem)[i] || null; }
     };
     Object.defineProperty(shim, 'length', { get: function () { return Object.keys(mem).length; } });
-    try { window.localStorage = shim; } catch (e2) { /* im lặng */ }
+    window.__edcStorage = shim;
   }
 })();

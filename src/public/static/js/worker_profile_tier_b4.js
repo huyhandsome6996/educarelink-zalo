@@ -93,7 +93,7 @@
     var verifyStatus = document.getElementById('verify-status');
     if (!verifyStatus || !verifyStatus.textContent.trim()) return;
 
-    var token = localStorage.getItem('token');
+    var token = window.__edcStorage.getItem('token');
     if (!token) {
       injectTierBadge({ tier: 'bronze' });
       return;

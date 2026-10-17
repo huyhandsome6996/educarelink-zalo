@@ -2,7 +2,7 @@
 // EduCareLink — Web Performance Utilities
 // Áp dụng DSA: LRU Cache (Map), Debounce, Request Deduplication
 // ====================================================================
-// File này được load global qua <script src="/static/js/performance.js">
+// File này được load global qua <script src="../static/js/performance.js">
 // Expose window.EduPerf cho tất cả templates dùng
 // ====================================================================
 

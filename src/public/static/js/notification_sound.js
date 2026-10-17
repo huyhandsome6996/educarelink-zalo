@@ -37,7 +37,7 @@
   var loadedAudio = {};
 
   function getToken() {
-    try { return localStorage.getItem('token'); } catch (e) { return null; }
+    try { return window.__edcStorage.getItem('token'); } catch (e) { return null; }
   }
 
   function isEmergency(n) {
@@ -151,7 +151,7 @@
           showBrowserNotification(fresh[j]);
         }
       }
-      try { localStorage.setItem(LAST_KEY, String(Date.now())); } catch (e) {}
+      try { window.__edcStorage.setItem(LAST_KEY, String(Date.now())); } catch (e) {}
       firstPollDone = true;
     }).catch(function () { /* mạng lỗi — poll sau */ });
   }

@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <title>EduCareLink — Đơn ghép cặp của tôi</title>
     <link rel="shortcut icon" href="../static/images/favicon.ico" type="image/x-icon">
@@ -72,6 +73,17 @@
         .uc-tab .uc-badge { min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px;
             display: inline-flex; align-items: center; justify-content: center; font-size: 10.5px; font-weight: 800; }
         .uc-tab.active .uc-badge { background: rgba(255,255,255,0.25); color: #fff; }
+        /* ===== Task 2-c: Mobile Web UX (spec 1.4) ===== */
+        /* Touch target ≥44px cho nút/tab + touch feedback card */
+        .uc-btn { min-height: 44px; }
+        .uc-tab { min-height: 44px; }
+        .booking-card { -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
+        @media (hover: none) { .booking-card:active { transform: scale(.985); } }
+        .uc-quick { min-width: 44px; min-height: 44px; }
+        @media (max-width: 640px) {
+            .uc-main { padding-left: 0.875rem; padding-right: 0.875rem; }
+            .uc-tab { padding: 8px 12px; }
+        }
         .uc-tab:not(.active) .uc-badge { background: #F3F4F6; color: #6B7280; }
         .uc-tab .uc-badge.uc-badge-hot { background: #FEE2E2 !important; color: #DC2626 !important; }
     </style>
@@ -183,7 +195,7 @@
   function fmtVND(n) { return (Number(n) || 0).toLocaleString('vi-VN') + 'đ'; }
 
   async function authFetch(url, options = {}) {
-    let token = localStorage.getItem(MCM_TOKEN_KEY);
+    let token = window.__edcStorage.getItem(MCM_TOKEN_KEY);
     if (!token) {
       toast('Vui lòng đăng nhập tài khoản Phụ huynh để tiếp tục.', false);
       setTimeout(() => {
@@ -200,7 +212,7 @@
     let response = await fetch(url, options);
     if (response.status === 401) {
       let refreshed = false;
-      const refreshToken = localStorage.getItem(MCM_REFRESH_KEY);
+      const refreshToken = window.__edcStorage.getItem(MCM_REFRESH_KEY);
       if (refreshToken) {
         try {
           const refreshResp = await fetch(API_BASE + '/auth/token/refresh/', {
@@ -210,8 +222,8 @@
           });
           if (refreshResp.ok) {
             const refreshData = await refreshResp.json();
-            localStorage.setItem(MCM_TOKEN_KEY, refreshData.access);
-            if (refreshData.refresh) localStorage.setItem(MCM_REFRESH_KEY, refreshData.refresh);
+            window.__edcStorage.setItem(MCM_TOKEN_KEY, refreshData.access);
+            if (refreshData.refresh) window.__edcStorage.setItem(MCM_REFRESH_KEY, refreshData.refresh);
             options.headers['Authorization'] = 'Bearer ' + refreshData.access;
             response = await fetch(url, options);
             if (response.status !== 401) refreshed = true;
@@ -219,12 +231,12 @@
         } catch (e) {}
       }
       if (!refreshed && response.status === 401) {
-        localStorage.removeItem(MCM_TOKEN_KEY);
-        localStorage.removeItem(MCM_REFRESH_KEY);
-        localStorage.removeItem('role');
-        localStorage.removeItem('user');
-        localStorage.removeItem('is_staff');
-        localStorage.removeItem('admin_username');
+        window.__edcStorage.removeItem(MCM_TOKEN_KEY);
+        window.__edcStorage.removeItem(MCM_REFRESH_KEY);
+        window.__edcStorage.removeItem('role');
+        window.__edcStorage.removeItem('user');
+        window.__edcStorage.removeItem('is_staff');
+        window.__edcStorage.removeItem('admin_username');
         toast('Phiên đăng nhập đã hết hạn hoặc tài khoản không tồn tại. Đang chuyển đến trang đăng nhập...', false);
         setTimeout(() => {
           const next = encodeURIComponent(window.location.pathname + window.location.search);
@@ -261,10 +273,10 @@
   //   2) Tile bản đồ dùng CARTO (Fastly CDN) làm mặc định, tự chuyển sang
   //      OSM tile nếu CARTO lỗi, và hiện thông báo thân thiện nếu cả hai fail.
   const MCM_TILE_PROVIDERS = [
-    { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-      options: { attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 20 } },
     { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      options: { attribution: '© OpenStreetMap', maxZoom: 19 } },
+      options: { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains: ['a', 'b', 'c'], maxZoom: 19 } },
+    { url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+      options: { attribution: '&copy; OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team', maxZoom: 19 } },
   ];
 
   function attachResilientTiles(map) {
@@ -526,12 +538,12 @@
 
     <!-- 1. Nhận đơn mới (luồng ghép cặp thụ động kiểu Grab — trang chính) -->
     <a href="don-cua-toi.html"
-       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active_tab == 'feed' %}active font-semibold rounded-l-none shadow-xs">
+       class="wsb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active font-semibold rounded-l-none shadow-xs">
       <div class="flex items-center gap-3 min-w-0">
-        <span class="material-symbols-outlined text-xl active_tab == 'feed' %}fill-icon text-[#F26522]">notifications_active</span>
+        <span class="material-symbols-outlined text-xl fill-icon text-[#F26522]">notifications_active</span>
         <span class="truncate">Nhận đơn mới</span>
       </div>
-      active_tab == 'feed' %}
+      
         <span class="w-1.5 h-1.5 rounded-full bg-[#F26522] shrink-0"></span>
       
     </a>
@@ -645,7 +657,7 @@
 <script>
   (function initWorkerSidebar() {
     try {
-      const raw = localStorage.getItem('user');
+      const raw = window.__edcStorage.getItem('user');
       if (raw) {
         const u = JSON.parse(raw);
         const nameEl = document.getElementById('sidebar-name');
@@ -663,19 +675,19 @@
     if (typeof window.handleLogout !== 'function') {
       window.handleLogout = function() {
         if (confirm('Bạn có chắc muốn đăng xuất?')) {
-          try { localStorage.clear(); } catch (e) {}
+          try { window.__edcStorage.clear(); } catch (e) {}
           setTimeout(() => { window.location.href = 'login.html'; }, 200);
         }
       };
     }
 
-    // Nguồn sự thật duy nhất: /api/profile/ (web login không lưu localStorage 'user')
+    // Nguồn sự thật duy nhất: /api/profile/ (web login không lưu window.__edcStorage 'user')
     (async function wsbLoadProfile() {
       try {
         const nameEl = document.getElementById('sidebar-name');
         const avtEl = document.getElementById('sidebar-avatar');
         if (!nameEl || !avtEl) return;
-        const token = localStorage.getItem('token');
+        const token = window.__edcStorage.getItem('token');
         if (!token) return;
         const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers: { 'Authorization': 'Bearer ' + token } });
         if (!r.ok) return;
@@ -699,29 +711,32 @@
 </aside>
 
 <!-- ===== BOTTOM NAV (Mobile <1024px) — chuẩn 4 tab Carepartner ===== -->
+<!-- Task 2-c: nâng chuẩn chất lượng mobile — touch target ≥44px,       -->
+<!-- safe-area iOS 14px, touch feedback :active scale (giữ nguyên id +   -->
+<!-- cấu trúc 4 tab mà JS/worker_profile.html đang phụ thuộc).           -->
 <nav id="worker-bottom-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-xl border-t border-border shadow-lg">
-    <div class="flex justify-around items-center px-2 py-2" style="padding-bottom: max(0.6rem, env(safe-area-inset-bottom));">
+    <div class="flex justify-around items-center px-1 py-1.5" style="padding-bottom: max(14px, env(safe-area-inset-bottom));">
         <!-- Nhận việc -->
         <a href="don-cua-toi.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 active_tab == 'feed' %}bg-orange-50 text-primary font-bold transition-all">
-            <span class="material-symbols-outlined text-xlactive_tab == 'feed' %} filled">notifications_active</span>
-            <span class="active_tab == 'feed' %}font-bold text-[10px] mt-0.5">Nhận việc</span>
+           class="worker-bn-item flex flex-col items-center justify-center rounded-xl bg-orange-50 text-primary font-bold">
+            <span class="material-symbols-outlined text-xl filled">notifications_active</span>
+            <span class="font-bold text-[10px] mt-0.5">Nhận việc</span>
         </a>
         <!-- Lịch rảnh -->
         <a href="lich-ranh.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+           class="worker-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
             <span class="material-symbols-outlined text-xl">event_available</span>
             <span class="font-medium text-[10px] mt-0.5">Lịch rảnh</span>
         </a>
         <!-- Việc của tôi -->
         <a href="worker-jobs.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+           class="worker-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
             <span class="material-symbols-outlined text-xl">assignment</span>
             <span class="font-medium text-[10px] mt-0.5">Việc của tôi</span>
         </a>
         <!-- Hồ sơ -->
         <a href="worker-profile.html"
-           class="flex flex-col items-center justify-center rounded-xl px-3.5 py-1.5 text-textSecondary hover:text-textPrimary transition-all">
+           class="worker-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
             <span class="material-symbols-outlined text-xl">person</span>
             <span class="font-medium text-[10px] mt-0.5">Hồ sơ</span>
         </a>
@@ -729,10 +744,20 @@
 </nav>
 
 <style>
+    /* Touch target ≥44px + touch feedback cho tab Carepartner (Task 2-c) */
+    .worker-bn-item {
+        min-width: 64px;
+        min-height: 52px;
+        padding: 6px 10px;
+        transition: transform .15s ease, background-color .15s ease, color .15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .worker-bn-item:active { transform: scale(.94); }
+
     /* Chừa chỗ cho bottom-nav trên mobile để nội dung không bị che
        (đồng bộ _parent_chrome.html) */
     @media (max-width: 1023px) {
-        main, .main-area, .chat-main-area { padding-bottom: 5.5rem; }
+        main, .main-area, .chat-main-area { padding-bottom: 6rem; }
     }
 </style>
 
@@ -743,7 +768,7 @@
   (function () {
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        try { localStorage.clear(); } catch (e) {}
+        try { window.__edcStorage.clear(); } catch (e) {}
         setTimeout(() => { window.location.href = 'login.html'; }, 200);
       }
     };
@@ -785,7 +810,7 @@
     </div>
 </header>
 
-<main class="max-w-3xl mx-auto px-4 py-5 lg:ml-[260px] pb-28">
+<main class="uc-main max-w-3xl mx-auto px-4 py-5 lg:ml-[260px] pb-28">
 
     <!-- ================= URGENT BANNER (đơn chờ cam kết sắp hết hạn) ================= -->
     <div id="urgent-banner" class="hidden uc-fade-in rounded-2xl overflow-hidden shadow-lg shadow-amber-200/50 border border-amber-300">
@@ -1030,13 +1055,13 @@
    ĐƠN GHÉP CẶP CỦA TÔI — luồng thụ động Flow 1 (khóa thiết kế Stitch)
    Dữ liệu thật: GET /api/matching/bookings/ — không dữ liệu cứng.
 
-   ⚠️ AUTH GUARD (bắt buộc): trang dùng JWT ở localStorage, Django
+   ⚠️ AUTH GUARD (bắt buộc): trang dùng JWT ở window.__edcStorage, Django
    không nhìn thấy → không được check auth phía server (trước đây gây
    vòng lặp redirect /login ↔ /don-cua-toi vô hạn). Guard đồng bộ với
    worker_jobs.html: chưa có token → đá về /login/ kèm ?next=.
    ═══════════════════════════════════════════════════════════════ */
 const LOGIN_URL = "login.html";
-if (!localStorage.getItem('token')) {
+if (!window.__edcStorage.getItem('token')) {
   window.location.href = LOGIN_URL + '?next=/don-cua-toi/';
 }
 
@@ -1382,13 +1407,13 @@ function buildCard(b) {
           <div class="text-[11px] text-gray-400 font-semibold">Thù lao thực nhận${b.total_value_vnd ? ' · đơn ' + fmtVND(b.total_value_vnd) : ''}</div>
         </div>
         <div class="flex items-center gap-1.5">
-          <a href="${mapsUrl(b)}" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#F26522] transition" title="Chỉ đường trên Google Maps">
+          <a href="${mapsUrl(b)}" target="_blank" rel="noopener" class="uc-quick w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#F26522] transition" title="Chỉ đường trên Google Maps">
             <span class="material-symbols-outlined text-[18px]">map</span>
           </a>
-          ${phone ? `<a href="tel:${esc(phone)}" class="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-emerald-600 transition" title="Gọi phụ huynh">
+          ${phone ? `<a href="tel:${esc(phone)}" class="uc-quick w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-emerald-600 transition" title="Gọi phụ huynh">
             <span class="material-symbols-outlined text-[18px]">call</span>
           </a>` : ''}
-          <a href="don.html?id=${esc(b.id)}" class="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-600 transition" title="Chi tiết đơn">
+          <a href="don.html?id=${esc(b.id)}" class="uc-quick w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-600 transition" title="Chi tiết đơn">
             <span class="material-symbols-outlined text-[18px]">chevron_right</span>
           </a>
         </div>
@@ -1731,11 +1756,11 @@ function setElText(id, text) {
     if (dot) { dot.className = 'w-2 h-2 rounded-full ' + (on ? 'bg-emerald-500' : 'bg-gray-400'); }
     if (label) label.textContent = on ? 'Đang nhận đơn' : 'Tạm dừng nhận đơn';
   };
-  let on = localStorage.getItem('ecl_receive_orders') !== 'off';
+  let on = window.__edcStorage.getItem('ecl_receive_orders') !== 'off';
   apply(on);
   toggle.addEventListener('click', () => {
     on = !on;
-    localStorage.setItem('ecl_receive_orders', on ? 'on' : 'off');
+    window.__edcStorage.setItem('ecl_receive_orders', on ? 'on' : 'off');
     apply(on);
     toast(on ? 'Đã bật nhận đơn ghép cặp.' : 'Đã tạm dừng nhận đơn ghép cặp.', on);
   });

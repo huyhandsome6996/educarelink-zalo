@@ -11,11 +11,14 @@ import os
 import re
 import subprocess
 import sys
+from pathlib import Path
 
-SRC = "/home/z/my-project/work/educarelink-backend-4-12-2026/frontend/templates/frontend"
-PAGES_DIR = "/home/z/my-project/work/educarelink-zalo/src/public/pages"
-OUT_CSS = "/home/z/my-project/work/educarelink-zalo/src/public/static/css"
-CONF_DIR = "/home/z/my-project/work/educarelink-zalo/scripts/tailwind-cdn"
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_REPO = Path(os.environ.get("EDUCARELINK_SOURCE", ROOT.parent / "educarelink-main"))
+SRC = str(SOURCE_REPO / "frontend/templates/frontend")
+PAGES_DIR = str(ROOT / "src/public/pages")
+OUT_CSS = str(ROOT / "src/public/static/css")
+CONF_DIR = str(ROOT / "scripts/tailwind-cdn")
 
 CDN_PAGES = [
     ("parent_home.html", "parent_home"),
@@ -65,7 +68,7 @@ def main():
             cfg = extract_config(f.read())
         if not cfg:
             print("-- %s không có config inline -> dùng Tailwind mặc định" % tpl)
-        page_html = os.path.join(PAGES_DIR, tpl.replace("_", "-"))
+        page_html = "./src/public/pages/" + tpl.replace("_", "-")
         conf_path = os.path.join(CONF_DIR, name + ".config.js")
         with open(conf_path, "w", encoding="utf-8") as f:
             f.write("/** Tự sinh từ %s — KHÔNG sửa tay, chạy build_cdn_css.py */\n" % tpl)
@@ -77,15 +80,21 @@ def main():
             else:
                 # Trang dùng CDN không khai báo config -> Tailwind mặc định 100%
                 f.write("module.exports = { content: [\"%s\"] };\n" % page_html)
+            # Các partial mới dùng token chung kể cả khi trang chỉ khai báo brand.
+            f.write("var shared = require('../upstream-tailwind/shared-theme');\n")
+            f.write("var theme = module.exports.theme = module.exports.theme || {};\n")
+            f.write("var ext = theme.extend = theme.extend || {};\n")
+            f.write("ext.colors = Object.assign({}, shared.colors, ext.colors || {});\n")
+            f.write("ext.fontFamily = Object.assign({}, shared.fontFamily, ext.fontFamily || {});\n")
         out = os.path.join(OUT_CSS, "cdn-%s.css" % name)
         r = subprocess.run(
-            ["npx", "tailwindcss", "-c", conf_path, "-o", out, "--minify"],
-            cwd="/home/z/my-project/work/educarelink-zalo",
+            ["node", str(ROOT / "node_modules/tailwindcss/lib/cli.js"), "-c", conf_path, "-o", out, "--minify"],
+            cwd=str(ROOT),
             capture_output=True, text=True)
         if r.returncode != 0:
             print("!! tailwindcss lỗi cho", name)
             print(r.stdout[-800:], r.stderr[-800:])
-            continue
+            sys.exit(r.returncode)
         size = os.path.getsize(out)
         # verify nhanh: css phải chứa class chủ đạo của page
         with open(out, encoding="utf-8") as f:

@@ -10,7 +10,7 @@
  * KHÔNG retry vô hạn.
  *
  * Được include trong _worker_chrome.html → chạy trên mọi trang worker.
- * Auth: JWT trong localStorage ('token' / 'refresh_token') — cùng cơ chế
+ * Auth: JWT trong window.__edcStorage ('token' / 'refresh_token') — cùng cơ chế
  * apiFetch của các trang (đồng bộ mobile dùng JWT /api/auth/login/).
  * ============================================================ */
 (function () {
@@ -24,15 +24,15 @@
   var timerId = null;
 
   function getToken() {
-    try { return localStorage.getItem('token'); } catch (e) { return null; }
+    try { return window.__edcStorage.getItem('token'); } catch (e) { return null; }
   }
 
   function getRefreshToken() {
-    try { return localStorage.getItem('refresh_token'); } catch (e) { return null; }
+    try { return window.__edcStorage.getItem('refresh_token'); } catch (e) { return null; }
   }
 
   function setToken(t) {
-    try { localStorage.setItem('token', t); } catch (e) { /* ignore */ }
+    try { window.__edcStorage.setItem('token', t); } catch (e) { /* ignore */ }
   }
 
   function isWorkerPage() {

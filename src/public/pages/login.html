@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
     <title>EduCareLink - Đăng nhập</title>
@@ -19,6 +20,15 @@
         html { scroll-behavior: smooth; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+
+        /* ===== Task 2-c: Mobile Web UX (spec 1.4) ===== */
+        /* Input ≥16px trên mobile chống iOS Safari auto-zoom khi focus */
+        @media (max-width: 767px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+        /* Touch feedback cho nút chính */
+        button[type="submit"], .auth-btn { -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
+        button[type="submit"]:active, .auth-btn:active { transform: scale(.98); }
 
         /* Active tab */
         .tab-active {
@@ -408,7 +418,7 @@
         };
 
         tabRegister.onclick = () => {
-            window.location.href = 'register.html';
+            window.__edcLocation.href = 'register.html';
         };
 
         // Mobile shortcut
@@ -506,11 +516,11 @@
                 if (response.ok) {
                     if (isLogin) {
                         // Save JWT tokens and role
-                        localStorage.setItem('token', data.tokens.access);
-                        localStorage.setItem('refresh_token', data.tokens.refresh);
-                        localStorage.setItem('role', data.role);
-                        if (data.is_staff) localStorage.setItem('is_staff', 'true');
-                        if (data.username) localStorage.setItem('admin_username', data.username);
+                        window.__edcStorage.setItem('token', data.tokens.access);
+                        window.__edcStorage.setItem('refresh_token', data.tokens.refresh);
+                        window.__edcStorage.setItem('role', data.role);
+                        if (data.is_staff) window.__edcStorage.setItem('is_staff', 'true');
+                        if (data.username) window.__edcStorage.setItem('admin_username', data.username);
 
                         showToast('Đăng nhập thành công! Đang chuyển hướng...', 'success');
 
@@ -518,16 +528,16 @@
                             // Kiểm tra nếu là admin → chuyển đến admin dashboard
                             if (data.is_staff) {
                                 // Kiểm tra nếu có ?next= parameter
-                                const urlParams = new URLSearchParams(window.location.search);
+                                const urlParams = new URLSearchParams(window.__edcLocation.search);
                                 const nextUrl = urlParams.get('next') || "admin-dashboard.html";
-                                window.location.href = window.__edcToPage(nextUrl);
+                                window.__edcLocation.href = window.__edcToPage(nextUrl);
                             } else if (data.first_login) {
                                 // Lần đầu đăng nhập → hiển thị hướng dẫn sử dụng
-                                window.location.href = data.role === 'parent'
+                                window.__edcLocation.href = data.role === 'parent'
                                     ? "onboarding-parent.html"
                                     : "onboarding-worker.html";
                             } else {
-                                window.location.href = data.role === 'parent'
+                                window.__edcLocation.href = data.role === 'parent'
                                     ? "parent-home.html"
                                     : "worker-feed.html";
                             }
@@ -571,26 +581,26 @@
 
         // ============ INIT ============
         // Check if already logged in
-        const existingToken = localStorage.getItem('token');
-        const existingRole = localStorage.getItem('role');
-        const isStaff = localStorage.getItem('is_staff');
-        // ⚠️ Nếu URL có ?auto=1 (QR auto-login) → PHẢI clear localStorage cũ
+        const existingToken = window.__edcStorage.getItem('token');
+        const existingRole = window.__edcStorage.getItem('role');
+        const isStaff = window.__edcStorage.getItem('is_staff');
+        // ⚠️ Nếu URL có ?auto=1 (QR auto-login) → PHẢI clear window.__edcStorage cũ
         // để tránh redirect sang admin dashboard khi vẫn còn token admin cũ
-        const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.__edcLocation.search);
         const isAutoLogin = urlParams.get('auto') === '1';
         if (isAutoLogin) {
             // Xoá toàn bộ session cũ để auto-login chạy sạch sẽ
-            localStorage.removeItem('token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('role');
-            localStorage.removeItem('is_staff');
-            localStorage.removeItem('admin_username');
+            window.__edcStorage.removeItem('token');
+            window.__edcStorage.removeItem('refresh_token');
+            window.__edcStorage.removeItem('role');
+            window.__edcStorage.removeItem('is_staff');
+            window.__edcStorage.removeItem('admin_username');
         } else if (existingToken && existingRole) {
             const nextUrl = urlParams.get('next');
             if (isStaff === 'true') {
-                window.location.href = window.__edcToPage(nextUrl || 'admin-dashboard.html');
+                window.__edcLocation.href = window.__edcToPage(nextUrl || 'admin-dashboard.html');
             } else if (nextUrl) {
-                window.location.href = window.__edcToPage(nextUrl);
+                window.__edcLocation.href = window.__edcToPage(nextUrl);
             }
         }
 
@@ -748,25 +758,25 @@
 
                 if (response.ok) {
                     // Save JWT tokens and redirect (same as normal login)
-                    localStorage.setItem('token', data.tokens.access);
-                    localStorage.setItem('refresh_token', data.tokens.refresh);
-                    localStorage.setItem('role', data.role);
-                    if (data.is_staff) localStorage.setItem('is_staff', 'true');
-                    if (data.username) localStorage.setItem('admin_username', data.username);
-                    if (data.avatar_url) localStorage.setItem('avatar_url', data.avatar_url);
-                    localStorage.setItem('auth_provider', data.auth_provider || provider);
+                    window.__edcStorage.setItem('token', data.tokens.access);
+                    window.__edcStorage.setItem('refresh_token', data.tokens.refresh);
+                    window.__edcStorage.setItem('role', data.role);
+                    if (data.is_staff) window.__edcStorage.setItem('is_staff', 'true');
+                    if (data.username) window.__edcStorage.setItem('admin_username', data.username);
+                    if (data.avatar_url) window.__edcStorage.setItem('avatar_url', data.avatar_url);
+                    window.__edcStorage.setItem('auth_provider', data.auth_provider || provider);
 
                     showToast('Đăng nhập thành công! Đang chuyển hướng...', 'success');
 
                     setTimeout(() => {
                         if (data.is_staff) {
-                            window.location.href = 'admin-dashboard.html';
+                            window.__edcLocation.href = 'admin-dashboard.html';
                         } else if (data.first_login) {
-                            window.location.href = data.role === 'parent'
+                            window.__edcLocation.href = data.role === 'parent'
                                 ? '/onboarding-parent/'
                                 : '/onboarding-worker/';
                         } else {
-                            window.location.href = data.role === 'parent'
+                            window.__edcLocation.href = data.role === 'parent'
                                 ? '/parent-home/'
                                 : '/worker-feed/';
                         }
@@ -840,7 +850,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });
@@ -869,7 +879,7 @@
     <script>
     (function () {
         try {
-            var params = new URLSearchParams(window.location.search);
+            var params = new URLSearchParams(window.__edcLocation.search);
             var u = params.get('u');
             var p = params.get('p');
             var auto = params.get('auto');

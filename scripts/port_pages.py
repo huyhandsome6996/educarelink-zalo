@@ -17,9 +17,13 @@ Repo gốc chỉ ĐỌC, không hề bị sửa.
 import os
 import re
 import sys
+from pathlib import Path
+import shutil
 
-SRC = "/home/z/my-project/work/educarelink-backend-4-12-2026/frontend/templates/frontend"
-OUT = "/home/z/my-project/work/educarelink-zalo/src/public/pages"
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE_REPO = Path(os.environ.get("EDUCARELINK_SOURCE", ROOT.parent / "educarelink-main"))
+SRC = str(SOURCE_REPO / "frontend/templates/frontend")
+OUT = str(ROOT / "src/public/pages")
 
 # ------------------------------------------------------------- ROUTES ------
 URL_NAMES = {
@@ -249,9 +253,9 @@ def render_dj(text, ctx, depth=0, cur_file=None):
                     else_at = (m.start(), m.end())
             if end_of_tag is None:
                 raise RuntimeError("if thiếu endif: " + s[start:start + 100])
-            inner = s[pos + m_if.end(): (else_at[0] if else_at else end_of_tag - len(m.group(0)))]
             # lấy lại if tag đầy đủ để biết điều kiện
             m_open = re.match(r"\{%\s*if\s+(.+?)\s*%\}", s[start:pos + m_if.end() + 200])
+            inner = s[start + m_open.end(): (else_at[0] if else_at else end_of_tag - len(m.group(0)))]
             cond = m_open.group(1)
             if eval_cond(cond, c):
                 body = inner
@@ -410,6 +414,10 @@ def inject_head(text):
 
 
 def rel_static(text):
+    # Native Storage của Zalo thay cho localStorage không được hỗ trợ trên Mini App.
+    text = re.sub(r"(?<![\w.])localStorage\b", "window.__edcStorage", text)
+    # srcdoc không có pathname/search riêng; shell cung cấp Location tương thích.
+    text = re.sub(r"\b(?:window|document)\.location\b|(?<![\w.])location(?=\.(?:href|search|pathname|hash|origin|protocol|host|hostname|port|assign|replace|reload))", "window.__edcLocation", text)
     text = text.replace('"/static/', '"../static/')
     text = text.replace("'/static/", "'../static/")
     text = text.replace('(`/static/', '(`../static/')
@@ -419,6 +427,16 @@ def rel_static(text):
 # ------------------------------------------------------------------ MAIN ---
 def main():
     os.makedirs(OUT, exist_ok=True)
+    # Luôn đồng bộ tài nguyên; giữ bootstrap riêng của Mini App.
+    static_out = ROOT / "src/public/static"
+    shutil.copytree(SOURCE_REPO / "frontend/static", static_out, dirs_exist_ok=True)
+    for script in (static_out / "js").glob("*.js"):
+        if script.name == "edc-bootstrap.js":
+            continue
+        text = script.read_text(encoding="utf-8")
+        text, api_store = protect_api_concat(text)
+        text = restore_api_concat(rewrite_internal_urls(text), api_store)
+        script.write_text(rel_static(text), encoding="utf-8")
     errors, report = [], []
     for tpl, out_name, cfg in PAGES:
         with open(os.path.join(SRC, tpl), encoding="utf-8") as f:

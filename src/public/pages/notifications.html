@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
   <title>Thông báo — EduCareLink</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="shortcut icon" href="../static/images/favicon.ico" type="image/x-icon">
@@ -22,12 +23,26 @@
       transition: opacity 0.3s; pointer-events: none; max-width: 90%;
     }
     .toast.show { opacity: 1; }
+
+    /* ===== Task 2-c: Mobile Web UX (spec 1.4) — media query responsive ===== */
+    .break-words { overflow-wrap: break-word; word-wrap: break-word; }
+    .ntf-header { padding-top: max(10px, env(safe-area-inset-top)); }
+    .ntf-main { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
+    /* Touch feedback + touch target cho row thông báo */
+    .ntf-item { min-height: 56px; -webkit-tap-highlight-color: transparent; transition: transform .15s ease, background-color .15s ease; }
+    @media (hover: none) {
+      .ntf-item:active { transform: scale(.985); background-color: #f9fafb; }
+    }
+    .ntf-btn { min-height: 44px; -webkit-tap-highlight-color: transparent; }
+    @media (max-width: 640px) {
+      .ntf-main { padding-left: 0.875rem; padding-right: 0.875rem; }
+    }
   </style>
 </head>
 <body class="bg-[#F7F7F7]">
 
 <!-- Header -->
-<header class="bg-[#F26522] text-white shadow-md sticky top-0 z-20">
+<header class="ntf-header bg-[#F26522] text-white shadow-md sticky top-0 z-20">
   <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <a id="back-link" href="javascript:void(0)" onclick="goBack()" class="bg-white/20 hover:bg-white/30 active:scale-95 rounded-lg w-9 h-9 flex items-center justify-center transition shrink-0" aria-label="Quay lại">
@@ -42,13 +57,13 @@
       </div>
     </div>
     <button onclick="markAllRead()" id="mark-all-btn"
-      class="text-xs bg-white/20 hover:bg-white/30 active:scale-95 rounded-lg px-3 py-2 font-semibold transition">
+      class="ntf-btn text-xs bg-white/20 hover:bg-white/30 active:scale-95 rounded-lg px-3 py-2 font-semibold transition">
       Đọc tất cả
     </button>
   </div>
 </header>
 
-<main class="max-w-3xl mx-auto px-4 py-4 pb-16">
+<main class="ntf-main max-w-3xl mx-auto px-4 py-4 pb-16">
   <!-- Loading -->
   <div id="loading-state" class="text-center py-16">
     <div class="w-10 h-10 border-4 border-[#F26522]/30 border-t-[#F26522] rounded-full animate-spin mx-auto"></div>
@@ -89,11 +104,11 @@
 // ====================================================================
 const API_BASE = window.API_BASE;
 
-function getAuthToken() { return localStorage.getItem('token'); }
+function getAuthToken() { return window.__edcStorage.getItem('token'); }
 
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
-  if (!token) { window.location.href = 'login.html'; throw new Error('No auth token'); }
+  if (!token) { window.__edcLocation.href = 'login.html'; throw new Error('No auth token'); }
   const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
   if (options.body && typeof options.body === 'object') {
     headers['Content-Type'] = 'application/json';
@@ -103,14 +118,14 @@ async function authFetch(url, options = {}) {
   if (resp.status === 401) {
     const refreshed = await tryRefreshToken();
     if (refreshed) return authFetch(url, options);
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('Auth expired');
   }
   return resp;
 }
 
 async function tryRefreshToken() {
-  const refreshToken = localStorage.getItem('refresh_token');
+  const refreshToken = window.__edcStorage.getItem('refresh_token');
   if (!refreshToken) return false;
   try {
     const r = await fetch(`${API_BASE}/auth/token/refresh/`, {
@@ -120,8 +135,8 @@ async function tryRefreshToken() {
     });
     if (!r.ok) return false;
     const data = await r.json();
-    localStorage.setItem('token', data.access);
-    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+    window.__edcStorage.setItem('token', data.access);
+    if (data.refresh) window.__edcStorage.setItem('refresh_token', data.refresh);
     return true;
   } catch (e) { return false; }
 }
@@ -236,14 +251,14 @@ function notificationHtml(n) {
   const timeLabel = rel ? `${rel} • ${full}` : full;
   return `
     <div onclick="handleNotifClick('${n.id}', '${n.source}', ${n.is_read})"
-         class="flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer select-none ${unread ? 'border-[#F26522]/30 bg-orange-50/50 hover:bg-orange-50/80 shadow-sm' : cfg.border + ' ' + cfg.bg + ' hover:bg-gray-50/80'}">
+         class="ntf-item flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer select-none ${unread ? 'border-[#F26522]/30 bg-orange-50/50 hover:bg-orange-50/80 shadow-sm' : cfg.border + ' ' + cfg.bg + ' hover:bg-gray-50/80'}">
       <div class="text-xl mt-0.5 shrink-0">${cfg.icon}</div>
       <div class="flex-1 min-w-0">
         <div class="flex items-start justify-between gap-2">
-          <p class="text-sm font-bold ${unread ? 'text-[#1a1a2e]' : 'text-gray-600'}">${escapeHtml(n.title)}</p>
+          <p class="text-sm font-bold ${unread ? 'text-[#1a1a2e]' : 'text-gray-600'} break-words">${escapeHtml(n.title)}</p>
           ${sourceBadge}${n.is_broadcast ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-600 font-semibold whitespace-nowrap">Chung</span>' : ''}
         </div>
-        <p class="text-sm ${unread ? 'text-gray-700' : 'text-gray-500'} mt-1 leading-relaxed">${escapeHtml(n.message)}</p>
+        <p class="text-sm ${unread ? 'text-gray-700' : 'text-gray-500'} mt-1 leading-relaxed break-words">${escapeHtml(n.message)}</p>
         <p class="text-xs text-gray-400 mt-2" title="${escapeHtml(full)}">${escapeHtml(timeLabel)}</p>
       </div>
       ${unread ? '<span class="w-2.5 h-2.5 rounded-full bg-[#F26522] mt-2 shrink-0" title="Chưa đọc"></span>' : ''}
@@ -334,18 +349,18 @@ async function markAllRead() {
 
 // Điều hướng quay lại mượt mà
 function goBack() {
-  if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
+  if (window.history.length > 1 && document.referrer && document.referrer.includes(window.__edcLocation.host)) {
     window.history.back();
   } else {
-    const role = localStorage.getItem('role');
-    const isStaff = localStorage.getItem('is_staff') === 'true';
-    window.location.href = isStaff ? 'admin-dashboard.html' : (role === 'worker' ? 'worker-jobs.html' : 'parent-home.html');
+    const role = window.__edcStorage.getItem('role');
+    const isStaff = window.__edcStorage.getItem('is_staff') === 'true';
+    window.__edcLocation.href = isStaff ? 'admin-dashboard.html' : (role === 'worker' ? 'worker-jobs.html' : 'parent-home.html');
   }
 }
 
 (function initBackLink() {
-  const role = localStorage.getItem('role');
-  const isStaff = localStorage.getItem('is_staff') === 'true';
+  const role = window.__edcStorage.getItem('role');
+  const isStaff = window.__edcStorage.getItem('is_staff') === 'true';
   const fallback = isStaff ? 'admin-dashboard.html' : (role === 'worker' ? 'worker-jobs.html' : 'parent-home.html');
   const backEl = document.getElementById('back-link');
   if (backEl && !backEl.getAttribute('href')) {

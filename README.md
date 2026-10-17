@@ -60,9 +60,23 @@ Production: `https://educarelink-backend.onrender.com/api/` — Dev: dùng relat
 
 ```bash
 npm install
-npx vite build      # xuất src/www
+npm run sync:web    # lấy template/static mới nhất và build lại CSS
+npm run build       # xuất src/www
 zmp login           # tài khoản Zalo Developer
-zmp deploy          # đẩy bundle (src/www) lên Zalo
+npm run deploy      # đẩy đúng bundle src/www bằng chế độ existing project
 ```
 
 > Lưu ý: nhớ khai báo domain `educarelink-backend.onrender.com` trong phần **API List / Trusted domains** của app trên Zalo Developer Console để các request API hoạt động trên bản production.
+
+### Bản đồng bộ 17/10/2026
+
+- Zalo không hỗ trợ upload file HTML. Build đóng gói mỗi trang thành JSON; shell render bằng `srcdoc`, đồng bộ Location và điều hướng qua bridge. Không tải trực tiếp `.html` trên CDN.
+- Lệnh deploy đọc đúng app-config đã build trong `src/www`, đồng thời giữ kiểm tra chứng chỉ TLS.
+
+- Repo gốc: commit `d9c0a0135d94453acdf26f3db96d3f9983e3a738` (44 trang), gồm thanh điều hướng mobile 5 tab.
+- Scripts đọc repo gốc từ biến `EDUCARELINK_SOURCE`; mặc định thư mục cạnh repo này là `educarelink-main`. Ví dụ PowerShell: `$env:EDUCARELINK_SOURCE='../educarelink-backend-4-12-2026'`.
+- `npm run sync:web` đồng bộ cả tài nguyên dùng chung và build lại 4 bộ CSS gốc cùng 12 bộ CSS theo trang.
+- Phiên đăng nhập dùng Native Storage của Zalo qua shell; đường dẫn trang/logo lấy theo URL của bundle để đúng thư mục phiên bản CDN.
+- Backend phải cho phép origin `https://h5.zdn.vn`; chỉ cấu hình trusted domain trên Zalo chưa đủ để giải quyết CORS.
+- Mini App đích: EduCare, ID `187194879682905673`. Đăng nhập CLI bằng tài khoản có quyền quản lý hoặc App Access Token của đúng app.
+- Để tải bản kiểm thử: `npm run deploy -- --testing --desc "Đồng bộ web 17/10/2026"`. Sau đó kiểm tra trên điện thoại và gửi xét duyệt tại trang quản lý Mini App.

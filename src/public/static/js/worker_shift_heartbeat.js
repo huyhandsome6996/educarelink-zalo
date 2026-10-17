@@ -35,7 +35,7 @@
   var tickWorker = null;
 
   function getToken() {
-    try { return localStorage.getItem('token'); } catch (e) { return null; }
+    try { return window.__edcStorage.getItem('token'); } catch (e) { return null; }
   }
 
   function isWorkerPage() {

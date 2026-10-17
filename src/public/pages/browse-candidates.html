@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
     <title>Ứng viên - EduCareLink</title>
@@ -66,12 +67,15 @@
             border-radius: 8px;
         }
 
-        /* Mobile bottom nav safe area */
-        @supports (padding-bottom: env(safe-area-inset-bottom)) {
-            .mobile-nav { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
-        }
+        /* Mobile bottom nav safe area (partial 5-tab tự set 6rem — rule giữ tương thích) */
         @media (max-width: 1023px) {
-            .main-content { padding-bottom: 5.5rem; }
+            .main-content { padding-bottom: 6rem; }
+        }
+        /* ===== Task 2-c: touch feedback cho candidate card ===== */
+        .candidate-card, .bc-btn { -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
+        @media (hover: none) {
+            .candidate-card:active { transform: scale(.985); }
+            .bc-btn:active { transform: scale(.97); }
         }
 
         /* Status badge pulse */
@@ -231,12 +235,12 @@
 
     <!-- 2. Việc của tôi -->
     <a href="parent-tasks.html"
-       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active_tab == 'tasks' %}active font-semibold rounded-l-none shadow-xs">
+       class="psb-nav-item flex items-center justify-between pl-2.5 pr-3 py-2 rounded-xl text-sm font-medium active font-semibold rounded-l-none shadow-xs">
       <div class="flex items-center gap-3 min-w-0">
-        <span class="material-symbols-outlined text-xl active_tab == 'tasks' %}fill-icon text-[#F26522]">assignment</span>
+        <span class="material-symbols-outlined text-xl fill-icon text-[#F26522]">assignment</span>
         <span class="truncate">Việc của tôi</span>
       </div>
-      active_tab == 'tasks' %}
+      
         <span class="w-1.5 h-1.5 rounded-full bg-[#F26522] shrink-0"></span>
       
     </a>
@@ -355,7 +359,7 @@
     // văng sang luồng phụ huynh.
     function psbApplyRoleGuard() {
       var role = null;
-      try { role = localStorage.getItem('role'); } catch (e) {}
+      try { role = window.__edcStorage.getItem('role'); } catch (e) {}
       if (role === 'worker') {
         document.querySelectorAll('[data-psb-settings-link]').forEach(function (a) {
           a.setAttribute('href', 'worker-profile.html');
@@ -368,7 +372,7 @@
     document.addEventListener('DOMContentLoaded', psbApplyRoleGuard);
 
     try {
-      const raw = localStorage.getItem('user');
+      const raw = window.__edcStorage.getItem('user');
       if (raw) {
         const u = JSON.parse(raw);
         const nameEl = document.getElementById('sidebar-name');
@@ -389,13 +393,13 @@
 
     if (typeof window.handleLogout !== 'function') {
       window.handleLogout = function() {
-        localStorage.clear();
+        window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
-    // Fallback riêng của EduCareLink: web login KHÔNG lưu localStorage 'user'
+    // Fallback riêng của EduCareLink: web login KHÔNG lưu window.__edcStorage 'user'
     // (chỉ lưu token/role/avatar_url rời) — nên lấy trực tiếp từ /api/profile/,
     // cùng nguồn sự thật với _parent_chrome.html, để mọi trang phụ huynh đều
     // có tên + avatar ngay cả khi trang chưa có script đổ dữ liệu riêng.
@@ -404,7 +408,7 @@
         const nameEl = document.getElementById('sidebar-name');
         const avtEl = document.getElementById('sidebar-avatar');
         if (!nameEl || !avtEl) return;
-        const token = localStorage.getItem('token');
+        const token = window.__edcStorage.getItem('token');
         if (!token) {
           if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
             nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
@@ -414,9 +418,9 @@
         const r = await fetch(window.__API_ORIGIN + '/api/profile/', { headers: { 'Authorization': 'Bearer ' + token } });
         if (r.status === 401) {
           // Token hỏng hoặc tài khoản không tồn tại trên DB
-          localStorage.removeItem('token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
+          window.__edcStorage.removeItem('token');
+          window.__edcStorage.removeItem('refresh_token');
+          window.__edcStorage.removeItem('user');
           if (nameEl.textContent === 'Đang tải...' || !nameEl.textContent.trim()) {
             nameEl.innerHTML = '<a href="login.html" class="text-[#F26522] hover:underline font-bold text-xs">Đăng nhập</a>';
           }
@@ -701,30 +705,97 @@
 <!-- ============================================ -->
 <!-- MOBILE BOTTOM NAV (<1024px)                  -->
 <!-- ============================================ -->
-<nav class="mobile-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-xl border-t border-border">
-    <div class="flex justify-around items-center px-2 pt-2 pb-3">
-        <a href="parent-home.html"
-           class="flex flex-col items-center justify-center text-textSecondary px-3 py-1.5 rounded-xl transition-colors">
-            <span class="material-symbols-outlined text-2xl">home</span>
-            <span class="text-[10px] font-medium mt-0.5">Trang chủ</span>
-        </a>
-        <a href="parent-tasks.html"
-           class="flex flex-col items-center justify-center text-primary bg-primaryLight px-3 py-1.5 rounded-xl">
-            <span class="material-symbols-outlined text-2xl filled">assignment</span>
-            <span class="text-[10px] font-semibold mt-0.5">Việc của tôi</span>
-        </a>
-        <a href="dang-viec-select.html"
-           class="flex flex-col items-center justify-center text-textSecondary px-3 py-1.5 rounded-xl transition-colors">
-            <span class="material-symbols-outlined text-2xl">add_circle</span>
-            <span class="text-[10px] font-medium mt-0.5">Đăng việc</span>
-        </a>
-        <a href="chatbot.html"
-           class="flex flex-col items-center justify-center text-textSecondary px-3 py-1.5 rounded-xl transition-colors">
-            <span class="material-symbols-outlined text-2xl">smart_toy</span>
-            <span class="text-[10px] font-medium mt-0.5">AI Trợ lý</span>
-        </a>
-    </div>
+<!-- MOBILE BOTTOM NAV — chuẩn 5 tab theo spec 1.4 (partial dùng chung) -->
+
+<!-- ============================================================ -->
+<!-- _parent_bottom_nav.html — Bottom Navigation MOBILE (<1024px)  -->
+<!-- Chuẩn 5 tab theo spec 1.4 (Mobile Web UX):                     -->
+<!--   Trang chủ · Việc của tôi · Đăng việc (+) · Nhật ký ·         -->
+<!--   Tài khoản                                                    -->
+<!-- AI Trợ lý không mất tính năng: nút nổi (floating) góc phải     -->
+<!-- phía trên bottom-nav, trỏ /parent/chatbot/ — TỰ ĐỘNG ẨN khi    -->
+<!-- trang gọi include với active_tab='chatbot'.                    -->
+<!-- Tham số: active_tab = home | tasks | matching | diary |        -->
+<!--                     account | chatbot                          -->
+<!-- An toàn cả 2 chế độ CSS: build local (tailwind-*.css) lẫn      -->
+<!-- Tailwind CDN — mọi kích thước quan trọng nằm ở <style> bên     -->
+<!-- dưới nên không phụ thuộc class build có sẵn.                   -->
+<!-- ============================================================ -->
+
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface/95 backdrop-blur-xl border-t border-border shadow-lg">
+  <div class="flex justify-around items-center px-2 py-1.5" style="padding-bottom: max(14px, env(safe-area-inset-bottom));">
+    <!-- 1. Trang chủ -->
+    <a href="parent-home.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">home</span>
+      <span class="font-medium text-[10px] mt-0.5">Trang chủ</span>
+    </a>
+    <!-- 2. Việc của tôi -->
+    <a href="parent-tasks.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl bg-orange-50 text-primary font-bold">
+      <span class="material-symbols-outlined text-xl filled">assignment</span>
+      <span class="font-bold text-[10px] mt-0.5">Việc của tôi</span>
+    </a>
+    <!-- 3. Đăng việc — nút tròn nổi bật màu primary ở giữa -->
+    <a href="dang-viec-select.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-primary">
+      <div class="parent-bn-add w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center shadow-md">
+        <span class="material-symbols-outlined text-xl">add</span>
+      </div>
+      <span class="font-bold text-[10px] mt-0.5 text-primary">Đăng việc</span>
+    </a>
+    <!-- 4. Nhật ký -->
+    <a href="parent-care-diary-history.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">book</span>
+      <span class="font-medium text-[10px] mt-0.5">Nhật ký</span>
+    </a>
+    <!-- 5. Tài khoản -->
+    <a href="parent-profile.html"
+       class="parent-bn-item flex flex-col items-center justify-center rounded-xl text-textSecondary">
+      <span class="material-symbols-outlined text-xl">person</span>
+      <span class="font-medium text-[10px] mt-0.5">Tài khoản</span>
+    </a>
+  </div>
 </nav>
+
+<!-- AI Trợ lý — nút nổi góc phải, phía trên bottom-nav (ẩn ở trang chatbot) -->
+
+<a href="chatbot.html" id="ai-fab"
+   class="lg:hidden fixed right-4 z-50 flex items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30"
+   aria-label="AI Trợ lý">
+  <span class="material-symbols-outlined text-2xl">smart_toy</span>
+</a>
+
+
+<style>
+  /* Touch target ≥44px + touch feedback (spec 1.4) — dùng CSS thuần để
+     hoạt động cả khi trang dùng build local không có class utility này */
+  .parent-bn-item {
+    min-width: 56px;
+    min-height: 52px;
+    padding: 6px 6px;
+    transition: transform .15s ease, background-color .15s ease, color .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .parent-bn-item:active { transform: scale(.94); }
+  .parent-bn-add { transition: transform .15s ease; }
+  .parent-bn-item:active .parent-bn-add { transform: scale(.94) rotate(90deg); }
+  #ai-fab {
+    width: 48px;
+    height: 48px;
+    bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    transition: transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #ai-fab:active { transform: scale(.92); }
+
+  /* Chừa chỗ cho bottom-nav 5 tab trên mobile — nội dung không bị che */
+  @media (max-width: 1023px) {
+    main, .main-area, .main-content { padding-bottom: 6rem; }
+  }
+</style>
+
 
 <!-- ============================================ -->
 <!-- TOAST CONTAINER                               -->
@@ -768,16 +839,16 @@ const API_BASE = window.API_BASE;
 const LOGIN_URL = "login.html";
 
 async function apiFetch(url, options = {}) {
-    let token = localStorage.getItem('token');
+    let token = window.__edcStorage.getItem('token');
     if (!token) {
-        window.location.href = LOGIN_URL;
+        window.__edcLocation.href = LOGIN_URL;
         return new Response(null, { status: 401 });
     }
     options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
     let response = await fetch(url, options);
 
     if (response.status === 401) {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = window.__edcStorage.getItem('refresh_token');
         if (refreshToken) {
             try {
                 const refreshResp = await fetch(API_BASE + '/auth/token/refresh/', {
@@ -787,38 +858,38 @@ async function apiFetch(url, options = {}) {
                 });
                 if (refreshResp.ok) {
                     const refreshData = await refreshResp.json();
-                    localStorage.setItem('token', refreshData.access);
-                    if (refreshData.refresh) localStorage.setItem('refresh_token', refreshData.refresh);
+                    window.__edcStorage.setItem('token', refreshData.access);
+                    if (refreshData.refresh) window.__edcStorage.setItem('refresh_token', refreshData.refresh);
                     options.headers['Authorization'] = 'Bearer ' + refreshData.access;
                     response = await fetch(url, options);
                 } else {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = LOGIN_URL;
+                    window.__edcStorage.removeItem('token');
+                    window.__edcStorage.removeItem('refresh_token');
+                    window.__edcLocation.href = LOGIN_URL;
                     return new Response(null, { status: 401 });
                 }
             } catch (e) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('refresh_token');
-                window.location.href = LOGIN_URL;
+                window.__edcStorage.removeItem('token');
+                window.__edcStorage.removeItem('refresh_token');
+                window.__edcLocation.href = LOGIN_URL;
                 return new Response(null, { status: 401 });
             }
         } else {
-            localStorage.removeItem('token');
-            window.location.href = LOGIN_URL;
+            window.__edcStorage.removeItem('token');
+            window.__edcLocation.href = LOGIN_URL;
             return new Response(null, { status: 401 });
         }
     }
     return response;
 }
 
-const token = localStorage.getItem('token');
-// Lấy task_id từ URL parameter hoặc localStorage
-const urlParams = new URLSearchParams(window.location.search);
-const taskId = urlParams.get('task_id') || localStorage.getItem('current_task_id');
+const token = window.__edcStorage.getItem('token');
+// Lấy task_id từ URL parameter hoặc window.__edcStorage
+const urlParams = new URLSearchParams(window.__edcLocation.search);
+const taskId = urlParams.get('task_id') || window.__edcStorage.getItem('current_task_id');
 
-if (!token) window.location.href = LOGIN_URL;
-if (!taskId) window.location.href = "parent-tasks.html";
+if (!token) window.__edcLocation.href = LOGIN_URL;
+if (!taskId) window.__edcLocation.href = "parent-tasks.html";
 
 // ==================== STATE ====================
 let confirmCallback = null;
@@ -905,7 +976,7 @@ document.getElementById('confirm-action-btn').addEventListener('click', () => {
 
 // ==================== NAVIGATION ====================
 function goBackToTasks() {
-    window.location.href = "parent-tasks.html";
+    window.__edcLocation.href = "parent-tasks.html";
 }
 
 function handleLogout() {
@@ -913,9 +984,9 @@ function handleLogout() {
         'Đăng xuất',
         'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản?',
         () => {
-            localStorage.clear();
+            window.__edcStorage.clear();
             showToast('Đã đăng xuất thành công', 'success');
-            setTimeout(() => { window.location.href = "login.html"; }, 600);
+            setTimeout(() => { window.__edcLocation.href = "login.html"; }, 600);
         },
         'logout',
         'error'
@@ -1561,9 +1632,9 @@ async function init() {
         const profResp = await apiFetch(API_BASE + "/profile/");
 
         if (profResp && profResp.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('refresh_token');
-            window.location.href = LOGIN_URL;
+            window.__edcStorage.removeItem('token');
+            window.__edcStorage.removeItem('refresh_token');
+            window.__edcLocation.href = LOGIN_URL;
             return;
         }
 
@@ -1597,7 +1668,7 @@ async function init() {
 
         if (!task) {
             showToast('Không tìm thấy thông tin công việc', 'error');
-            setTimeout(() => { window.location.href = "parent-tasks.html"; }, 1500);
+            setTimeout(() => { window.__edcLocation.href = "parent-tasks.html"; }, 1500);
             return;
         }
 
@@ -1660,7 +1731,7 @@ init();
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });
@@ -1834,7 +1905,7 @@ init();
           $('payos-gate-cancel').classList.add('hidden');
           $('payos-gate-done').classList.remove('hidden');
           if (typeof current.opts?.onSuccess === 'function') current.opts.onSuccess(d);
-          if (current.opts?.autoReloadOnSuccess) setTimeout(() => location.reload(), 2200);
+          if (current.opts?.autoReloadOnSuccess) setTimeout(() => window.__edcLocation.reload(), 2200);
         } else if (d.task_status === 'open' || d.status === 'cancelled') {
           settled = true;
           stopLoops();

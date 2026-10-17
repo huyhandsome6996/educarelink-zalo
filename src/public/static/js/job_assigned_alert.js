@@ -21,7 +21,7 @@
  *      Chi tiết → sang trang "Việc của tôi".
  *
  * Include trong _worker_chrome.html — chạy trên mọi trang worker.
- * Auth: JWT localStorage (giống apiFetch của các trang worker).
+ * Auth: JWT window.__edcStorage (giống apiFetch của các trang worker).
  * ============================================================ */
 (function () {
   'use strict';
@@ -48,7 +48,7 @@
   ];
 
   function getToken() {
-    try { return localStorage.getItem('token'); } catch (e) { return null; }
+    try { return window.__edcStorage.getItem('token'); } catch (e) { return null; }
   }
 
   function isWorkerPage() {
@@ -125,7 +125,7 @@
       });
       n.onclick = function () {
         try { window.focus(); } catch (e) {}
-        window.location.href = '/worker/my-jobs/';
+        window.__edcLocation.href = 'worker-jobs.html';
       };
     } catch (e) { /* trình duyệt không hỗ trợ */ }
   }
@@ -189,7 +189,7 @@
 
     document.getElementById('ela-accept').addEventListener('click', commitOffer);
     document.getElementById('ela-detail').addEventListener('click', function () {
-      window.location.href = '/worker/my-jobs/';
+      window.__edcLocation.href = 'worker-jobs.html';
     });
     document.getElementById('ela-decline').addEventListener('click', toggleDecline);
   }
@@ -263,10 +263,10 @@
     btn.textContent = 'Đang xác nhận...';
     authedPost('/api/matching/bookings/' + activeBooking.id + '/commit/')
       .then(function (r) {
-        if (r.ok) { hideModal(); window.location.href = '/worker/my-jobs/'; }
+        if (r.ok) { hideModal(); window.__edcLocation.href = 'worker-jobs.html'; }
         else return r.json().then(function (d) {
           alert((d && d.detail) || 'Không xác nhận được đơn — có thể đã hết giờ.');
-          hideModal(); window.location.reload();
+          hideModal(); window.__edcLocation.reload();
         });
       })
       .catch(function () { btn.disabled = false; btn.textContent = 'Xác nhận cam kết'; });
@@ -282,7 +282,7 @@
       reason_code: reason, note: note,
     }).then(function (r) {
       hideModal();
-      if (r.ok) { window.location.reload(); }
+      if (r.ok) { window.__edcLocation.reload(); }
       else return r.json().then(function (d) {
         alert((d && d.detail) || 'Không từ chối được đơn.');
         btn.disabled = false;

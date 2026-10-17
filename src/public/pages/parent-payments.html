@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
   <title>Thanh toán — EduCareLink</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="shortcut icon" href="../static/images/favicon.ico" type="image/x-icon">
@@ -21,12 +22,33 @@
       transition: opacity 0.3s; pointer-events: none; max-width: 90%;
     }
     .toast.show { opacity: 1; }
+
+    /* ===== Task 2-c: Mobile Web UX (spec 1.4) — media query responsive ===== */
+    /* Safe-area iOS cho header sticky + nội dung đáy trang */
+    .pp-header { padding-top: max(10px, env(safe-area-inset-top)); }
+    .pp-main { padding-bottom: calc(2rem + env(safe-area-inset-bottom)); }
+    /* Touch feedback cho card + nút chính */
+    .pp-card, .pp-btn { transition: transform .15s ease, box-shadow .15s ease; -webkit-tap-highlight-color: transparent; }
+    @media (hover: none) {
+      .pp-card:active { transform: scale(.98); }
+      .pp-btn:active { transform: scale(.97); }
+    }
+    @media (max-width: 640px) {
+      /* Card full-width, padding co giãn */
+      .pp-main { padding-left: 0.875rem; padding-right: 0.875rem; }
+      #setup-card, #payment-list > div { padding: 0.875rem; }
+      /* Text co giãn */
+      .pp-title { font-size: 1rem; }
+      .pp-amount { font-size: 1.05rem; }
+      /* Nút chạm tối thiểu 44px */
+      .pp-btn { min-height: 44px; }
+    }
   </style>
 </head>
 <body class="bg-[#F7F7F7]">
 
 <!-- Header -->
-<header class="bg-[#F26522] text-white shadow-lg sticky top-0 z-20">
+<header class="pp-header bg-[#F26522] text-white shadow-lg sticky top-0 z-20">
   <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <img src="../static/images/logo.png" alt="Logo EduCareLink" width="36" height="36" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; max-width: 36px; max-height: 36px; object-fit: contain;" class="w-9 h-9 rounded-xl bg-white p-0.5 shadow-sm shrink-0 object-contain" loading="eager">
@@ -36,22 +58,22 @@
         </svg>
       </a>
       <div>
-        <h1 class="text-lg font-bold">Thanh toán</h1>
+        <h1 class="pp-title text-lg font-bold">Thanh toán</h1>
         <p class="text-xs text-white/80">Quản lý thanh toán các công việc</p>
       </div>
     </div>
   </div>
 </header>
 
-<main class="max-w-3xl mx-auto px-4 py-4 pb-16">
+<main class="pp-main max-w-3xl mx-auto px-4 py-4 pb-16">
   <!-- ============ SETUP CHO TASK (?task_id=X) ============ -->
   <div id="setup-card" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 hidden">
     <h2 class="font-bold text-base mb-1">Thiết lập thanh toán</h2>
-    <p id="setup-task-title" class="text-sm text-gray-500 mb-4">Đang tải thông tin công việc...</p>
+    <p id="setup-task-title" class="text-sm text-gray-500 mb-4 break-words">Đang tải thông tin công việc...</p>
 
     <div id="setup-methods" class="space-y-2">
       <!-- MoMo Escrow -->
-      <button onclick="setupPayment('momo_escrow')" class="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-gray-100 hover:border-[#F26522] hover:bg-orange-50/50 transition text-left">
+      <button onclick="setupPayment('momo_escrow')" class="pp-btn w-full flex items-start gap-3 p-4 rounded-xl border-2 border-gray-100 hover:border-[#F26522] hover:bg-orange-50/50 transition text-left">
         <div class="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-xl shrink-0">💳</div>
         <div class="flex-1">
           <p class="font-bold text-sm">Ví MoMo (giữ tiền an toàn)</p>
@@ -59,7 +81,7 @@
         </div>
       </button>
       <!-- PayOS VietQR -->
-      <button onclick="setupPayOS()" class="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-gray-100 hover:border-[#F26522] hover:bg-orange-50/50 transition text-left">
+      <button onclick="setupPayOS()" class="pp-btn w-full flex items-start gap-3 p-4 rounded-xl border-2 border-gray-100 hover:border-[#F26522] hover:bg-orange-50/50 transition text-left">
         <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl shrink-0">🏦</div>
         <div class="flex-1">
           <p class="font-bold text-sm">Chuyển khoản VietQR (PayOS)</p>
@@ -67,7 +89,7 @@
         </div>
       </button>
       <!-- Cash -->
-      <button onclick="setupPayment('cash')" class="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-gray-100 hover:border-[#F26522] hover:bg-orange-50/50 transition text-left">
+      <button onclick="setupPayment('cash')" class="pp-btn w-full flex items-start gap-3 p-4 rounded-xl border-2 border-gray-100 hover:border-[#F26522] hover:bg-orange-50/50 transition text-left">
         <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-xl shrink-0">💵</div>
         <div class="flex-1">
           <p class="font-bold text-sm">Tiền mặt</p>
@@ -89,7 +111,7 @@
   <div id="error-state" class="hidden text-center py-12">
     <div class="text-4xl mb-3">⚠️</div>
     <p class="text-sm text-gray-600 mb-4">Không tải được danh sách thanh toán.</p>
-    <button onclick="loadPayments()" class="px-5 py-2.5 rounded-xl bg-[#F26522] text-white text-sm font-semibold hover:bg-[#D4541E] transition">
+    <button onclick="loadPayments()" class="pp-btn px-5 py-2.5 rounded-xl bg-[#F26522] text-white text-sm font-semibold hover:bg-[#D4541E] transition">
       Thử lại
     </button>
   </div>
@@ -130,11 +152,11 @@ const STATUS_CONFIG = {
 };
 const formatVnd = (v) => Number(v || 0).toLocaleString('vi-VN') + 'đ';
 
-function getAuthToken() { return localStorage.getItem('token'); }
+function getAuthToken() { return window.__edcStorage.getItem('token'); }
 
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
-  if (!token) { window.location.href = 'login.html'; throw new Error('No auth token'); }
+  if (!token) { window.__edcLocation.href = 'login.html'; throw new Error('No auth token'); }
   const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
   if (options.body && typeof options.body === 'object') {
     headers['Content-Type'] = 'application/json';
@@ -144,14 +166,14 @@ async function authFetch(url, options = {}) {
   if (resp.status === 401) {
     const refreshed = await tryRefreshToken();
     if (refreshed) return authFetch(url, options);
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('Auth expired');
   }
   return resp;
 }
 
 async function tryRefreshToken() {
-  const refreshToken = localStorage.getItem('refresh_token');
+  const refreshToken = window.__edcStorage.getItem('refresh_token');
   if (!refreshToken) return false;
   try {
     const r = await fetch(`${API_BASE}/auth/token/refresh/`, {
@@ -161,8 +183,8 @@ async function tryRefreshToken() {
     });
     if (!r.ok) return false;
     const data = await r.json();
-    localStorage.setItem('token', data.access);
-    if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+    window.__edcStorage.setItem('token', data.access);
+    if (data.refresh) window.__edcStorage.setItem('refresh_token', data.refresh);
     return true;
   } catch (e) { return false; }
 }
@@ -190,7 +212,7 @@ function showState(name) {
 
 // ── Setup card khi có ?task_id ─────────────────────────────────────
 async function initSetupCard() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   const taskId = params.get('task_id');
   if (!taskId) return;
   const card = document.getElementById('setup-card');
@@ -217,7 +239,7 @@ function setupError(msg) {
 }
 
 async function setupPayment(method) {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   const taskId = params.get('task_id');
   if (!taskId) { showToast('Thiếu task_id.'); return; }
   try {
@@ -229,7 +251,7 @@ async function setupPayment(method) {
     if (r.ok) {
       if (data.next_action === 'redirect_to_momo' && data.momo_pay_url) {
         showToast('✅ Đang chuyển tới MoMo...');
-        window.location.href = data.momo_pay_url;
+        window.__edcLocation.href = data.momo_pay_url;
       } else {
         showToast('✅ Đã thiết lập thanh toán tiền mặt.');
         loadPayments();
@@ -243,7 +265,7 @@ async function setupPayment(method) {
 }
 
 async function setupPayOS() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   const taskId = params.get('task_id');
   if (!taskId) { showToast('Thiếu task_id.'); return; }
   try {
@@ -254,7 +276,7 @@ async function setupPayOS() {
     const data = await r.json().catch(() => ({}));
     if (r.ok && data.checkout_url) {
       showToast('✅ Đang mở trang chuyển khoản PayOS...');
-      window.location.href = data.checkout_url;
+      window.__edcLocation.href = data.checkout_url;
     } else {
       setupError(data.error || 'PayOS chưa sẵn sàng — vui lòng dùng MoMo hoặc tiền mặt.');
     }
@@ -269,18 +291,18 @@ function paymentHtml(p) {
   const method = METHOD_LABELS[p.method] || p.method;
   const payUrl = p.momo_pay_url || p.payos_checkout_url;
   return `
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div class="pp-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <div class="flex items-start justify-between gap-2 flex-wrap">
         <div class="min-w-0">
-          <p class="text-sm font-bold truncate">${escapeHtml(p.task_title || 'Việc #' + p.task)}</p>
-          <p class="text-xs text-gray-500 mt-0.5">${escapeHtml(method)}${p.worker_name ? ' · CarePartner: ' + escapeHtml(p.worker_name) : ''}</p>
+          <p class="text-sm font-bold line-clamp-2 break-words">${escapeHtml(p.task_title || 'Việc #' + p.task)}</p>
+          <p class="text-xs text-gray-500 mt-0.5 break-words">${escapeHtml(method)}${p.worker_name ? ' · CarePartner: ' + escapeHtml(p.worker_name) : ''}</p>
         </div>
-        <span class="text-xs px-2 py-0.5 rounded-full border ${st.cls} font-semibold whitespace-nowrap">${st.label}</span>
+        <span class="text-xs px-2 py-0.5 rounded-full border ${st.cls} font-semibold whitespace-nowrap ml-auto shrink-0">${st.label}</span>
       </div>
       <div class="flex items-end justify-between mt-3 flex-wrap gap-2">
         <div>
           <p class="text-xs text-gray-400">Số tiền</p>
-          <p class="text-lg font-extrabold text-[#F26522]">${formatVnd(p.amount)}</p>
+          <p class="pp-amount text-lg font-extrabold text-[#F26522]">${formatVnd(p.amount)}</p>
         </div>
         ${p.status === 'held' ? `
           <div class="text-right">
@@ -290,7 +312,7 @@ function paymentHtml(p) {
       </div>
       ${payUrl && (p.status === 'pending') ? `
         <button onclick="window.open('${escapeHtml(payUrl)}', '_blank')"
-          class="mt-3 w-full py-2.5 rounded-xl bg-[#F26522] text-white text-sm font-semibold hover:bg-[#D4541E] transition">
+          class="pp-btn mt-3 w-full py-3 min-h-[44px] rounded-xl bg-[#F26522] text-white text-sm font-semibold hover:bg-[#D4541E] transition">
           Thanh toán ngay
         </button>` : ''}
       ${p.status === 'completed' ? `<p class="text-xs text-gray-400 mt-3">Hoàn tất: ${escapeHtml(new Date(p.completed_at).toLocaleString('vi-VN'))}</p>` : ''}

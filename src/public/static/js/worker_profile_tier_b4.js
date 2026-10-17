@@ -93,13 +93,13 @@
     var verifyStatus = document.getElementById('verify-status');
     if (!verifyStatus || !verifyStatus.textContent.trim()) return;
 
-    var token = localStorage.getItem('token');
+    var token = window.__edcStorage.getItem('token');
     if (!token) {
       injectTierBadge({ tier: 'bronze' });
       return;
     }
 
-    var urlParams = new URLSearchParams(window.location.search);
+    var urlParams = new URLSearchParams(window.__edcLocation.search);
     var workerId = urlParams.get('worker_id');
     var apiUrl = workerId
       ? '/api/worker/' + workerId + '/profile/'

@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
     <title>Đăng ký - EduCareLink</title>
@@ -26,6 +27,15 @@
         h1, h2, h3, h4 {
             font-family: 'Manrope', sans-serif;
         }
+
+        /* ===== Task 2-c: Mobile Web UX (spec 1.4) ===== */
+        /* Input ≥16px trên mobile chống iOS Safari auto-zoom khi focus */
+        @media (max-width: 767px) {
+            input, select, textarea { font-size: 16px !important; }
+        }
+        /* Touch feedback cho nút chính */
+        button[type="submit"], .reg-btn { -webkit-tap-highlight-color: transparent; transition: transform .15s ease; }
+        button[type="submit"]:active, .reg-btn:active { transform: scale(.98); }
 
         /* Custom scrollbar */
         .custom-scroll::-webkit-scrollbar {
@@ -858,7 +868,7 @@
                     showToast('Đăng ký thành công! Hãy đăng nhập.', 'success');
                 }
                 setTimeout(() => {
-                    window.location.href = 'login.html';
+                    window.__edcLocation.href = 'login.html';
                 }, 1500);
             } else {
                 // Handle error messages
@@ -917,8 +927,9 @@
 
     function initRegMap() {
         regMapInstance = L.map('reg-location-map').setView([REG_DEFAULT_LAT, REG_DEFAULT_LNG], 12);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
         }).addTo(regMapInstance);
         regMapInstance.on('click', function(e) {
             setRegMapPin(e.latlng.lat, e.latlng.lng);
@@ -1143,25 +1154,25 @@
             const data = await response.json();
 
             if (response.ok) {
-                localStorage.setItem('token', data.tokens.access);
-                localStorage.setItem('refresh_token', data.tokens.refresh);
-                localStorage.setItem('role', data.role);
-                if (data.is_staff) localStorage.setItem('is_staff', 'true');
-                if (data.username) localStorage.setItem('admin_username', data.username);
-                if (data.avatar_url) localStorage.setItem('avatar_url', data.avatar_url);
-                localStorage.setItem('auth_provider', data.auth_provider || provider);
+                window.__edcStorage.setItem('token', data.tokens.access);
+                window.__edcStorage.setItem('refresh_token', data.tokens.refresh);
+                window.__edcStorage.setItem('role', data.role);
+                if (data.is_staff) window.__edcStorage.setItem('is_staff', 'true');
+                if (data.username) window.__edcStorage.setItem('admin_username', data.username);
+                if (data.avatar_url) window.__edcStorage.setItem('avatar_url', data.avatar_url);
+                window.__edcStorage.setItem('auth_provider', data.auth_provider || provider);
 
                 showToast('Đăng ký thành công! Đang chuyển hướng...', 'success');
 
                 setTimeout(() => {
                     if (data.is_staff) {
-                        window.location.href = 'admin-dashboard.html';
+                        window.__edcLocation.href = 'admin-dashboard.html';
                     } else if (data.first_login) {
-                        window.location.href = data.role === 'parent'
+                        window.__edcLocation.href = data.role === 'parent'
                             ? '/onboarding-parent/'
                             : '/onboarding-worker/';
                     } else {
-                        window.location.href = data.role === 'parent'
+                        window.__edcLocation.href = data.role === 'parent'
                             ? '/parent-home/'
                             : '/worker-feed/';
                     }
@@ -1228,7 +1239,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });

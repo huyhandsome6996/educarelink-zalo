@@ -9,9 +9,11 @@ CSS selector escape: : . / [ ] ( ) # % , ! & ' * -> \char,
 import os
 import re
 import sys
+from pathlib import Path
 
-PAGES = "/home/z/my-project/work/educarelink-zalo/src/public/pages"
-CSS = "/home/z/my-project/work/educarelink-zalo/src/public/static/css"
+ROOT = Path(__file__).resolve().parents[1]
+PAGES = str(ROOT / "src/public/pages")
+CSS = str(ROOT / "src/public/static/css")
 
 CHECKS = [
     ("parent-home.html", ["cdn-parent_home.css"]),

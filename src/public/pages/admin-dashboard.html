@@ -3,7 +3,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
     <title>Educarelink Admin - Quản lý hệ thống</title>
@@ -13,7 +14,7 @@
         // Khởi tạo Theme sớm nhất có thể để tránh nhấp nháy FOUC
         (function () {
             try {
-                var savedTheme = localStorage.getItem('admin_dashboard_theme');
+                var savedTheme = window.__edcStorage.getItem('admin_dashboard_theme');
                 if (savedTheme === 'light') {
                     document.documentElement.setAttribute('data-theme', 'light');
                 }
@@ -2102,12 +2103,12 @@
             const darkBtn = document.getElementById('themeDarkBtn');
             if (theme === 'light') {
                 document.documentElement.setAttribute('data-theme', 'light');
-                try { localStorage.setItem('admin_dashboard_theme', 'light'); } catch (e) { /* noop */ }
+                try { window.__edcStorage.setItem('admin_dashboard_theme', 'light'); } catch (e) { /* noop */ }
                 if (lightBtn) lightBtn.classList.add('active');
                 if (darkBtn) darkBtn.classList.remove('active');
             } else {
                 document.documentElement.removeAttribute('data-theme');
-                try { localStorage.setItem('admin_dashboard_theme', 'dark'); } catch (e) { /* noop */ }
+                try { window.__edcStorage.setItem('admin_dashboard_theme', 'dark'); } catch (e) { /* noop */ }
                 if (darkBtn) darkBtn.classList.add('active');
                 if (lightBtn) lightBtn.classList.remove('active');
             }
@@ -2116,7 +2117,7 @@
 
         function initAdminTheme() {
             try {
-                const savedTheme = localStorage.getItem('admin_dashboard_theme');
+                const savedTheme = window.__edcStorage.getItem('admin_dashboard_theme');
                 if (savedTheme === 'light') {
                     setAdminTheme('light');
                 } else {
@@ -2129,7 +2130,7 @@
         initAdminTheme();
 
         // ===== AUTH =====
-        function getAuthToken() { return localStorage.getItem('token'); }
+        function getAuthToken() { return window.__edcStorage.getItem('token'); }
 
         async function apiFetch(url, options = {}) {
             if (!options.headers) options.headers = {};
@@ -2140,7 +2141,7 @@
             }
             let response = await fetch(url, options);
             if (response.status === 401) {
-                const refreshToken = localStorage.getItem('refresh_token');
+                const refreshToken = window.__edcStorage.getItem('refresh_token');
                 if (!refreshToken) { handleAuthError(response); return response; }
                 try {
                     const refreshRes = await fetch(`${API_BASE}/auth/token/refresh/`, {
@@ -2150,8 +2151,8 @@
                     });
                     if (refreshRes.ok) {
                         const data = await refreshRes.json();
-                        localStorage.setItem('token', data.access);
-                        if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+                        window.__edcStorage.setItem('token', data.access);
+                        if (data.refresh) window.__edcStorage.setItem('refresh_token', data.refresh);
                         options.headers['Authorization'] = `Bearer ${data.access}`;
                         response = await fetch(url, options);
                     } else { handleAuthError(response); }
@@ -2167,7 +2168,7 @@
 
         function checkAdminAuth() {
             const token = getAuthToken();
-            if (!token) { window.location.href = 'login.html?next=/admin-dashboard/'; return false; }
+            if (!token) { window.__edcLocation.href = 'login.html?next=/admin-dashboard/'; return false; }
             return true;
         }
 
@@ -2177,7 +2178,7 @@
         async function checkAdminRole() {
             try {
                 const res = await apiFetch(`${API_BASE}/profile/`);
-                if (!res.ok) { window.location.href = 'login.html?next=/admin-dashboard/'; return false; }
+                if (!res.ok) { window.__edcLocation.href = 'login.html?next=/admin-dashboard/'; return false; }
                 const user = await res.json();
                 if (!user.is_staff && !user.is_superuser) {
                     document.getElementById('tableBody').innerHTML = `
@@ -2258,7 +2259,7 @@
                         <div class="empty-title">Phiên đăng nhập hết hạn</div>
                         <div class="empty-text"><a href="login.html?next=/admin-dashboard/" style="color:#F26522;font-weight:700">Đăng nhập lại</a></div>
                     </div>`;
-                localStorage.removeItem('token');
+                window.__edcStorage.removeItem('token');
             } else if (response.status === 403) {
                 document.getElementById('tableBody').innerHTML = `
                     <div class="empty-state">
@@ -3014,8 +3015,8 @@
 
         // ===== LOGOUT =====
         function logoutAdmin() {
-            localStorage.clear();
-            window.location.href = 'login.html';
+            window.__edcStorage.clear();
+            window.__edcLocation.href = 'login.html';
         }
 
         // ===== AI NOTIFICATION BELL =====
@@ -3139,7 +3140,7 @@
 
         // ===== ADMIN NAME =====
         function displayAdminName() {
-            const username = localStorage.getItem('admin_username') || 'Admin';
+            const username = window.__edcStorage.getItem('admin_username') || 'Admin';
             const el = document.getElementById('adminName');
             if (el) el.textContent = '\uD83D\uDC4B ' + username;
         }
@@ -4294,7 +4295,7 @@
                             e.preventDefault();
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
-                            setTimeout(() => { window.location.href = window.__edcToPage(href); }, 300);
+                            setTimeout(() => { window.__edcLocation.href = window.__edcToPage(href); }, 300);
                         }
                     });
                 });

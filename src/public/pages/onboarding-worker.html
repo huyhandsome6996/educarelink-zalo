@@ -4,7 +4,8 @@
 <head>
 <script src="../static/js/edc-bootstrap.js"></script>
     <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<style>/*EC-MOBILE-BASE*/html,body{overflow-x:hidden}</style>
     <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicon-32.png">
     <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
     <title>EduCareLink - Hướng dẫn sử dụng</title>
@@ -416,9 +417,9 @@
         btnSkip.addEventListener('click', () => completeOnboarding());
 
         async function completeOnboarding() {
-            const token = localStorage.getItem('token');
+            const token = window.__edcStorage.getItem('token');
             if (!token) {
-                window.location.href = "login.html";
+                window.__edcLocation.href = "login.html";
                 return;
             }
 
@@ -433,7 +434,7 @@
                 
                 if (response.status === 401) {
                     // Token expired — try refresh
-                    const refreshToken = localStorage.getItem('refresh_token');
+                    const refreshToken = window.__edcStorage.getItem('refresh_token');
                     if (refreshToken) {
                         try {
                             const refreshResp = await fetch(window.__API_ORIGIN + '/api/auth/token/refresh/', {
@@ -443,7 +444,7 @@
                             });
                             if (refreshResp.ok) {
                                 const refreshData = await refreshResp.json();
-                                localStorage.setItem('token', refreshData.access);
+                                window.__edcStorage.setItem('token', refreshData.access);
                                 const retryResp = await fetch(window.__API_ORIGIN + '/api/onboarding/complete/', {
                                     method: 'POST',
                                     headers: {
@@ -452,27 +453,27 @@
                                     },
                                 });
                                 if (retryResp.ok) {
-                                    localStorage.removeItem('first_login_redirect');
-                                    window.location.href = "worker-feed.html";
+                                    window.__edcStorage.removeItem('first_login_redirect');
+                                    window.__edcLocation.href = "worker-feed.html";
                                     return;
                                 }
                             }
                         } catch (e) { /* refresh failed, redirect to login */ }
                     }
-                    localStorage.clear();
-                    window.location.href = "login.html";
+                    window.__edcStorage.clear();
+                    window.__edcLocation.href = "login.html";
                     return;
                 }
 
                 if (response.ok) {
-                    localStorage.removeItem('first_login_redirect');
-                    window.location.href = "worker-feed.html";
+                    window.__edcStorage.removeItem('first_login_redirect');
+                    window.__edcLocation.href = "worker-feed.html";
                 } else {
-                    window.location.href = "worker-feed.html";
+                    window.__edcLocation.href = "worker-feed.html";
                 }
             } catch (error) {
                 console.error('Onboarding complete error:', error);
-                window.location.href = "worker-feed.html";
+                window.__edcLocation.href = "worker-feed.html";
             }
         }
 

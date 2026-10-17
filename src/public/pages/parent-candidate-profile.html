@@ -318,7 +318,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -390,7 +390,7 @@
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <!-- Back link — quay lại danh sách ứng viên (khu vực phụ huynh) -->
-        <a href="javascript:history.length > 1 ? history.back() : location.href='browse-candidates.html'"
+        <a href="javascript:history.length > 1 ? history.back() : window.__edcLocation.href='browse-candidates.html'"
            class="inline-flex items-center gap-1.5 text-sm font-bold text-textSecondary hover:text-primary transition-all duration-200 mb-5">
             <span class="material-symbols-outlined text-lg">arrow_back</span>
             Quay lại ứng viên
@@ -586,7 +586,7 @@ const LOGIN_URL = "login.html";
 async function apiFetch(url, options = {}) {
     let token = window.__edcStorage.getItem('token');
     if (!token) {
-        window.location.href = LOGIN_URL;
+        window.__edcLocation.href = LOGIN_URL;
         return new Response(null, { status: 401 });
     }
     options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -610,25 +610,25 @@ async function apiFetch(url, options = {}) {
                 } else {
                     window.__edcStorage.removeItem('token');
                     window.__edcStorage.removeItem('refresh_token');
-                    window.location.href = LOGIN_URL;
+                    window.__edcLocation.href = LOGIN_URL;
                     return new Response(null, { status: 401 });
                 }
             } catch (e) {
                 window.__edcStorage.removeItem('token');
                 window.__edcStorage.removeItem('refresh_token');
-                window.location.href = LOGIN_URL;
+                window.__edcLocation.href = LOGIN_URL;
                 return new Response(null, { status: 401 });
             }
         } else {
             window.__edcStorage.removeItem('token');
-            window.location.href = LOGIN_URL;
+            window.__edcLocation.href = LOGIN_URL;
             return new Response(null, { status: 401 });
         }
     }
     return response;
 }
 
-if (!window.__edcStorage.getItem('token')) window.location.href = LOGIN_URL;
+if (!window.__edcStorage.getItem('token')) window.__edcLocation.href = LOGIN_URL;
 
 // ==================== HELPERS ====================
 function escapeHtml(s) {
@@ -727,7 +727,7 @@ function renderProfile(p) {
 // ==================== INIT ====================
 async function init() {
     try {
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(window.__edcLocation.search);
         const workerId = params.get('worker_id');
         if (!workerId) { showError('Không xác định được CarePartner cần xem.'); return; }
 
@@ -735,7 +735,7 @@ async function init() {
         const profResp = await apiFetch(API_BASE + "/profile/");
         if (!profResp || profResp.status === 401) {
             if (profResp) { window.__edcStorage.removeItem('token'); window.__edcStorage.removeItem('refresh_token'); }
-            window.location.href = LOGIN_URL;
+            window.__edcLocation.href = LOGIN_URL;
             return;
         }
         const prof = await profResp.json();
@@ -760,7 +760,7 @@ async function init() {
 function handleLogout() {
     if (confirm('Bạn có chắc muốn đăng xuất?')) {
         window.__edcStorage.clear();
-        setTimeout(() => { window.location.href = LOGIN_URL; }, 400);
+        setTimeout(() => { window.__edcLocation.href = LOGIN_URL; }, 400);
     }
 }
 

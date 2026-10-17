@@ -2168,7 +2168,7 @@
 
         function checkAdminAuth() {
             const token = getAuthToken();
-            if (!token) { window.location.href = 'login.html?next=/admin-dashboard/'; return false; }
+            if (!token) { window.__edcLocation.href = 'login.html?next=/admin-dashboard/'; return false; }
             return true;
         }
 
@@ -2178,7 +2178,7 @@
         async function checkAdminRole() {
             try {
                 const res = await apiFetch(`${API_BASE}/profile/`);
-                if (!res.ok) { window.location.href = 'login.html?next=/admin-dashboard/'; return false; }
+                if (!res.ok) { window.__edcLocation.href = 'login.html?next=/admin-dashboard/'; return false; }
                 const user = await res.json();
                 if (!user.is_staff && !user.is_superuser) {
                     document.getElementById('tableBody').innerHTML = `
@@ -3016,7 +3016,7 @@
         // ===== LOGOUT =====
         function logoutAdmin() {
             window.__edcStorage.clear();
-            window.location.href = 'login.html';
+            window.__edcLocation.href = 'login.html';
         }
 
         // ===== AI NOTIFICATION BELL =====
@@ -4295,7 +4295,7 @@
                             e.preventDefault();
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
-                            setTimeout(() => { window.location.href = window.__edcToPage(href); }, 300);
+                            setTimeout(() => { window.__edcLocation.href = window.__edcToPage(href); }, 300);
                         }
                     });
                 });

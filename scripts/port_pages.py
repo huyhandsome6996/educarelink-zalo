@@ -416,6 +416,8 @@ def inject_head(text):
 def rel_static(text):
     # Native Storage của Zalo thay cho localStorage không được hỗ trợ trên Mini App.
     text = re.sub(r"(?<![\w.])localStorage\b", "window.__edcStorage", text)
+    # srcdoc không có pathname/search riêng; shell cung cấp Location tương thích.
+    text = re.sub(r"\b(?:window|document)\.location\b|(?<![\w.])location(?=\.(?:href|search|pathname|hash|origin|protocol|host|hostname|port|assign|replace|reload))", "window.__edcLocation", text)
     text = text.replace('"/static/', '"../static/')
     text = text.replace("'/static/", "'../static/")
     text = text.replace('(`/static/', '(`../static/')

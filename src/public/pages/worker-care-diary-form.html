@@ -567,7 +567,7 @@ function validateAssessmentClientSide(type, data) {
 
 async function apiFetch(url, options = {}) {
   let token = window.__edcStorage.getItem('token');
-  if (!token) { window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+  if (!token) { window.__edcLocation.href = LOGIN_URL; return new Response(null, { status: 401 }); }
   options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
   let response = await fetch(url, options);
   if (response.status === 401) {
@@ -584,9 +584,9 @@ async function apiFetch(url, options = {}) {
           if (rd.refresh) window.__edcStorage.setItem('refresh_token', rd.refresh);
           options.headers['Authorization'] = 'Bearer ' + rd.access;
           response = await fetch(url, options);
-        } else { window.__edcStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
-      } catch (e) { window.__edcStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
-    } else { window.__edcStorage.clear(); window.location.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+        } else { window.__edcStorage.clear(); window.__edcLocation.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+      } catch (e) { window.__edcStorage.clear(); window.__edcLocation.href = LOGIN_URL; return new Response(null, { status: 401 }); }
+    } else { window.__edcStorage.clear(); window.__edcLocation.href = LOGIN_URL; return new Response(null, { status: 401 }); }
   }
   return response;
 }
@@ -867,7 +867,7 @@ async function loadExistingDiary() {
 }
 
 async function loadTaskInfo() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   taskId = params.get('task_id');
   if (!taskId) {
     document.getElementById('loading-state').classList.add('hidden');
@@ -894,13 +894,13 @@ async function loadTaskInfo() {
     if (resp.ok) {
       const d = await resp.json();
       // Lấy task title từ API my-jobs hoặc dùng URL param
-      const params2 = new URLSearchParams(window.location.search);
+      const params2 = new URLSearchParams(window.__edcLocation.search);
       document.getElementById('task-title-display').textContent = params2.get('task_title') || 'Công việc #' + taskId;
     }
   } catch(e) { /* ignore */ }
 
   // Dùng query param nếu có
-  const params3 = new URLSearchParams(window.location.search);
+  const params3 = new URLSearchParams(window.__edcLocation.search);
   const tt = params3.get('task_title');
   if (tt) document.getElementById('task-title-display').textContent = tt;
 
@@ -918,10 +918,10 @@ async function loadTaskInfo() {
 
 function handleLogout() {
   window.__edcStorage.clear();
-  window.location.href = LOGIN_URL;
+  window.__edcLocation.href = LOGIN_URL;
 }
 
-if (!window.__edcStorage.getItem('token')) window.location.href = LOGIN_URL;
+if (!window.__edcStorage.getItem('token')) window.__edcLocation.href = LOGIN_URL;
 loadTaskInfo();
 </script>
 </body>

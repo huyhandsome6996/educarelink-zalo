@@ -99,7 +99,7 @@
       return;
     }
 
-    var urlParams = new URLSearchParams(window.location.search);
+    var urlParams = new URLSearchParams(window.__edcLocation.search);
     var workerId = urlParams.get('worker_id');
     var apiUrl = workerId
       ? '/api/worker/' + workerId + '/profile/'

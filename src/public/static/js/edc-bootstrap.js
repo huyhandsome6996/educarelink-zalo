@@ -10,8 +10,9 @@
 (function () {
   'use strict';
 
-  var IS_DEV = location.hostname === 'localhost' ||
-    location.hostname === '127.0.0.1' || location.hostname === '';
+  var hostname = window.__edcHost || location.hostname;
+  var IS_DEV = hostname === 'localhost' ||
+    hostname === '127.0.0.1' || hostname === '';
 
   /* 1) API origin — giữ nguyên hành vi gốc:
      - dev: fetch('/api/..') đi qua vite proxy -> không CORS
@@ -73,6 +74,51 @@
     if (ROUTES[url]) return ROUTES[url] + q;
     return url;
   };
+
+  // Navigation trên srcdoc được chuyển về shell, vì CDN Zalo không phục vụ HTML.
+  var pageURL = new URL(window.__edcPageURL || location.href || 'https://h5.zdn.vn/');
+  function navigate(url, replace) {
+    url = String(url);
+    if (url.charAt(0) === '#') {
+      pageURL.hash = url;
+      var element = document.getElementById(decodeURIComponent(url.slice(1)));
+      if (element) element.scrollIntoView();
+      return;
+    }
+    var mapped = window.__edcToPage(url);
+    var resolved = new URL(mapped, pageURL);
+    if (resolved.origin === pageURL.origin && /\/pages\/[a-z0-9-]+\.html$/.test(resolved.pathname)) {
+      parent.postMessage({type:'edc-navigate', url:resolved.pathname.split('/pages/')[1] + resolved.search + resolved.hash, replace:!!replace}, '*');
+    } else {
+      parent.postMessage({type:'edc-external', url:resolved.href}, '*');
+    }
+  }
+  var virtualLocation = {
+    assign: function (url) { navigate(url, false); },
+    replace: function (url) { navigate(url, true); },
+    reload: function () { parent.postMessage({type:'edc-navigate', reload:true}, '*'); },
+    toString: function () { return pageURL.href; }
+  };
+  ['href','search','pathname','hash','origin','protocol','host','hostname','port'].forEach(function (key) {
+    Object.defineProperty(virtualLocation, key, {
+      get: function () { return pageURL[key]; },
+      set: function (value) {
+        if (key === 'href') navigate(value, false);
+        else if (key === 'hash') navigate(value.charAt(0) === '#' ? value : '#' + value, true);
+        else { var next = new URL(pageURL.href); next[key] = value; navigate(next.href, false); }
+      }
+    });
+  });
+  window.__edcLocation = virtualLocation;
+  document.addEventListener('click', function (event) {
+    var link = event.target.closest && event.target.closest('a[href]');
+    if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.button > 0) return;
+    var href = link.getAttribute('href');
+    if (!href || href === '#' || /^javascript:/i.test(href)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    navigate(href, false);
+  }, true);
 
   /* 3) Relay lỗi về shell */
   function relay(type, msg) {

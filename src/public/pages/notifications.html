@@ -108,7 +108,7 @@ function getAuthToken() { return window.__edcStorage.getItem('token'); }
 
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
-  if (!token) { window.location.href = 'login.html'; throw new Error('No auth token'); }
+  if (!token) { window.__edcLocation.href = 'login.html'; throw new Error('No auth token'); }
   const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
   if (options.body && typeof options.body === 'object') {
     headers['Content-Type'] = 'application/json';
@@ -118,7 +118,7 @@ async function authFetch(url, options = {}) {
   if (resp.status === 401) {
     const refreshed = await tryRefreshToken();
     if (refreshed) return authFetch(url, options);
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('Auth expired');
   }
   return resp;
@@ -349,12 +349,12 @@ async function markAllRead() {
 
 // Điều hướng quay lại mượt mà
 function goBack() {
-  if (window.history.length > 1 && document.referrer && document.referrer.includes(window.location.host)) {
+  if (window.history.length > 1 && document.referrer && document.referrer.includes(window.__edcLocation.host)) {
     window.history.back();
   } else {
     const role = window.__edcStorage.getItem('role');
     const isStaff = window.__edcStorage.getItem('is_staff') === 'true';
-    window.location.href = isStaff ? 'admin-dashboard.html' : (role === 'worker' ? 'worker-jobs.html' : 'parent-home.html');
+    window.__edcLocation.href = isStaff ? 'admin-dashboard.html' : (role === 'worker' ? 'worker-jobs.html' : 'parent-home.html');
   }
 }
 

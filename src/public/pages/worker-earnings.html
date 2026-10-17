@@ -140,7 +140,7 @@ function getAuthToken() { return window.__edcStorage.getItem('token'); }
 
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
-  if (!token) { window.location.href = 'login.html'; throw new Error('No auth token'); }
+  if (!token) { window.__edcLocation.href = 'login.html'; throw new Error('No auth token'); }
   const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
   if (options.body && typeof options.body === 'object') {
     headers['Content-Type'] = 'application/json';
@@ -150,7 +150,7 @@ async function authFetch(url, options = {}) {
   if (resp.status === 401) {
     const refreshed = await tryRefreshToken();
     if (refreshed) return authFetch(url, options);
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('Auth expired');
   }
   return resp;

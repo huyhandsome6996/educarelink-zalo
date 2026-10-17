@@ -16,11 +16,11 @@
   ],
   "scripts": {
     "sync:web": "python scripts/port_pages.py && python scripts/build_static_css.py && python scripts/build_cdn_css.py",
-    "build": "vite build",
+    "build": "vite build && python scripts/package_pages.py",
     "verify:build": "node scripts/verify_build.cjs src/www",
     "login": "zmp login",
     "start": "zmp start",
-    "deploy": "zmp deploy --existing --outputDir src/www"
+    "deploy": "node scripts/deploy.cjs"
   },
   "dependencies": {
     "jotai": "^2.12.1",

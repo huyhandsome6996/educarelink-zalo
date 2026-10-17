@@ -418,7 +418,7 @@
         };
 
         tabRegister.onclick = () => {
-            window.location.href = 'register.html';
+            window.__edcLocation.href = 'register.html';
         };
 
         // Mobile shortcut
@@ -528,16 +528,16 @@
                             // Kiểm tra nếu là admin → chuyển đến admin dashboard
                             if (data.is_staff) {
                                 // Kiểm tra nếu có ?next= parameter
-                                const urlParams = new URLSearchParams(window.location.search);
+                                const urlParams = new URLSearchParams(window.__edcLocation.search);
                                 const nextUrl = urlParams.get('next') || "admin-dashboard.html";
-                                window.location.href = window.__edcToPage(nextUrl);
+                                window.__edcLocation.href = window.__edcToPage(nextUrl);
                             } else if (data.first_login) {
                                 // Lần đầu đăng nhập → hiển thị hướng dẫn sử dụng
-                                window.location.href = data.role === 'parent'
+                                window.__edcLocation.href = data.role === 'parent'
                                     ? "onboarding-parent.html"
                                     : "onboarding-worker.html";
                             } else {
-                                window.location.href = data.role === 'parent'
+                                window.__edcLocation.href = data.role === 'parent'
                                     ? "parent-home.html"
                                     : "worker-feed.html";
                             }
@@ -586,7 +586,7 @@
         const isStaff = window.__edcStorage.getItem('is_staff');
         // ⚠️ Nếu URL có ?auto=1 (QR auto-login) → PHẢI clear window.__edcStorage cũ
         // để tránh redirect sang admin dashboard khi vẫn còn token admin cũ
-        const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.__edcLocation.search);
         const isAutoLogin = urlParams.get('auto') === '1';
         if (isAutoLogin) {
             // Xoá toàn bộ session cũ để auto-login chạy sạch sẽ
@@ -598,9 +598,9 @@
         } else if (existingToken && existingRole) {
             const nextUrl = urlParams.get('next');
             if (isStaff === 'true') {
-                window.location.href = window.__edcToPage(nextUrl || 'admin-dashboard.html');
+                window.__edcLocation.href = window.__edcToPage(nextUrl || 'admin-dashboard.html');
             } else if (nextUrl) {
-                window.location.href = window.__edcToPage(nextUrl);
+                window.__edcLocation.href = window.__edcToPage(nextUrl);
             }
         }
 
@@ -770,13 +770,13 @@
 
                     setTimeout(() => {
                         if (data.is_staff) {
-                            window.location.href = 'admin-dashboard.html';
+                            window.__edcLocation.href = 'admin-dashboard.html';
                         } else if (data.first_login) {
-                            window.location.href = data.role === 'parent'
+                            window.__edcLocation.href = data.role === 'parent'
                                 ? '/onboarding-parent/'
                                 : '/onboarding-worker/';
                         } else {
-                            window.location.href = data.role === 'parent'
+                            window.__edcLocation.href = data.role === 'parent'
                                 ? '/parent-home/'
                                 : '/worker-feed/';
                         }
@@ -850,7 +850,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });
@@ -879,7 +879,7 @@
     <script>
     (function () {
         try {
-            var params = new URLSearchParams(window.location.search);
+            var params = new URLSearchParams(window.__edcLocation.search);
             var u = params.get('u');
             var p = params.get('p');
             var auto = params.get('auto');

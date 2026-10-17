@@ -156,7 +156,7 @@ function getAuthToken() { return window.__edcStorage.getItem('token'); }
 
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
-  if (!token) { window.location.href = 'login.html'; throw new Error('No auth token'); }
+  if (!token) { window.__edcLocation.href = 'login.html'; throw new Error('No auth token'); }
   const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
   if (options.body && typeof options.body === 'object') {
     headers['Content-Type'] = 'application/json';
@@ -166,7 +166,7 @@ async function authFetch(url, options = {}) {
   if (resp.status === 401) {
     const refreshed = await tryRefreshToken();
     if (refreshed) return authFetch(url, options);
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('Auth expired');
   }
   return resp;
@@ -212,7 +212,7 @@ function showState(name) {
 
 // ── Setup card khi có ?task_id ─────────────────────────────────────
 async function initSetupCard() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   const taskId = params.get('task_id');
   if (!taskId) return;
   const card = document.getElementById('setup-card');
@@ -239,7 +239,7 @@ function setupError(msg) {
 }
 
 async function setupPayment(method) {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   const taskId = params.get('task_id');
   if (!taskId) { showToast('Thiếu task_id.'); return; }
   try {
@@ -251,7 +251,7 @@ async function setupPayment(method) {
     if (r.ok) {
       if (data.next_action === 'redirect_to_momo' && data.momo_pay_url) {
         showToast('✅ Đang chuyển tới MoMo...');
-        window.location.href = data.momo_pay_url;
+        window.__edcLocation.href = data.momo_pay_url;
       } else {
         showToast('✅ Đã thiết lập thanh toán tiền mặt.');
         loadPayments();
@@ -265,7 +265,7 @@ async function setupPayment(method) {
 }
 
 async function setupPayOS() {
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   const taskId = params.get('task_id');
   if (!taskId) { showToast('Thiếu task_id.'); return; }
   try {
@@ -276,7 +276,7 @@ async function setupPayOS() {
     const data = await r.json().catch(() => ({}));
     if (r.ok && data.checkout_url) {
       showToast('✅ Đang mở trang chuyển khoản PayOS...');
-      window.location.href = data.checkout_url;
+      window.__edcLocation.href = data.checkout_url;
     } else {
       setupError(data.error || 'PayOS chưa sẵn sàng — vui lòng dùng MoMo hoặc tiền mặt.');
     }

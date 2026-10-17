@@ -141,8 +141,8 @@
     if (!token) {
       toast('Vui lòng đăng nhập tài khoản Phụ huynh để tiếp tục.', false);
       setTimeout(() => {
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = 'login.html?next=' + next;
+        const next = encodeURIComponent(window.__edcLocation.pathname + window.__edcLocation.search);
+        window.__edcLocation.href = 'login.html?next=' + next;
       }, 1000);
       throw new Error('no_token');
     }
@@ -181,8 +181,8 @@
         window.__edcStorage.removeItem('admin_username');
         toast('Phiên đăng nhập đã hết hạn hoặc tài khoản không tồn tại. Đang chuyển đến trang đăng nhập...', false);
         setTimeout(() => {
-          const next = encodeURIComponent(window.location.pathname + window.location.search);
-          window.location.href = 'login.html?next=' + next;
+          const next = encodeURIComponent(window.__edcLocation.pathname + window.__edcLocation.search);
+          window.__edcLocation.href = 'login.html?next=' + next;
         }, 1200);
         throw new Error('user_unauthorized');
       }
@@ -671,7 +671,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -828,7 +828,7 @@
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
         try { window.__edcStorage.clear(); } catch (e) {}
-        setTimeout(() => { window.location.href = 'login.html'; }, 200);
+        setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
       }
     };
     async function pcrLoadUser() {
@@ -1123,7 +1123,7 @@
       window.handleLogout = function() {
         if (confirm('Bạn có chắc muốn đăng xuất?')) {
           try { window.__edcStorage.clear(); } catch (e) {}
-          setTimeout(() => { window.location.href = 'login.html'; }, 200);
+          setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
         }
       };
     }
@@ -1216,7 +1216,7 @@
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
         try { window.__edcStorage.clear(); } catch (e) {}
-        setTimeout(() => { window.location.href = 'login.html'; }, 200);
+        setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
       }
     };
   })();
@@ -1495,7 +1495,7 @@
 </div>
 
 <script>
-  const bookingId = new URLSearchParams(window.location.search).get('id');
+  const bookingId = new URLSearchParams(window.__edcLocation.search).get('id');
   const CANCEL_REASONS = [
     { code: 'school_schedule', label: 'Trùng lịch học đột xuất', fm: true },
     { code: 'health', label: 'Sức khỏe không tốt', fm: true },

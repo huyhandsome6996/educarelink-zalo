@@ -514,7 +514,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -671,7 +671,7 @@
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
         try { window.__edcStorage.clear(); } catch (e) {}
-        setTimeout(() => { window.location.href = 'login.html'; }, 200);
+        setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
       }
     };
     async function pcrLoadUser() {
@@ -966,7 +966,7 @@
       window.handleLogout = function() {
         if (confirm('Bạn có chắc muốn đăng xuất?')) {
           try { window.__edcStorage.clear(); } catch (e) {}
-          setTimeout(() => { window.location.href = 'login.html'; }, 200);
+          setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
         }
       };
     }
@@ -1059,7 +1059,7 @@
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
         try { window.__edcStorage.clear(); } catch (e) {}
-        setTimeout(() => { window.location.href = 'login.html'; }, 200);
+        setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
       }
     };
   })();
@@ -1278,7 +1278,7 @@
         async function apiFetch(url, options = {}) {
             let token = window.__edcStorage.getItem('token');
             if (!token) {
-                window.location.href = "login.html";
+                window.__edcLocation.href = "login.html";
                 return new Response(null, { status: 401 });
             }
             options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -1303,18 +1303,18 @@
                         } else {
                             window.__edcStorage.removeItem('token');
                             window.__edcStorage.removeItem('refresh_token');
-                            window.location.href = "login.html";
+                            window.__edcLocation.href = "login.html";
                             return new Response(null, { status: 401 });
                         }
                     } catch (e) {
                         window.__edcStorage.removeItem('token');
                         window.__edcStorage.removeItem('refresh_token');
-                        window.location.href = "login.html";
+                        window.__edcLocation.href = "login.html";
                         return new Response(null, { status: 401 });
                     }
                 } else {
                     window.__edcStorage.removeItem('token');
-                    window.location.href = "login.html";
+                    window.__edcLocation.href = "login.html";
                     return new Response(null, { status: 401 });
                 }
             }
@@ -1323,7 +1323,7 @@
 
         // ===== AUTH CHECK =====
         if (!window.__edcStorage.getItem('token')) {
-            window.location.href = "login.html";
+            window.__edcLocation.href = "login.html";
         }
 
         // ===== CHAT HISTORY (for conversation context) =====
@@ -1373,7 +1373,7 @@
                 window.__edcStorage.clear();
                 showToast('Đã đăng xuất thành công', 'success');
                 setTimeout(() => {
-                    window.location.href = "login.html";
+                    window.__edcLocation.href = "login.html";
                 }, 500);
             }
         }
@@ -1543,7 +1543,7 @@
                         window.__edcStorage.removeItem('refresh_token');
                         showToast('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.', 'error');
                         setTimeout(() => {
-                            window.location.href = "login.html";
+                            window.__edcLocation.href = "login.html";
                         }, 1500);
                         return;
                     }
@@ -1667,7 +1667,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300);
                         }
                     });

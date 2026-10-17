@@ -394,7 +394,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -625,7 +625,7 @@
                     </div>
                     
                     <!-- CTA CHÍNH NỔI BẬT NHẤT (Nền cam rực, duy nhất 1 nút chính) -->
-                    <button onclick="location.href='dang-viec-select.html'"
+                    <button onclick="window.__edcLocation.href='dang-viec-select.html'"
                             class="relative overflow-hidden group bg-gradient-to-r from-[#F26522] via-[#E25514] to-[#D4541E] hover:from-[#EA580C] hover:to-[#B8431A] text-white px-6 py-3.5 rounded-xl font-headline font-extrabold text-sm lg:text-base shadow-cta-glow transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 shrink-0 cursor-pointer">
                         <div class="cta-shimmer-light"></div>
                         <span class="material-symbols-outlined text-2xl filled">add_circle</span>
@@ -916,18 +916,18 @@
                         } else {
                             window.__edcStorage.removeItem('token');
                             window.__edcStorage.removeItem('refresh_token');
-                            window.location.href = LOGIN_URL;
+                            window.__edcLocation.href = LOGIN_URL;
                             return new Response(null, { status: 401 });
                         }
                     } catch (e) {
                         window.__edcStorage.removeItem('token');
                         window.__edcStorage.removeItem('refresh_token');
-                        window.location.href = LOGIN_URL;
+                        window.__edcLocation.href = LOGIN_URL;
                         return new Response(null, { status: 401 });
                     }
                 } else {
                     window.__edcStorage.removeItem('token');
-                    window.location.href = LOGIN_URL;
+                    window.__edcLocation.href = LOGIN_URL;
                     return new Response(null, { status: 401 });
                 }
             }
@@ -936,7 +936,7 @@
 
         // Guard đăng nhập — giống trang cũ: không có token thì về /login/
         if (!window.__edcStorage.getItem('token')) {
-            window.location.href = LOGIN_URL;
+            window.__edcLocation.href = LOGIN_URL;
         }
 
         // ---- Greeting based on time of day ----
@@ -1107,7 +1107,7 @@
                             </div>
                         </div>
 
-                        <h3 class="font-headline font-bold text-textPrimary text-base leading-snug mb-3 hover:text-primary transition-colors cursor-pointer" onclick="location.href='${detailHref}'">
+                        <h3 class="font-headline font-bold text-textPrimary text-base leading-snug mb-3 hover:text-primary transition-colors cursor-pointer" onclick="window.__edcLocation.href='${detailHref}'">
                             ${escapeHtml(title)}
                         </h3>
 
@@ -1149,7 +1149,7 @@
                 window.__edcStorage.clear();
                 showToast('Đã đăng xuất an toàn', 'success');
                 setTimeout(() => {
-                    window.location.href = LOGIN_URL;
+                    window.__edcLocation.href = LOGIN_URL;
                 }, 400);
             }
         }

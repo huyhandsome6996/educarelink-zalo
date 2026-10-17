@@ -406,7 +406,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -466,7 +466,7 @@
     <header class="lg:hidden fixed top-0 left-0 right-0 z-50 bg-surface/80 backdrop-blur-xl border-b border-border">
         <div class="flex items-center justify-between px-4 h-14">
             <img src="../static/images/logo.png" alt="Logo EduCareLink" class="w-8 h-8 rounded-lg object-contain shrink-0" loading="eager">
-            <button onclick="location.href='parent-tasks.html'"
+            <button onclick="window.__edcLocation.href='parent-tasks.html'"
                     class="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-gray-100 active:scale-90 transition-all">
                 <span class="material-symbols-outlined text-textPrimary text-xl">arrow_back</span>
             </button>
@@ -482,7 +482,7 @@
 
         <!-- TOP HEADER BAR (Desktop) -->
         <div class="hidden lg:flex items-center gap-4 px-8 py-5 bg-surface border-b border-border sticky top-0 z-30">
-            <button onclick="location.href='parent-tasks.html'"
+            <button onclick="window.__edcLocation.href='parent-tasks.html'"
                     class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center hover:bg-gray-100 active:scale-90 transition-all">
                 <span class="material-symbols-outlined text-textSecondary">arrow_back</span>
             </button>
@@ -741,7 +741,7 @@
         async function apiFetch(url, options = {}) {
             let token = window.__edcStorage.getItem('token');
             if (!token) {
-                window.location.href = LOGIN_URL;
+                window.__edcLocation.href = LOGIN_URL;
                 return new Response(null, { status: 401 });
             }
             options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -765,18 +765,18 @@
                         } else {
                             window.__edcStorage.removeItem('token');
                             window.__edcStorage.removeItem('refresh_token');
-                            window.location.href = LOGIN_URL;
+                            window.__edcLocation.href = LOGIN_URL;
                             return new Response(null, { status: 401 });
                         }
                     } catch (e) {
                         window.__edcStorage.removeItem('token');
                         window.__edcStorage.removeItem('refresh_token');
-                        window.location.href = LOGIN_URL;
+                        window.__edcLocation.href = LOGIN_URL;
                         return new Response(null, { status: 401 });
                     }
                 } else {
                     window.__edcStorage.removeItem('token');
-                    window.location.href = LOGIN_URL;
+                    window.__edcLocation.href = LOGIN_URL;
                     return new Response(null, { status: 401 });
                 }
             }
@@ -784,12 +784,12 @@
         }
 
         const token = window.__edcStorage.getItem('token');
-        const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.__edcLocation.search);
         const taskId = urlParams.get('task_id');
 
         // Auth guard
-        if (!token) window.location.href = LOGIN_URL;
-        if (!taskId) window.location.href = "parent-tasks.html";
+        if (!token) window.__edcLocation.href = LOGIN_URL;
+        if (!taskId) window.__edcLocation.href = "parent-tasks.html";
 
         // ==================== STATE ====================
         let rating = 5;
@@ -834,7 +834,7 @@
                 window.__edcStorage.clear();
                 showToast('Đã đăng xuất thành công', 'success');
                 setTimeout(() => {
-                    window.location.href = "login.html";
+                    window.__edcLocation.href = "login.html";
                 }, 500);
             }
         }
@@ -1002,7 +1002,7 @@
                 if (!task) {
                     showToast('Không tìm thấy công việc này', 'error');
                     setTimeout(() => {
-                        window.location.href = "parent-tasks.html";
+                        window.__edcLocation.href = "parent-tasks.html";
                     }, 1500);
                     return;
                 }
@@ -1126,7 +1126,7 @@
                     const isUpdate = Boolean(currentTask && currentTask.is_reviewed);
                     showToast(isUpdate ? 'Cập nhật đánh giá thành công! 🎉' : 'Cảm ơn bạn đã đánh giá! 🎉', 'success');
                     setTimeout(() => {
-                        window.location.href = "parent-tasks.html";
+                        window.__edcLocation.href = "parent-tasks.html";
                     }, 1200);
                 } else {
                     const err = await resp.json().catch(() => ({}));
@@ -1199,7 +1199,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });

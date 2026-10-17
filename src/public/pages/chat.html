@@ -163,7 +163,7 @@ function getAuthToken() {
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
   if (!token) {
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('No auth token');
   }
   const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
@@ -175,7 +175,7 @@ async function authFetch(url, options = {}) {
   if (resp.status === 401) {
     const refreshed = await tryRefreshToken();
     if (refreshed) return authFetch(url, options);
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('Auth expired');
   }
   return resp;
@@ -438,7 +438,7 @@ async function init() {
   stopPolling();
   // FIX back button: gắn href trước mọi await — bấm back luôn hoạt động
   initBackLink();
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   taskId = params.get('task_id');
   if (!taskId) {
     document.getElementById('error-text').textContent = 'Thiếu task_id.';

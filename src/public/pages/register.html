@@ -868,7 +868,7 @@
                     showToast('Đăng ký thành công! Hãy đăng nhập.', 'success');
                 }
                 setTimeout(() => {
-                    window.location.href = 'login.html';
+                    window.__edcLocation.href = 'login.html';
                 }, 1500);
             } else {
                 // Handle error messages
@@ -1166,13 +1166,13 @@
 
                 setTimeout(() => {
                     if (data.is_staff) {
-                        window.location.href = 'admin-dashboard.html';
+                        window.__edcLocation.href = 'admin-dashboard.html';
                     } else if (data.first_login) {
-                        window.location.href = data.role === 'parent'
+                        window.__edcLocation.href = data.role === 'parent'
                             ? '/onboarding-parent/'
                             : '/onboarding-worker/';
                     } else {
-                        window.location.href = data.role === 'parent'
+                        window.__edcLocation.href = data.role === 'parent'
                             ? '/parent-home/'
                             : '/worker-feed/';
                     }
@@ -1239,7 +1239,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });

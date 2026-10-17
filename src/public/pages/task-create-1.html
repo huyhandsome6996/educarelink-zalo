@@ -520,7 +520,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -990,7 +990,7 @@
         async function apiFetch(url, options = {}) {
             let token = window.__edcStorage.getItem('token');
             if (!token) {
-                window.location.href = "login.html";
+                window.__edcLocation.href = "login.html";
                 return new Response(null, { status: 401 });
             }
             options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -1014,18 +1014,18 @@
                         } else {
                             window.__edcStorage.removeItem('token');
                             window.__edcStorage.removeItem('refresh_token');
-                            window.location.href = "login.html";
+                            window.__edcLocation.href = "login.html";
                             return new Response(null, { status: 401 });
                         }
                     } catch (e) {
                         window.__edcStorage.removeItem('token');
                         window.__edcStorage.removeItem('refresh_token');
-                        window.location.href = "login.html";
+                        window.__edcLocation.href = "login.html";
                         return new Response(null, { status: 401 });
                     }
                 } else {
                     window.__edcStorage.removeItem('token');
-                    window.location.href = "login.html";
+                    window.__edcLocation.href = "login.html";
                     return new Response(null, { status: 401 });
                 }
             }
@@ -1034,7 +1034,7 @@
 
         // ===== AUTH CHECK =====
         if (!window.__edcStorage.getItem('token')) {
-            window.location.href = "login.html";
+            window.__edcLocation.href = "login.html";
         }
 
         // ===== TOAST NOTIFICATION SYSTEM =====
@@ -1077,7 +1077,7 @@
         // ===== LOGOUT =====
         function handleLogout() {
             window.__edcStorage.clear();
-            window.location.href = "login.html";
+            window.__edcLocation.href = "login.html";
         }
 
         // ===== CATEGORY SELECTOR =====
@@ -1191,7 +1191,7 @@
                 if (resp.ok) {
                     showToast('Đăng việc thành công! Đang chuyển hướng...', 'success');
                     setTimeout(() => {
-                        window.location.href = "parent-tasks.html";
+                        window.__edcLocation.href = "parent-tasks.html";
                     }, 1500);
                 } else {
                     let errMsg = 'Đã xảy ra lỗi';
@@ -1715,7 +1715,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });

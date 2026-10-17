@@ -323,7 +323,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -578,7 +578,7 @@ const LOGIN_URL = "login.html";
 async function apiFetch(url, options = {}) {
     let token = window.__edcStorage.getItem('token');
     if (!token) {
-        window.location.href = LOGIN_URL;
+        window.__edcLocation.href = LOGIN_URL;
         return new Response(null, { status: 401 });
     }
     options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -602,25 +602,25 @@ async function apiFetch(url, options = {}) {
                 } else {
                     window.__edcStorage.removeItem('token');
                     window.__edcStorage.removeItem('refresh_token');
-                    window.location.href = LOGIN_URL;
+                    window.__edcLocation.href = LOGIN_URL;
                     return new Response(null, { status: 401 });
                 }
             } catch (e) {
                 window.__edcStorage.removeItem('token');
                 window.__edcStorage.removeItem('refresh_token');
-                window.location.href = LOGIN_URL;
+                window.__edcLocation.href = LOGIN_URL;
                 return new Response(null, { status: 401 });
             }
         } else {
             window.__edcStorage.removeItem('token');
-            window.location.href = LOGIN_URL;
+            window.__edcLocation.href = LOGIN_URL;
             return new Response(null, { status: 401 });
         }
     }
     return response;
 }
 
-if (!window.__edcStorage.getItem('token')) window.location.href = LOGIN_URL;
+if (!window.__edcStorage.getItem('token')) window.__edcLocation.href = LOGIN_URL;
 
 // ==================== HELPERS ====================
 function escapeHtml(s) {
@@ -696,11 +696,11 @@ let currentTask = null;
 // ==================== HÀNH ĐỘNG THEO TRẠNG THÁI ====================
 function viewCandidates(taskId) {
     window.__edcStorage.setItem('current_task_id', taskId);
-    window.location.href = "browse-candidates.html";
+    window.__edcLocation.href = "browse-candidates.html";
 }
 
 function goToReview(taskId) {
-    window.location.href = "review.html?task_id=" + taskId;
+    window.__edcLocation.href = "review.html?task_id=" + taskId;
 }
 
 async function trackCarepartner(taskId) {
@@ -710,7 +710,7 @@ async function trackCarepartner(taskId) {
             const data = await r.json();
             const consent = data?.consent?.consent || (data?.has_consent ? data.consent?.consent : null);
             if (data.has_consent && consent === 'granted') {
-                window.location.href = "tracking.html?task_id=" + taskId;
+                window.__edcLocation.href = "tracking.html?task_id=" + taskId;
             } else if (data.has_consent && consent === 'revoked') {
                 showToast('⚠️ Carepartner đã dừng chia sẻ vị trí. Vui lòng liên hệ trực tiếp.', 'error');
             } else {
@@ -732,7 +732,7 @@ async function trackCarepartner(taskId) {
 function chatButtonHtml(state, taskId) {
     if (state === 'open') {
         return `
-            <button onclick="location.href='chat.html?task_id=${taskId}'" class="w-full py-3 bg-blue-500 text-white font-headline font-bold text-sm rounded-xl hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+            <button onclick="window.__edcLocation.href='chat.html?task_id=${taskId}'" class="w-full py-3 bg-blue-500 text-white font-headline font-bold text-sm rounded-xl hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">chat</span>
                 Chat với Carepartner (24h)
             </button>`;
@@ -837,11 +837,11 @@ function renderActionArea(task) {
                     <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">location_on</span>
                     Theo dõi vị trí Carepartner
                 </button>
-                <button onclick="location.href='chat.html?task_id=${task.id}'" class="${btnBase} bg-blue-500 text-white hover:bg-blue-600">
+                <button onclick="window.__edcLocation.href='chat.html?task_id=${task.id}'" class="${btnBase} bg-blue-500 text-white hover:bg-blue-600">
                     <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">chat</span>
                     Nhắn tin với Carepartner
                 </button>
-                <button onclick="location.href='parent-payments.html?task_id=${task.id}'" class="${btnBase} bg-indigo-500 text-white hover:bg-indigo-600">
+                <button onclick="window.__edcLocation.href='parent-payments.html?task_id=${task.id}'" class="${btnBase} bg-indigo-500 text-white hover:bg-indigo-600">
                     <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">payments</span>
                     Thanh toán
                 </button>
@@ -943,7 +943,7 @@ async function fetchAssignedWorker(task) {
 // ==================== INIT ====================
 async function init() {
     try {
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(window.__edcLocation.search);
         const taskId = params.get('task_id');
         if (!taskId) { showError('Thiếu mã công việc', 'Không xác định được công việc cần xem.'); return; }
 
@@ -951,7 +951,7 @@ async function init() {
         const profResp = await apiFetch(API_BASE + "/profile/");
         if (!profResp || profResp.status === 401) {
             if (profResp) { window.__edcStorage.removeItem('token'); window.__edcStorage.removeItem('refresh_token'); }
-            window.location.href = LOGIN_URL;
+            window.__edcLocation.href = LOGIN_URL;
             return;
         }
         const prof = await profResp.json();
@@ -986,7 +986,7 @@ async function init() {
 function handleLogout() {
     if (confirm('Bạn có chắc muốn đăng xuất?')) {
         window.__edcStorage.clear();
-        setTimeout(() => { window.location.href = LOGIN_URL; }, 400);
+        setTimeout(() => { window.__edcLocation.href = LOGIN_URL; }, 400);
     }
 }
 
@@ -1139,7 +1139,7 @@ init();
           $('payos-gate-cancel').classList.add('hidden');
           $('payos-gate-done').classList.remove('hidden');
           if (typeof current.opts?.onSuccess === 'function') current.opts.onSuccess(d);
-          if (current.opts?.autoReloadOnSuccess) setTimeout(() => location.reload(), 2200);
+          if (current.opts?.autoReloadOnSuccess) setTimeout(() => window.__edcLocation.reload(), 2200);
         } else if (d.task_status === 'open' || d.status === 'cancelled') {
           settled = true;
           stopLoops();

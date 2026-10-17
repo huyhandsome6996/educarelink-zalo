@@ -369,7 +369,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -695,8 +695,8 @@ function sessionExpiredRedirect() {
   ['token', 'refresh_token', 'role', 'user', 'is_staff', 'admin_username'].forEach(k => window.__edcStorage.removeItem(k));
   showToast('Phiên đăng nhập đã hết hạn hoặc tài khoản không tồn tại. Đang chuyển đến trang đăng nhập...', 'error', 4000);
   setTimeout(() => {
-    const next = encodeURIComponent(window.location.pathname + window.location.search);
-    window.location.href = LOGIN_URL + '?next=' + next;
+    const next = encodeURIComponent(window.__edcLocation.pathname + window.__edcLocation.search);
+    window.__edcLocation.href = LOGIN_URL + '?next=' + next;
   }, 1200);
 }
 
@@ -740,7 +740,7 @@ async function apiFetch(url, options = {}) {
     return response;
 }
 
-if (!window.__edcStorage.getItem('token')) window.location.href = LOGIN_URL;
+if (!window.__edcStorage.getItem('token')) window.__edcLocation.href = LOGIN_URL;
 
 // ==== Đồng bộ /parent/: đổ avatar + tên lên capsule "Tài khoản" của top bar ====
 (async function loadTopbarUser() {
@@ -782,7 +782,7 @@ const CANDIDATES_READY_JOB_STATUSES = ['ai_parsed', 'matching', 'needs_replaceme
 // ==== Lọc sâu từ URL (thẻ thống kê ở Trang chủ chuyển qua: ?status=) ====
 (function applyInitialFilterFromUrl() {
   try {
-    const p = new URLSearchParams(window.location.search);
+    const p = new URLSearchParams(window.__edcLocation.search);
     const st = (p.get('status') || '').toLowerCase();
     const fl = (p.get('filter') || '').toLowerCase();
     if (st === 'open' || fl === 'pending') {
@@ -870,7 +870,7 @@ function handleLogout() {
     () => {
       window.__edcStorage.clear();
       showToast('Đã đăng xuất thành công', 'success');
-      setTimeout(() => { window.location.href = "login.html"; }, 600);
+      setTimeout(() => { window.__edcLocation.href = "login.html"; }, 600);
     },
     'logout',
     'error'
@@ -1088,12 +1088,12 @@ function renderBookingCard(b) {
       ${detailBtn}`;
   } else if (b.status === 'in_progress') {
     const chatBtn = b.task_id ? `
-      <button onclick="location.href='chat.html?task_id=${b.task_id}'" class="flex-1 py-3 bg-blue-500 text-white font-headline font-bold text-sm rounded-xl hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+      <button onclick="window.__edcLocation.href='chat.html?task_id=${b.task_id}'" class="flex-1 py-3 bg-blue-500 text-white font-headline font-bold text-sm rounded-xl hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
         <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">chat</span>
         Nhắn tin
       </button>` : '';
     const trackBtn = b.task_id ? `
-      <button onclick="location.href='tracking.html?task_id=${b.task_id}'" class="py-3 px-3 bg-gray-100 text-gray-600 font-headline font-bold text-sm rounded-xl hover:bg-gray-200 active:scale-[0.98] transition-all duration-200 flex items-center justify-center" title="Theo dõi vị trí">
+      <button onclick="window.__edcLocation.href='tracking.html?task_id=${b.task_id}'" class="py-3 px-3 bg-gray-100 text-gray-600 font-headline font-bold text-sm rounded-xl hover:bg-gray-200 active:scale-[0.98] transition-all duration-200 flex items-center justify-center" title="Theo dõi vị trí">
         <span class="material-symbols-outlined text-lg">location_on</span>
       </button>` : '';
     actionHTML = `
@@ -1118,7 +1118,7 @@ function renderBookingCard(b) {
           Sửa
         </a>
       </div>` : (b.task_id ? `
-      <button onclick="location.href='review.html?task_id=${b.task_id}'" class="w-full py-3 mb-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-headline font-bold text-sm rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+      <button onclick="window.__edcLocation.href='review.html?task_id=${b.task_id}'" class="w-full py-3 mb-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-headline font-bold text-sm rounded-xl shadow-md shadow-orange-500/20 hover:shadow-lg active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
         <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">star</span>
         Đánh giá Carepartner
       </button>` : '');
@@ -1291,7 +1291,7 @@ function startCommitCountdowns() {
 function chat24hButtonHtml(state, taskId) {
   if (state === 'open') {
     return `
-      <button onclick="location.href='chat.html?task_id=${taskId}'" class="w-full py-3 bg-blue-500 text-white font-headline font-bold text-sm rounded-xl hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+      <button onclick="window.__edcLocation.href='chat.html?task_id=${taskId}'" class="w-full py-3 bg-blue-500 text-white font-headline font-bold text-sm rounded-xl hover:bg-blue-600 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
         <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">chat</span>
         Chat với Carepartner (24h)
       </button>`;
@@ -1358,7 +1358,7 @@ function updateStats() {
 // ==================== NAVIGATION ====================
 // Xem ứng viên của bài đăng Flow 1 → trang ung_vien (GET candidates Flow 1)
 function viewCandidates(jobId) {
-  window.location.href = 'ung-vien.html?id=' + jobId;
+  window.__edcLocation.href = 'ung-vien.html?id=' + jobId;
 }
 
 // ==================== INIT ====================
@@ -1448,7 +1448,7 @@ init();
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });

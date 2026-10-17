@@ -446,14 +446,14 @@
     <!-- ========== JAVASCRIPT ========== -->
     <script>
         const API_BASE = window.API_BASE;
-        const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.__edcLocation.search);
         const taskId = urlParams.get('task_id');
 
         // ===== TOKEN REFRESH UTILITY =====
         async function apiFetch(url, options = {}) {
             let token = window.__edcStorage.getItem('token');
             if (!token) {
-                window.location.href = "login.html";
+                window.__edcLocation.href = "login.html";
                 return new Response(null, { status: 401 });
             }
             options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -480,18 +480,18 @@
                             // Refresh thất bại → đăng xuất
                             window.__edcStorage.removeItem('token');
                             window.__edcStorage.removeItem('refresh_token');
-                            window.location.href = "login.html";
+                            window.__edcLocation.href = "login.html";
                             return new Response(null, { status: 401 });
                         }
                     } catch (e) {
                         window.__edcStorage.removeItem('token');
                         window.__edcStorage.removeItem('refresh_token');
-                        window.location.href = "login.html";
+                        window.__edcLocation.href = "login.html";
                         return new Response(null, { status: 401 });
                     }
                 } else {
                     window.__edcStorage.removeItem('token');
-                    window.location.href = "login.html";
+                    window.__edcLocation.href = "login.html";
                     return new Response(null, { status: 401 });
                 }
             }
@@ -499,8 +499,8 @@
         }
 
         // Auth & param check
-        if (!window.__edcStorage.getItem('token')) window.location.href = "login.html";
-        if (!taskId) window.location.href = "worker-feed.html";
+        if (!window.__edcStorage.getItem('token')) window.__edcLocation.href = "login.html";
+        if (!taskId) window.__edcLocation.href = "worker-feed.html";
 
         // ===== GLOBAL STATE =====
         let currentTask = null;
@@ -606,7 +606,7 @@
             showLogoutModal().then(confirmed => {
                 if (confirmed) {
                     window.__edcStorage.clear();
-                    window.location.href = "login.html";
+                    window.__edcLocation.href = "login.html";
                 }
             });
         }
@@ -759,7 +759,7 @@
                     showToast(d.message || 'Ứng tuyển thành công! Chờ phụ huynh duyệt.', 'success');
                     // Redirect after short delay
                     setTimeout(() => {
-                        window.location.href = "worker-jobs.html";
+                        window.__edcLocation.href = "worker-jobs.html";
                     }, 1500);
                 } else {
                     showToast(d.error || 'Không thể ứng tuyển. Vui lòng thử lại.', 'error');
@@ -861,7 +861,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });

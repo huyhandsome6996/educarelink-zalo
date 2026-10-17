@@ -552,7 +552,7 @@
       window.handleLogout = function() {
         if (confirm('Bạn có chắc muốn đăng xuất?')) {
           try { window.__edcStorage.clear(); } catch (e) {}
-          setTimeout(() => { window.location.href = 'login.html'; }, 200);
+          setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
         }
       };
     }
@@ -645,7 +645,7 @@
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
         try { window.__edcStorage.clear(); } catch (e) {}
-        setTimeout(() => { window.location.href = 'login.html'; }, 200);
+        setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
       }
     };
   })();
@@ -1212,7 +1212,7 @@
         async function apiFetch(url, options = {}) {
             let token = window.__edcStorage.getItem('token');
             if (!token) {
-                window.location.href = LOGIN_URL;
+                window.__edcLocation.href = LOGIN_URL;
                 return new Response(null, { status: 401 });
             }
             options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -1236,18 +1236,18 @@
                         } else {
                             window.__edcStorage.removeItem('token');
                             window.__edcStorage.removeItem('refresh_token');
-                            window.location.href = LOGIN_URL;
+                            window.__edcLocation.href = LOGIN_URL;
                             return new Response(null, { status: 401 });
                         }
                     } catch (e) {
                         window.__edcStorage.removeItem('token');
                         window.__edcStorage.removeItem('refresh_token');
-                        window.location.href = LOGIN_URL;
+                        window.__edcLocation.href = LOGIN_URL;
                         return new Response(null, { status: 401 });
                     }
                 } else {
                     window.__edcStorage.removeItem('token');
-                    window.location.href = LOGIN_URL;
+                    window.__edcLocation.href = LOGIN_URL;
                     return new Response(null, { status: 401 });
                 }
             }
@@ -1255,7 +1255,7 @@
         }
 
         // Auth check — redirect to login if no token
-        if (!window.__edcStorage.getItem('token')) window.location.href = LOGIN_URL;
+        if (!window.__edcStorage.getItem('token')) window.__edcLocation.href = LOGIN_URL;
 
         // ===== GLOBAL STATE =====
         let profileData = null;
@@ -1334,7 +1334,7 @@
                     window.__edcStorage.clear();
                     showToast('Đăng xuất thành công!', 'success');
                     setTimeout(() => {
-                        window.location.href = "login.html";
+                        window.__edcLocation.href = "login.html";
                     }, 800);
                 }
             });
@@ -1385,7 +1385,7 @@
         async function fetchProfileData() {
             try {
                 // Kiểm tra URL parameter worker_id — nếu có thì đang xem hồ sơ của worker khác
-                const urlParams = new URLSearchParams(window.location.search);
+                const urlParams = new URLSearchParams(window.__edcLocation.search);
                 const workerIdFromUrl = urlParams.get('worker_id');
                 
                 if (workerIdFromUrl) {
@@ -1403,7 +1403,7 @@
                         if (profileResp.status === 401) {
                             window.__edcStorage.removeItem('token');
                             window.__edcStorage.removeItem('refresh_token');
-                            window.location.href = LOGIN_URL;
+                            window.__edcLocation.href = LOGIN_URL;
                             return;
                         }
                         throw new Error('Không thể tải hồ sơ');
@@ -2541,7 +2541,7 @@
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });

@@ -161,7 +161,7 @@
       </button>
       <!-- N — nút chat thật (cửa sổ còn hiệu lực), thay toast placeholder -->
       <a href="chat.html?task_id=" id="chat-btn"
-         onclick="event.preventDefault(); window.location.href='chat.html?task_id=' + taskId;"
+         onclick="event.preventDefault(); window.__edcLocation.href='chat.html?task_id=' + taskId;"
          class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round"/>
@@ -358,7 +358,7 @@ function getAuthToken() {
 async function authFetch(url, options = {}) {
   const token = getAuthToken();
   if (!token) {
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('No auth token');
   }
   const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
@@ -371,7 +371,7 @@ async function authFetch(url, options = {}) {
     // Try refresh token
     const refreshed = await tryRefreshToken();
     if (refreshed) return authFetch(url, options);
-    window.location.href = 'login.html';
+    window.__edcLocation.href = 'login.html';
     throw new Error('Auth expired');
   }
   return resp;
@@ -400,11 +400,11 @@ async function tryRefreshToken() {
 // ====================================================================
 async function init() {
   // Get task_id from URL query param: ?task_id=123
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.__edcLocation.search);
   taskId = params.get('task_id');
   if (!taskId) {
     showToast('❌ Thiếu task_id. Quay lại danh sách việc.');
-    setTimeout(() => window.location.href = 'parent-tasks.html', 1500);
+    setTimeout(() => window.__edcLocation.href = 'parent-tasks.html', 1500);
     return;
   }
 
@@ -705,7 +705,7 @@ async function callCarepartner() {
       const accepted = candidates.find(c => c.status === 'accepted');
       if (accepted) {
         showToast('📞 Đang gọi carepartner...');
-        // In production: window.location.href = `tel:${phone}`;
+        // In production: window.__edcLocation.href = `tel:${phone}`;
         return;
       }
     }
@@ -717,7 +717,7 @@ function messageCarepartner() {
   // N — chuyển hẳn sang trang chat thật (giữ lại hàm cho tương thích
   // các chỗ onclick cũ nếu có)
   if (taskId) {
-    window.location.href = 'chat.html?task_id=' + taskId;
+    window.__edcLocation.href = 'chat.html?task_id=' + taskId;
   } else {
     showToast('Không xác định được công việc');
   }

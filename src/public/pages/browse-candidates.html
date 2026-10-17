@@ -395,7 +395,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -841,7 +841,7 @@ const LOGIN_URL = "login.html";
 async function apiFetch(url, options = {}) {
     let token = window.__edcStorage.getItem('token');
     if (!token) {
-        window.location.href = LOGIN_URL;
+        window.__edcLocation.href = LOGIN_URL;
         return new Response(null, { status: 401 });
     }
     options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -865,18 +865,18 @@ async function apiFetch(url, options = {}) {
                 } else {
                     window.__edcStorage.removeItem('token');
                     window.__edcStorage.removeItem('refresh_token');
-                    window.location.href = LOGIN_URL;
+                    window.__edcLocation.href = LOGIN_URL;
                     return new Response(null, { status: 401 });
                 }
             } catch (e) {
                 window.__edcStorage.removeItem('token');
                 window.__edcStorage.removeItem('refresh_token');
-                window.location.href = LOGIN_URL;
+                window.__edcLocation.href = LOGIN_URL;
                 return new Response(null, { status: 401 });
             }
         } else {
             window.__edcStorage.removeItem('token');
-            window.location.href = LOGIN_URL;
+            window.__edcLocation.href = LOGIN_URL;
             return new Response(null, { status: 401 });
         }
     }
@@ -885,11 +885,11 @@ async function apiFetch(url, options = {}) {
 
 const token = window.__edcStorage.getItem('token');
 // Lấy task_id từ URL parameter hoặc window.__edcStorage
-const urlParams = new URLSearchParams(window.location.search);
+const urlParams = new URLSearchParams(window.__edcLocation.search);
 const taskId = urlParams.get('task_id') || window.__edcStorage.getItem('current_task_id');
 
-if (!token) window.location.href = LOGIN_URL;
-if (!taskId) window.location.href = "parent-tasks.html";
+if (!token) window.__edcLocation.href = LOGIN_URL;
+if (!taskId) window.__edcLocation.href = "parent-tasks.html";
 
 // ==================== STATE ====================
 let confirmCallback = null;
@@ -976,7 +976,7 @@ document.getElementById('confirm-action-btn').addEventListener('click', () => {
 
 // ==================== NAVIGATION ====================
 function goBackToTasks() {
-    window.location.href = "parent-tasks.html";
+    window.__edcLocation.href = "parent-tasks.html";
 }
 
 function handleLogout() {
@@ -986,7 +986,7 @@ function handleLogout() {
         () => {
             window.__edcStorage.clear();
             showToast('Đã đăng xuất thành công', 'success');
-            setTimeout(() => { window.location.href = "login.html"; }, 600);
+            setTimeout(() => { window.__edcLocation.href = "login.html"; }, 600);
         },
         'logout',
         'error'
@@ -1634,7 +1634,7 @@ async function init() {
         if (profResp && profResp.status === 401) {
             window.__edcStorage.removeItem('token');
             window.__edcStorage.removeItem('refresh_token');
-            window.location.href = LOGIN_URL;
+            window.__edcLocation.href = LOGIN_URL;
             return;
         }
 
@@ -1668,7 +1668,7 @@ async function init() {
 
         if (!task) {
             showToast('Không tìm thấy thông tin công việc', 'error');
-            setTimeout(() => { window.location.href = "parent-tasks.html"; }, 1500);
+            setTimeout(() => { window.__edcLocation.href = "parent-tasks.html"; }, 1500);
             return;
         }
 
@@ -1731,7 +1731,7 @@ init();
                             document.body.classList.remove('page-loaded');
                             document.body.classList.add('page-exit');
                             setTimeout(() => {
-                                window.location.href = window.__edcToPage(href);
+                                window.__edcLocation.href = window.__edcToPage(href);
                             }, 300); // match transition duration
                         }
                     });
@@ -1905,7 +1905,7 @@ init();
           $('payos-gate-cancel').classList.add('hidden');
           $('payos-gate-done').classList.remove('hidden');
           if (typeof current.opts?.onSuccess === 'function') current.opts.onSuccess(d);
-          if (current.opts?.autoReloadOnSuccess) setTimeout(() => location.reload(), 2200);
+          if (current.opts?.autoReloadOnSuccess) setTimeout(() => window.__edcLocation.reload(), 2200);
         } else if (d.task_status === 'open' || d.status === 'cancelled') {
           settled = true;
           stopLoops();

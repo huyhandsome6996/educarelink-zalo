@@ -199,8 +199,8 @@
     if (!token) {
       toast('Vui lòng đăng nhập tài khoản Phụ huynh để tiếp tục.', false);
       setTimeout(() => {
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = 'login.html?next=' + next;
+        const next = encodeURIComponent(window.__edcLocation.pathname + window.__edcLocation.search);
+        window.__edcLocation.href = 'login.html?next=' + next;
       }, 1000);
       throw new Error('no_token');
     }
@@ -239,8 +239,8 @@
         window.__edcStorage.removeItem('admin_username');
         toast('Phiên đăng nhập đã hết hạn hoặc tài khoản không tồn tại. Đang chuyển đến trang đăng nhập...', false);
         setTimeout(() => {
-          const next = encodeURIComponent(window.location.pathname + window.location.search);
-          window.location.href = 'login.html?next=' + next;
+          const next = encodeURIComponent(window.__edcLocation.pathname + window.__edcLocation.search);
+          window.__edcLocation.href = 'login.html?next=' + next;
         }, 1200);
         throw new Error('user_unauthorized');
       }
@@ -676,7 +676,7 @@
       window.handleLogout = function() {
         if (confirm('Bạn có chắc muốn đăng xuất?')) {
           try { window.__edcStorage.clear(); } catch (e) {}
-          setTimeout(() => { window.location.href = 'login.html'; }, 200);
+          setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
         }
       };
     }
@@ -769,7 +769,7 @@
     window.handleLogout = window.handleLogout || function () {
       if (confirm('Bạn có chắc muốn đăng xuất?')) {
         try { window.__edcStorage.clear(); } catch (e) {}
-        setTimeout(() => { window.location.href = 'login.html'; }, 200);
+        setTimeout(() => { window.__edcLocation.href = 'login.html'; }, 200);
       }
     };
   })();
@@ -1062,7 +1062,7 @@
    ═══════════════════════════════════════════════════════════════ */
 const LOGIN_URL = "login.html";
 if (!window.__edcStorage.getItem('token')) {
-  window.location.href = LOGIN_URL + '?next=/don-cua-toi/';
+  window.__edcLocation.href = LOGIN_URL + '?next=/don-cua-toi/';
 }
 
 
@@ -1618,7 +1618,7 @@ window.handleSOS = function (id) {
   const phone = b ? parentPhone(b) : '';
   if (phone) {
     if (confirm('SOS — Gọi ngay cho phụ huynh (' + phone + ')? Nếu là tình huống khẩn cấp tính mạng, hãy gọi 113 trước.')) {
-      window.location.href = 'tel:' + phone;
+      window.__edcLocation.href = 'tel:' + phone;
     }
   } else {
     toast('Không có số điện thoại phụ huynh. Hãy gọi tổng đài hỗ trợ 113 nếu khẩn cấp.', false);

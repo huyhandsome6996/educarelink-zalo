@@ -70,6 +70,9 @@ npm run deploy      # đẩy đúng bundle src/www bằng chế độ existing p
 
 ### Bản đồng bộ 17/10/2026
 
+- Zalo không hỗ trợ upload file HTML. Build đóng gói mỗi trang thành JSON; shell render bằng `srcdoc`, đồng bộ Location và điều hướng qua bridge. Không tải trực tiếp `.html` trên CDN.
+- Lệnh deploy đọc đúng app-config đã build trong `src/www`, đồng thời giữ kiểm tra chứng chỉ TLS.
+
 - Repo gốc: commit `d9c0a0135d94453acdf26f3db96d3f9983e3a738` (44 trang), gồm thanh điều hướng mobile 5 tab.
 - Scripts đọc repo gốc từ biến `EDUCARELINK_SOURCE`; mặc định thư mục cạnh repo này là `educarelink-main`. Ví dụ PowerShell: `$env:EDUCARELINK_SOURCE='../educarelink-backend-4-12-2026'`.
 - `npm run sync:web` đồng bộ cả tài nguyên dùng chung và build lại 4 bộ CSS gốc cùng 12 bộ CSS theo trang.

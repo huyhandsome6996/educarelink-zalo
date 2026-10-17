@@ -391,7 +391,7 @@
       window.handleLogout = function() {
         window.__edcStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+        window.__edcLocation.href = 'login.html';
       };
     }
 
@@ -750,7 +750,7 @@
         async function apiFetch(url, options = {}) {
             let token = window.__edcStorage.getItem('token');
             if (!token) {
-                window.location.href = LOGIN_URL;
+                window.__edcLocation.href = LOGIN_URL;
                 return new Response(null, { status: 401 });
             }
             options.headers = { ...options.headers, 'Authorization': 'Bearer ' + token };
@@ -774,18 +774,18 @@
                         } else {
                             window.__edcStorage.removeItem('token');
                             window.__edcStorage.removeItem('refresh_token');
-                            window.location.href = LOGIN_URL;
+                            window.__edcLocation.href = LOGIN_URL;
                             return new Response(null, { status: 401 });
                         }
                     } catch (e) {
                         window.__edcStorage.removeItem('token');
                         window.__edcStorage.removeItem('refresh_token');
-                        window.location.href = LOGIN_URL;
+                        window.__edcLocation.href = LOGIN_URL;
                         return new Response(null, { status: 401 });
                     }
                 } else {
                     window.__edcStorage.removeItem('token');
-                    window.location.href = LOGIN_URL;
+                    window.__edcLocation.href = LOGIN_URL;
                     return new Response(null, { status: 401 });
                 }
             }
@@ -823,7 +823,7 @@
         function handleLogout() {
             showConfirm('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', () => {
                 window.__edcStorage.clear(); sessionStorage.clear();
-                window.location.href = 'login.html';
+                window.__edcLocation.href = 'login.html';
             });
         }
 
@@ -945,7 +945,7 @@
                     sessionStorage.removeItem('task_create_step1');
                     showToast('Đăng việc thành công!', 'success');
                     setTimeout(() => {
-                        window.location.href = 'parent-tasks.html';
+                        window.__edcLocation.href = 'parent-tasks.html';
                     }, 1200);
                 } else {
                     const data = await response.json();

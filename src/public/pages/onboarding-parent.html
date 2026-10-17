@@ -427,7 +427,7 @@
         async function completeOnboarding() {
             const token = window.__edcStorage.getItem('token');
             if (!token) {
-                window.location.href = "login.html";
+                window.__edcLocation.href = "login.html";
                 return;
             }
 
@@ -463,27 +463,27 @@
                                 });
                                 if (retryResp.ok) {
                                     window.__edcStorage.removeItem('first_login_redirect');
-                                    window.location.href = "parent-home.html";
+                                    window.__edcLocation.href = "parent-home.html";
                                     return;
                                 }
                             }
                         } catch (e) { /* refresh failed, redirect to login */ }
                     }
                     window.__edcStorage.clear();
-                    window.location.href = "login.html";
+                    window.__edcLocation.href = "login.html";
                     return;
                 }
 
                 if (response.ok) {
                     window.__edcStorage.removeItem('first_login_redirect');
-                    window.location.href = "parent-home.html";
+                    window.__edcLocation.href = "parent-home.html";
                 } else {
                     // API error — still redirect but don't clear first_login flag
-                    window.location.href = "parent-home.html";
+                    window.__edcLocation.href = "parent-home.html";
                 }
             } catch (error) {
                 console.error('Onboarding complete error:', error);
-                window.location.href = "parent-home.html";
+                window.__edcLocation.href = "parent-home.html";
             }
         }
 
